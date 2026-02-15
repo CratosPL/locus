@@ -80,6 +80,7 @@ export default function HomePage() {
   var [extraDrops, setExtraDrops] = useState<Drop[]>([]);
   var [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
   var [activeTab, setActiveTab] = useState<TabId>("map");
+  var [flyTrigger, setFlyTrigger] = useState(0);
   var [showCreateModal, setShowCreateModal] = useState(false);
   var [showProfile, setShowProfile] = useState(false);
   var [showWelcome, setShowWelcome] = useState(true);
@@ -385,6 +386,7 @@ export default function HomePage() {
               demoMode={demoMode}
               formatDistance={formatDistance}
               isNearby={isNearby}
+              flyTrigger={flyTrigger}
             />
 
             {/* Activity feed */}
@@ -421,7 +423,10 @@ export default function HomePage() {
 
               <button
                 onClick={function() {
-                  if (geoStatus === "idle" || geoStatus === "error") {
+                  if (geoStatus === "active") {
+                    // Re-center map on current position
+                    setFlyTrigger(Date.now());
+                  } else if (geoStatus === "idle" || geoStatus === "error") {
                     requestLocation();
                   }
                 }}

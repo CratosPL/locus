@@ -28,19 +28,23 @@ interface MapProps {
   demoMode: boolean;
   formatDistance: (lat: number, lng: number) => string;
   isNearby: (lat: number, lng: number) => boolean;
+  flyTrigger?: number;
 }
 
 // Inner component — flies map to user position when GPS activates
-function FlyToUser({ position }: { position: GeoPosition | null }) {
+function FlyToUser({ position, flyTrigger }: { position: GeoPosition | null; flyTrigger: number }) {
   var map = useMapHook ? useMapHook() : null;
-  var hasFlown = React.useRef(false);
+  var lastFlyTrigger = React.useRef(0);
 
+  // Fly on first position OR when flyTrigger changes (re-center button)
   React.useEffect(function() {
-    if (map && position && !hasFlown.current) {
-      map.flyTo([position.lat, position.lng], 15, { duration: 1.5 });
-      hasFlown.current = true;
+    if (map && position) {
+      if (lastFlyTrigger.current === 0 || flyTrigger !== lastFlyTrigger.current) {
+        map.flyTo([position.lat, position.lng], 15, { duration: 1.2 });
+        lastFlyTrigger.current = flyTrigger || 1;
+      }
     }
-  }, [map, position]);
+  }, [map, position, flyTrigger]);
 
   return null;
 }
@@ -60,6 +64,7 @@ export default function MapView({
   demoMode,
   formatDistance,
   isNearby,
+  flyTrigger,
 }: MapProps) {
   const [mounted, setMounted] = useState(false);
   const [leafletReady, setLeafletReady] = useState(false);
@@ -172,7 +177,7 @@ export default function MapView({
         />
 
         {/* Fly to user when GPS activates */}
-        <FlyToUser position={userPosition} />
+        <FlyToUser position={userPosition} flyTrigger={flyTrigger || 0} />
 
         {/* ─── User position marker ─────────────────────────────────── */}
         {userPosition && (
