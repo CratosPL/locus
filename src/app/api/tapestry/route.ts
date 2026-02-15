@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const TAPESTRY_API =
   process.env.NEXT_PUBLIC_TAPESTRY_API_URL ||
-  "https://api.usetapestry.dev/api/v1";
+  "https://api.usetapestry.dev/v1";
 const TAPESTRY_KEY = process.env.NEXT_PUBLIC_TAPESTRY_API_KEY || "";
 
 /**
@@ -24,6 +24,8 @@ export async function POST(req: NextRequest) {
 
     const separator = endpoint.includes("?") ? "&" : "?";
     const url = `${TAPESTRY_API}${endpoint}${separator}apiKey=${TAPESTRY_KEY}`;
+
+    console.log(`[Tapestry Proxy] ${method} ${url}`);
 
     const options: RequestInit = {
       method,
