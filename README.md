@@ -5,7 +5,7 @@
 
 **🏆 Solana Graveyard Hackathon 2026 — Tapestry On-chain Social Track**
 
-🔗 **[Live Demo](https://locus-psi-coral.vercel.app/)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
+🔗 **[Live Demo](https://locus-psi-coral.vercel.app)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
 
 ---
 
@@ -85,8 +85,38 @@ Program: HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn (Devnet)
 | 🪦 Create Drops | Place drops at your GPS location with SOL reward | Pinocchio + Tapestry |
 | 👤 Tapestry Profiles | Auto-created on wallet connect | Tapestry REST API |
 | ❤️ Likes & Comments | Social engagement on drops, stored on-chain | Tapestry protocol |
+| 🏅 Badges & Ranks | 7 discovery badges, reputation system (Lost Soul → Lich) | Client + Tapestry |
 | 🔍 Demo Mode | Toggle GPS bypass for testing/judging | Client-side flag |
-| 💾 Persistent State | Claims & likes survive page refresh | localStorage |
+| 💾 Persistent State | Claims, likes, and created drops survive refresh | localStorage |
+| 🛡️ Anti-spam | Max 5 drops/wallet, 60s cooldown, min reward, no self-claim | Client-side guards |
+| 🪙 Token Selector | SOL active, BONK/USDC coming soon | UI roadmap |
+
+---
+
+## Anti-Spam & Security
+
+Locus implements client-side protections and has a roadmap for on-chain enforcement:
+
+### Current (Client-side)
+
+| Protection | How |
+|---|---|
+| Max 5 active drops per wallet | Blocks creation after 5 unclaimed drops |
+| 60-second cooldown | Prevents rapid-fire drop spam |
+| Minimum 0.01 SOL reward | Economic barrier to low-effort spam |
+| No self-claiming | Can't claim your own drops |
+| Duplicate claim prevention | Can't claim same drop twice |
+
+### Future (On-chain — Sybil Resistance Roadmap)
+
+| Protection | Implementation |
+|---|---|
+| PDA counter per wallet | On-chain account tracking drop count per pubkey |
+| SOL stake requirement | Lock 0.1 SOL per active drop, released on claim |
+| Reputation gate | Min Tapestry score required to create drops |
+| Time-locked claims | Drops become claimable only after N confirmations |
+| ZK proof of location | Prove proximity without revealing exact coordinates |
+| Quadratic staking | Cost increases per drop: 1st free, 2nd 0.05, 3rd 0.1... |
 
 ---
 
@@ -107,7 +137,7 @@ Program: HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn (Devnet)
 ## Quick Start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/locus.git
+git clone https://github.com/CratosPL/locus.git
 cd locus
 npm install
 ```
@@ -125,13 +155,15 @@ npm run dev
 ```
 
 ### Testing Flow
-1. Open app → Allow location access (or enable Demo Mode)
-2. Click "Select Wallet" → Connect Solflare/Phantom (set to Devnet)
-3. Click a drop marker → See distance → Walk closer or use Demo Mode
-4. Click "⚡ Claim Drop" → Sign transaction in wallet
-5. See transaction confirmed on [Solscan](https://solscan.io)
-6. Click **+** to create a new drop at your location
-7. Like / Comment on drops via Tapestry social buttons
+1. Open app → Complete 3-step welcome tour
+2. Click **"📍 Enable GPS"** to activate location (or enable Demo Mode)
+3. Click "Select Wallet" → Connect Solflare/Phantom (set to Devnet)
+4. Click a drop marker → See distance → Walk closer or use Demo Mode
+5. Click "⚡ Claim Drop" → Sign transaction in wallet
+6. See transaction confirmed on [Solscan](https://solscan.io)
+7. Click **+** to create a new drop at your location (max 5 per wallet, 60s cooldown)
+8. Like / Comment on drops via social buttons
+9. Open Profile → Check your badges and reputation rank
 
 ---
 
@@ -149,13 +181,15 @@ src/
 │   ├── Header.tsx              # Logo + wallet connect/disconnect
 │   ├── MapView.tsx             # Leaflet map + GPS + popups + social
 │   ├── StatsBar.tsx            # Active drops, rewards, claims
-│   ├── DropList.tsx            # List view of all drops
-│   ├── CreateDropModal.tsx     # Create drop at GPS location
-│   └── ProfilePanel.tsx        # Tapestry profile + stats
+│   ├── DropList.tsx            # List view with category filters + sorting
+│   ├── CreateDropModal.tsx     # Create drop with token selector + GPS coords
+│   ├── ProfilePanel.tsx        # Tapestry profile + badges + reputation
+│   ├── WelcomeOverlay.tsx      # 3-step onboarding for first-time users
+│   └── TxToast.tsx             # Transaction success/error notifications
 ├── hooks/
 │   ├── useProgram.ts           # Solana program interaction (claim/create)
 │   ├── useTapestry.ts          # Tapestry social API (profile/like/comment)
-│   └── useGeolocation.ts       # GPS tracking + proximity check
+│   └── useGeolocation.ts       # GPS on user gesture (iOS-compatible) + proximity
 ├── types/index.ts
 └── utils/mockData.ts           # Sample drops in Warsaw
 ```
@@ -189,14 +223,20 @@ Pinocchio was chosen to demonstrate that geo-social doesn't need to be expensive
 
 ---
 
-## Verified Transaction
+## Verified Transactions
 
 ```
+# Claim transaction
 Signature: 3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY
-Block: 442129818
-CU: 13,250
-Fee: 0.000025 SOL
-Status: ✅ Finalized
+CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
+
+# Create drop transaction
+Signature: 44dEsMYw1abdLaQdF6xh7WZnxXayWbzVLS9i6vh1AoAqTb9FWDLmL1G3PYj3qaUZPuw8kYod9Zfp1DvzQurnwTcS
+CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
+
+# Deploy drop transaction
+Signature: 2T2jy6GuBUA3Nidu3wGnawphyxy4zVaraquL5t57RwdfjRopYxnsUJ6fFNYNMoRixRPTtckW69ghEwM2vgxDzBs2
+CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
 ```
 
 [View on Solscan →](https://solscan.io/tx/3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY?cluster=devnet)
@@ -205,11 +245,15 @@ Status: ✅ Finalized
 
 ## Future Roadmap
 
-- 🔐 ZK geofencing (prove proximity without revealing exact location)
-- 🎫 Session keys for gas-free claiming
-- 🌍 Multi-city expansion with community-created drops
-- 🏆 Leaderboards and seasonal events
-- 📱 PWA with push notifications for nearby drops
+- 🔐 **ZK geofencing** — prove proximity without revealing exact location
+- 🛡️ **On-chain sybil resistance** — PDA counters, quadratic staking, reputation gates
+- 🪙 **Multi-token rewards** — BONK, USDC, and SPL token support for drop bounties
+- 🎫 **Session keys** — gas-free claiming for onboarding new users
+- 🖼️ **NFT badges** — mint Proof-of-Discovery NFTs for completed quests
+- 🌍 **Multi-city expansion** — community-created drop zones worldwide
+- 🏆 **Leaderboards** — seasonal events with prize pools
+- 📱 **PWA** — push notifications for nearby drops, offline map caching
+- 🤝 **Multi-sig drops** — require N finders to unlock a shared vault
 
 ---
 
