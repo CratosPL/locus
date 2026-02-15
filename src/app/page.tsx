@@ -56,6 +56,22 @@ function saveClaimedIds(ids: Set<string>) {
   } catch {}
 }
 
+function loadExtraDrops(): Drop[] {
+  if (typeof window === "undefined") return [];
+  try {
+    var saved = localStorage.getItem("locus_extra_drops");
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveExtraDrops(drops: Drop[]) {
+  try {
+    localStorage.setItem("locus_extra_drops", JSON.stringify(drops));
+  } catch {}
+}
+
 export default function HomePage() {
   // ─── State ──────────────────────────────────────────────────────────────
   var [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
@@ -76,6 +92,9 @@ export default function HomePage() {
   // Load persisted state
   useEffect(function() {
     setClaimedIds(loadClaimedIds());
+    var savedDrops = loadExtraDrops();
+    setExtraDrops(savedDrops);
+    setCreatedCount(savedDrops.length);
     try {
       var savedLikes = localStorage.getItem("locus_likes");
       if (savedLikes) setLikedIds(new Set(JSON.parse(savedLikes)));
@@ -150,6 +169,19 @@ export default function HomePage() {
       var drop = drops.find(function(d) { return d.id === dropId; });
       if (!drop) return;
 
+      // Can't claim your own drop
+      var myName = profile?.username ? "@" + profile.username : walletAddress ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4) : "";
+      if (myName && drop.createdBy === myName) {
+        showToast("Can't claim your own drop!", "error");
+        return;
+      }
+
+      // Already claimed
+      if (claimedIds.has(dropId)) {
+        showToast("Already claimed!", "info");
+        return;
+      }
+
       var dropReward = drop.finderReward;
       var dropLat = drop.location.lat;
       var dropLng = drop.location.lng;
@@ -178,12 +210,41 @@ export default function HomePage() {
         showToast("Claim failed: " + result.error.message, "error");
       }
     },
-    [claimDropOnChain, drops, claimedIds, isNearby, formatDistance, showToast]
+    [claimDropOnChain, drops, claimedIds, isNearby, formatDistance, showToast, profile, walletAddress]
   );
 
   // ─── Create Drop Handler ──────────────────────────────────────────────
   var handleCreateDrop = useCallback(
     async function(data: { message: string; reward: number; category: DropCategory }) {
+      // ─── Anti-spam: max 5 active drops per wallet ──────────────
+      var myDrops = extraDrops.filter(function(d) { return !d.isClaimed; });
+      if (myDrops.length >= 5) {
+        showToast("Max 5 active drops per wallet", "error");
+        return;
+      }
+
+      // ─── Anti-spam: 60s cooldown ──────────────────────────────
+      var lastDrop = extraDrops[extraDrops.length - 1];
+      if (lastDrop) {
+        var lastTime = new Date(lastDrop.createdAt).getTime();
+        var now = Date.now();
+        // createdAt is date-only string, so check localStorage for precise time
+        try {
+          var lastDropTime = parseInt(localStorage.getItem("locus_last_drop_time") || "0");
+          if (now - lastDropTime < 60000) {
+            var wait = Math.ceil((60000 - (now - lastDropTime)) / 1000);
+            showToast("Cooldown: wait " + wait + "s", "info");
+            return;
+          }
+        } catch {}
+      }
+
+      // ─── Anti-spam: minimum reward ────────────────────────────
+      if (data.reward < 0.01) {
+        showToast("Minimum reward: 0.01 SOL", "error");
+        return;
+      }
+
       var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
       var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
 
@@ -207,7 +268,14 @@ export default function HomePage() {
           createdBy: creatorName,
           createdAt: new Date().toISOString().split("T")[0],
         };
-        setExtraDrops(function(prev) { return prev.concat([newDrop]); });
+
+        try { localStorage.setItem("locus_last_drop_time", String(Date.now())); } catch {}
+
+        setExtraDrops(function(prev) {
+          var updated = prev.concat([newDrop]);
+          saveExtraDrops(updated);
+          return updated;
+        });
         setCreatedCount(function(c) { return c + 1; });
 
         await registerDropAsContent(newDropId, data.message);
@@ -222,7 +290,7 @@ export default function HomePage() {
         showToast("Create failed", "error");
       }
     },
-    [createDropOnChain, userPosition, walletAddress, profile, registerDropAsContent, showToast]
+    [createDropOnChain, userPosition, walletAddress, profile, registerDropAsContent, showToast, extraDrops]
   );
 
   // ─── Like Handler ──────────────────────────────────────────────────────
