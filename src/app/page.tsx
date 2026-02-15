@@ -7,33 +7,43 @@ import StatsBar from "@/components/StatsBar";
 import DropList from "@/components/DropList";
 import CreateDropModal from "@/components/CreateDropModal";
 import ProfilePanel from "@/components/ProfilePanel";
+import WelcomeOverlay from "@/components/WelcomeOverlay";
+import TxToast from "@/components/TxToast";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { MOCK_DROPS, CATEGORY_CONFIG } from "@/utils/mockData";
 import type { Drop, DropCategory, Activity } from "@/types";
 
-const MapView = dynamic(() => import("@/components/MapView"), {
+const MapView = dynamic(function() { return import("@/components/MapView"); }, {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-void">
-      <div className="text-center">
-        <div className="text-4xl mb-4 animate-bounce">🗺️</div>
-        <p className="text-crypt-300 font-mono text-sm animate-pulse">
-          Summoning the map...
-        </p>
+  loading: function() {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-void">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-float">🗺️</div>
+          <p className="text-crypt-300 font-mono text-sm animate-pulse">
+            Summoning the map...
+          </p>
+        </div>
       </div>
-    </div>
-  ),
+    );
+  },
 });
 
 type TabId = "map" | "list";
 
-// Persist claimed drops across refreshes
+interface ToastData {
+  id: number;
+  message: string;
+  signature?: string;
+  type: "success" | "error" | "info";
+}
+
 function loadClaimedIds(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
-    const saved = localStorage.getItem("locus_claimed");
+    var saved = localStorage.getItem("locus_claimed");
     return saved ? new Set(JSON.parse(saved)) : new Set();
   } catch {
     return new Set();
@@ -47,58 +57,58 @@ function saveClaimedIds(ids: Set<string>) {
 }
 
 export default function HomePage() {
-  // ─── Persistent claimed state ───────────────────────────────────────────
-  const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  // ─── State ──────────────────────────────────────────────────────────────
+  var [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
+  var [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  var [extraDrops, setExtraDrops] = useState<Drop[]>([]);
+  var [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
+  var [activeTab, setActiveTab] = useState<TabId>("map");
+  var [showCreateModal, setShowCreateModal] = useState(false);
+  var [showProfile, setShowProfile] = useState(false);
+  var [showWelcome, setShowWelcome] = useState(true);
+  var [createdCount, setCreatedCount] = useState(0);
+  var [toasts, setToasts] = useState<ToastData[]>([]);
+  var [activities, setActivities] = useState<Activity[]>([
+    { icon: "🪦", text: "lich.sol dropped treasure near Łazienki", color: "#34d399", timestamp: Date.now() - 60000 },
+    { icon: "⚡", text: "shade.sol created a ritual drop", color: "#fbbf24", timestamp: Date.now() - 120000 },
+  ]);
 
-  // Load from localStorage on mount
-  useEffect(() => {
+  // Load persisted state
+  useEffect(function() {
     setClaimedIds(loadClaimedIds());
     try {
-      const savedLikes = localStorage.getItem("locus_likes");
+      var savedLikes = localStorage.getItem("locus_likes");
       if (savedLikes) setLikedIds(new Set(JSON.parse(savedLikes)));
     } catch {}
   }, []);
 
-  // Apply claimed state to drops
-  const [extraDrops, setExtraDrops] = useState<Drop[]>([]);
-  const drops = MOCK_DROPS.concat(extraDrops).map((d) => ({
-    ...d,
-    isClaimed: d.isClaimed || claimedIds.has(d.id),
-  }));
+  // Auto-remove old activities
+  useEffect(function() {
+    if (activities.length <= 3) return;
+    var timer = setTimeout(function() {
+      setActivities(function(prev) { return prev.slice(0, 5); });
+    }, 10000);
+    return function() { clearTimeout(timer); };
+  }, [activities.length]);
 
-  // ─── UI State ───────────────────────────────────────────────────────────
-  const [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>("map");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [createdCount, setCreatedCount] = useState(0);
-  const [activities, setActivities] = useState<Activity[]>([
-    {
-      icon: "🪦",
-      text: "lich.sol dropped treasure near Łazienki",
-      color: "#34d399",
-      timestamp: Date.now() - 60000,
-    },
-    {
-      icon: "⚡",
-      text: "shade.sol created a ritual drop",
-      color: "#fbbf24",
-      timestamp: Date.now() - 120000,
-    },
-  ]);
+  // Build drops array
+  var drops = MOCK_DROPS.concat(extraDrops).map(function(d) {
+    return {
+      ...d,
+      isClaimed: d.isClaimed || claimedIds.has(d.id),
+    };
+  });
 
   // ─── Hooks ──────────────────────────────────────────────────────────────
-  const {
+  var {
     claimDrop: claimDropOnChain,
     createDrop: createDropOnChain,
     isProcessing,
     isConnected,
     walletAddress,
-    programId,
   } = useProgram();
 
-  const {
+  var {
     profile,
     isConfigured: tapestryConfigured,
     findOrCreateProfile,
@@ -107,7 +117,7 @@ export default function HomePage() {
     commentOnDrop,
   } = useTapestry();
 
-  const {
+  var {
     position: userPosition,
     demoMode,
     setDemoMode,
@@ -115,185 +125,164 @@ export default function HomePage() {
     formatDistance,
   } = useGeolocation();
 
-  // ─── Auto-create Tapestry profile on wallet connect ────────────────────
-  useEffect(() => {
+  // ─── Toast helper ──────────────────────────────────────────────────────
+  var showToast = useCallback(function(message: string, type: "success" | "error" | "info", signature?: string) {
+    var id = Date.now();
+    setToasts(function(prev) { return prev.concat([{ id: id, message: message, type: type, signature: signature }]); });
+  }, []);
+
+  var removeToast = useCallback(function(id: number) {
+    setToasts(function(prev) { return prev.filter(function(t) { return t.id !== id; }); });
+  }, []);
+
+  // ─── Auto-create Tapestry profile ──────────────────────────────────────
+  useEffect(function() {
     if (isConnected && walletAddress && !profile) {
       findOrCreateProfile();
     }
   }, [isConnected, walletAddress, profile, findOrCreateProfile]);
 
-  // ─── Claim Handler (with geo-check) ────────────────────────────────────
-  const handleClaim = useCallback(
-    async (dropId: string) => {
-      const drop = drops.find((d) => d.id === dropId);
+  // ─── Claim Handler ─────────────────────────────────────────────────────
+  var handleClaim = useCallback(
+    async function(dropId: string) {
+      var drop = drops.find(function(d) { return d.id === dropId; });
       if (!drop) return;
 
-      // Geo-check: must be within 150m (or demo mode)
       if (!isNearby(drop.location.lat, drop.location.lng)) {
-        const dist = formatDistance(drop.location.lat, drop.location.lng);
-        setActivities((prev) => [
-          {
-            icon: "📍",
-            text: "Too far to claim! " + dist,
-            color: "#ef4444",
-            timestamp: Date.now(),
-          },
-          ...prev,
-        ]);
+        var dist = formatDistance(drop.location.lat, drop.location.lng);
+        showToast("Too far! " + dist, "info");
         return;
       }
 
-      const result = await claimDropOnChain(dropId);
+      var result = await claimDropOnChain(dropId);
 
       if (result.ok) {
-        // Persist claim
-        const newClaimed = new Set(claimedIds);
+        var newClaimed = new Set(claimedIds);
         newClaimed.add(dropId);
         setClaimedIds(newClaimed);
         saveClaimedIds(newClaimed);
 
-        setActivities((prev) => [
-          {
-            icon: "⚡",
-            text: "Claimed " + drop.finderReward + "◎ drop!",
-            color: "#34d399",
-            timestamp: Date.now(),
-          },
-          ...prev,
-        ]);
+        showToast("Drop claimed! +" + drop.finderReward + " SOL", "success", result.value);
+
+        setActivities(function(prev) {
+          return [{ icon: "⚡", text: "Claimed " + drop.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
+        });
         setSelectedDrop(null);
       } else {
-        setActivities((prev) => [
-          {
-            icon: "❌",
-            text: "Claim failed: " + result.error.message,
-            color: "#ef4444",
-            timestamp: Date.now(),
-          },
-          ...prev,
-        ]);
+        showToast("Claim failed: " + result.error.message, "error");
       }
     },
-    [claimDropOnChain, drops, claimedIds, isNearby, formatDistance]
+    [claimDropOnChain, drops, claimedIds, isNearby, formatDistance, showToast]
   );
 
-  // ─── Create Drop Handler (at user's location) ─────────────────────────
-  const handleCreateDrop = useCallback(
-    async (data: {
-      message: string;
-      reward: number;
-      category: DropCategory;
-    }) => {
-      // Use real GPS if available, otherwise Warsaw center + offset
-      const lat = userPosition
-        ? userPosition.lat
-        : 52.2297 + (Math.random() - 0.5) * 0.01;
-      const lng = userPosition
-        ? userPosition.lng
-        : 21.0122 + (Math.random() - 0.5) * 0.01;
+  // ─── Create Drop Handler ──────────────────────────────────────────────
+  var handleCreateDrop = useCallback(
+    async function(data: { message: string; reward: number; category: DropCategory }) {
+      var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
+      var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
 
-      const result = await createDropOnChain(
-        data.message,
-        lat,
-        lng,
-        data.reward
-      );
+      var result = await createDropOnChain(data.message, lat, lng, data.reward);
 
       if (result.ok) {
-        const newDropId = "drop-" + Date.now();
-        const newDrop: Drop = {
+        var newDropId = "drop-" + Date.now();
+        var creatorName = profile?.username
+          ? "@" + profile.username
+          : walletAddress
+            ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4)
+            : "anon.sol";
+
+        var newDrop: Drop = {
           id: newDropId,
-          location: { lat, lng },
+          location: { lat: lat, lng: lng },
           message: data.message,
           isClaimed: false,
           finderReward: data.reward,
           category: data.category,
-          createdBy: profile?.username
-            ? "@" + profile.username
-            : walletAddress
-              ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4)
-              : "anon.sol",
+          createdBy: creatorName,
           createdAt: new Date().toISOString().split("T")[0],
         };
-        setExtraDrops((prev) => prev.concat([newDrop]));
-        setCreatedCount((c) => c + 1);
+        setExtraDrops(function(prev) { return prev.concat([newDrop]); });
+        setCreatedCount(function(c) { return c + 1; });
 
-        // Register on Tapestry
         await registerDropAsContent(newDropId, data.message);
 
-        const cat = CATEGORY_CONFIG[data.category];
-        setActivities((prev) => [
-          {
-            icon: "🪦",
-            text: "Dropped " + cat.label.toLowerCase() + " at your location",
-            color: cat.color,
-            timestamp: Date.now(),
-          },
-          ...prev,
-        ]);
+        var cat = CATEGORY_CONFIG[data.category];
+        showToast("Drop created! " + cat.icon + " " + data.reward + " SOL", "success", result.value);
+
+        setActivities(function(prev) {
+          return [{ icon: "🪦", text: "Dropped " + cat.label.toLowerCase() + " at your location", color: cat.color, timestamp: Date.now() }].concat(prev);
+        });
+      } else {
+        showToast("Create failed", "error");
       }
     },
-    [createDropOnChain, userPosition, walletAddress, profile, registerDropAsContent]
+    [createDropOnChain, userPosition, walletAddress, profile, registerDropAsContent, showToast]
   );
 
-  // ─── Like Handler (Tapestry) ───────────────────────────────────────────
-  const handleLike = useCallback(
-    async (dropId: string) => {
+  // ─── Like Handler ──────────────────────────────────────────────────────
+  var handleLike = useCallback(
+    async function(dropId: string) {
       if (!isConnected || likedIds.has(dropId)) return;
-      const success = await likeDrop(dropId);
+      var success = await likeDrop(dropId);
       if (success) {
-        const newLikes = new Set(likedIds);
+        var newLikes = new Set(likedIds);
         newLikes.add(dropId);
         setLikedIds(newLikes);
         try {
           localStorage.setItem("locus_likes", JSON.stringify(Array.from(newLikes)));
         } catch {}
-        setActivities((prev) => [
-          {
-            icon: "❤️",
-            text: "Liked a drop",
-            color: "#f472b6",
-            timestamp: Date.now(),
-          },
-          ...prev,
-        ]);
+        setActivities(function(prev) {
+          return [{ icon: "❤️", text: "Liked a drop", color: "#f472b6", timestamp: Date.now() }].concat(prev);
+        });
       }
     },
     [isConnected, likeDrop, likedIds]
   );
 
-  // ─── Comment Handler (Tapestry) ────────────────────────────────────────
-  const handleComment = useCallback(
-    async (dropId: string, text: string) => {
+  // ─── Comment Handler ───────────────────────────────────────────────────
+  var handleComment = useCallback(
+    async function(dropId: string, text: string) {
       if (!isConnected || !text.trim()) return;
-      const comment = await commentOnDrop(dropId, text);
+      var comment = await commentOnDrop(dropId, text);
       if (comment) {
-        const preview = text.length > 30 ? text.slice(0, 30) + "..." : text;
-        setActivities((prev) => [
-          {
-            icon: "💬",
-            text: '"' + preview + '"',
-            color: "#60a5fa",
-            timestamp: Date.now(),
-          },
-          ...prev,
-        ]);
+        var preview = text.length > 30 ? text.slice(0, 30) + "..." : text;
+        setActivities(function(prev) {
+          return [{ icon: "💬", text: '"' + preview + '"', color: "#60a5fa", timestamp: Date.now() }].concat(prev);
+        });
       }
     },
     [isConnected, commentOnDrop]
   );
 
-  const handleSelectDropFromList = useCallback((drop: Drop) => {
+  var handleSelectDropFromList = useCallback(function(drop: Drop) {
     setSelectedDrop(drop);
     setActiveTab("map");
   }, []);
 
-  const claimedCount = claimedIds.size;
-  const likesCount = likedIds.size;
+  var claimedCount = claimedIds.size;
+  var likesCount = likedIds.size;
 
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-screen bg-void overflow-hidden">
+      {/* Welcome overlay */}
+      {showWelcome && (
+        <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />
+      )}
+
+      {/* Tx Toast notifications */}
+      {toasts.map(function(toast) {
+        return (
+          <TxToast
+            key={toast.id}
+            message={toast.message}
+            signature={toast.signature}
+            type={toast.type}
+            onDismiss={function() { removeToast(toast.id); }}
+          />
+        );
+      })}
+
       <Header />
       <StatsBar drops={drops} claimedCount={claimedCount} />
 
@@ -316,27 +305,29 @@ export default function HomePage() {
               isNearby={isNearby}
             />
 
-            {/* Activity feed overlay */}
+            {/* Activity feed */}
             {activities.length > 0 && (
-              <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5">
-                {activities.slice(0, 3).map((a, i) => (
-                  <div
-                    key={a.timestamp + "-" + i}
-                    className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur"
-                  >
-                    <span style={{ color: a.color }}>{a.icon}</span> {a.text}
-                  </div>
-                ))}
+              <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5 pointer-events-none">
+                {activities.slice(0, 3).map(function(a, i) {
+                  return (
+                    <div
+                      key={a.timestamp + "-" + i}
+                      className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur"
+                    >
+                      <span style={{ color: a.color }}>{a.icon}</span> {a.text}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            {/* Info overlay (top left) */}
+            {/* Info overlay */}
             <div className="absolute top-3 left-3 z-[1000] flex flex-col gap-1.5">
               <div className="px-3 py-1.5 rounded-lg bg-void/80 backdrop-blur border border-crypt-300/10 font-mono text-[10px] text-gray-600 tracking-wider">
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>
-                    {drops.filter((d) => !d.isClaimed).length} active drops
+                    {drops.filter(function(d) { return !d.isClaimed; }).length} active drops
                   </span>
                 </div>
                 {profile && (
@@ -346,9 +337,8 @@ export default function HomePage() {
                 )}
               </div>
 
-              {/* Demo mode toggle */}
               <button
-                onClick={() => setDemoMode(!demoMode)}
+                onClick={function() { setDemoMode(!demoMode); }}
                 className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
                   demoMode
                     ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
@@ -362,33 +352,37 @@ export default function HomePage() {
             </div>
           </>
         ) : (
-          <DropList drops={drops} onSelectDrop={handleSelectDropFromList} />
+          <DropList
+            drops={drops}
+            onSelectDrop={handleSelectDropFromList}
+            formatDistance={formatDistance}
+          />
         )}
       </div>
 
-      {/* Bottom navigation */}
+      {/* Bottom nav */}
       <nav className="flex justify-around items-center py-2.5 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl">
-        {(
-          [
-            { id: "map" as TabId, icon: "🗺️", label: "Map" },
-            { id: "list" as TabId, icon: "📜", label: "Drops" },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-5 py-1 " + (
-              activeTab === tab.id ? "text-crypt-300" : "text-gray-600"
-            )}
-          >
-            <span className="text-xl">{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
+        {([
+          { id: "map" as TabId, icon: "🗺️", label: "Map" },
+          { id: "list" as TabId, icon: "📜", label: "Drops" },
+        ]).map(function(tab) {
+          return (
+            <button
+              key={tab.id}
+              onClick={function() { setActiveTab(tab.id); }}
+              className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-5 py-1 " + (
+                activeTab === tab.id ? "text-crypt-300" : "text-gray-600"
+              )}
+            >
+              <span className="text-xl">{tab.icon}</span>
+              {tab.label}
+            </button>
+          );
+        })}
 
         {isConnected && (
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={function() { setShowCreateModal(true); }}
             className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
           >
             +
@@ -396,7 +390,7 @@ export default function HomePage() {
         )}
 
         <button
-          onClick={() => isConnected && setShowProfile(true)}
+          onClick={function() { if (isConnected) setShowProfile(true); }}
           className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-5 py-1 transition-colors " + (
             isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-800"
           )}
@@ -408,7 +402,7 @@ export default function HomePage() {
 
       {showCreateModal && (
         <CreateDropModal
-          onClose={() => setShowCreateModal(false)}
+          onClose={function() { setShowCreateModal(false); }}
           onCreate={handleCreateDrop}
           userPosition={userPosition}
         />
@@ -418,7 +412,7 @@ export default function HomePage() {
         profile={profile}
         stats={{ claimed: claimedCount, created: createdCount, likes: likesCount }}
         isOpen={showProfile}
-        onClose={() => setShowProfile(false)}
+        onClose={function() { setShowProfile(false); }}
         tapestryConfigured={tapestryConfigured}
       />
 

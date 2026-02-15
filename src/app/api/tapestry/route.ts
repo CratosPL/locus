@@ -5,6 +5,12 @@ const TAPESTRY_API =
   "https://api.usetapestry.dev/api/v1";
 const TAPESTRY_KEY = process.env.NEXT_PUBLIC_TAPESTRY_API_KEY || "";
 
+/**
+ * POST /api/tapestry
+ *
+ * Proxies Tapestry API calls server-side to avoid CORS.
+ * Body: { endpoint: "/profiles/findOrCreate", method: "POST", body: {...} }
+ */
 export async function POST(req: NextRequest) {
   try {
     const { endpoint, method = "POST", body } = await req.json();
@@ -17,7 +23,6 @@ export async function POST(req: NextRequest) {
     }
 
     const separator = endpoint.includes("?") ? "&" : "?";
-    // Składamy URL (API URL z .env + endpoint + klucz)
     const url = `${TAPESTRY_API}${endpoint}${separator}apiKey=${TAPESTRY_KEY}`;
 
     const options: RequestInit = {
@@ -32,7 +37,7 @@ export async function POST(req: NextRequest) {
     const text = await response.text();
 
     if (!response.ok) {
-      console.error(`[Tapestry Proxy] Error ${response.status}: ${text}`);
+      console.error(`[Tapestry Proxy] ${response.status}: ${text}`);
       return NextResponse.json(
         { error: text },
         { status: response.status }
@@ -42,7 +47,7 @@ export async function POST(req: NextRequest) {
     const data = text ? JSON.parse(text) : {};
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error("[Tapestry Proxy] Internal Error:", error);
+    console.error("[Tapestry Proxy] Error:", error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

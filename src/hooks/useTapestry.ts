@@ -6,7 +6,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 // ─── Config ──────────────────────────────────────────────────────────────────
 const TAPESTRY_API =
   process.env.NEXT_PUBLIC_TAPESTRY_API_URL ||
-  "https://api.usetapestry.dev/v1";
+  "https://api.usetapestry.dev/api/v1";
 const TAPESTRY_KEY = process.env.NEXT_PUBLIC_TAPESTRY_API_KEY || "";
 const NAMESPACE = process.env.NEXT_PUBLIC_TAPESTRY_NAMESPACE || "locus";
 

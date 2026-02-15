@@ -1,6 +1,6 @@
 import { Drop, CategoryConfig, DropCategory } from "@/types";
 
-export const CATEGORY_CONFIG: Record<DropCategory, CategoryConfig> = {
+export var CATEGORY_CONFIG: Record<DropCategory, CategoryConfig> = {
   lore: { icon: "👻", color: "#a78bfa", label: "Lore" },
   quest: { icon: "🔮", color: "#60a5fa", label: "Quest" },
   secret: { icon: "⚰️", color: "#f472b6", label: "Secret" },
@@ -8,11 +8,11 @@ export const CATEGORY_CONFIG: Record<DropCategory, CategoryConfig> = {
   treasure: { icon: "💀", color: "#34d399", label: "Treasure" },
 };
 
-export const MOCK_DROPS: Drop[] = [
+export var MOCK_DROPS: Drop[] = [
   {
     id: "drop-1",
     location: { lat: 52.2297, lng: 21.0122 },
-    message: "👻 First soul lost in the Old Town... the cobblestones remember.",
+    message: "First soul lost in the Old Town... the cobblestones remember.",
     isClaimed: false,
     finderReward: 0.05,
     category: "lore",
@@ -22,7 +22,7 @@ export const MOCK_DROPS: Drop[] = [
   {
     id: "drop-2",
     location: { lat: 52.2319, lng: 21.0067 },
-    message: "🔮 A forgotten oracle speaks beneath the Palace of Culture. Listen closely...",
+    message: "A forgotten oracle speaks beneath the Palace of Culture. Listen closely...",
     isClaimed: false,
     finderReward: 0.12,
     category: "quest",
@@ -32,7 +32,7 @@ export const MOCK_DROPS: Drop[] = [
   {
     id: "drop-3",
     location: { lat: 52.235, lng: 21.0 },
-    message: "⚰️ The coffin builder's secret recipe for digital immortality — now on-chain.",
+    message: "The coffin builder's secret recipe for digital immortality — now on-chain.",
     isClaimed: true,
     finderReward: 0.08,
     category: "secret",
@@ -44,7 +44,7 @@ export const MOCK_DROPS: Drop[] = [
   {
     id: "drop-4",
     location: { lat: 52.227, lng: 21.018 },
-    message: "🕯️ Light a candle at the Vistula crossroads at midnight. The blockchain never forgets.",
+    message: "Light a candle at the Vistula crossroads at midnight. The blockchain never forgets.",
     isClaimed: false,
     finderReward: 0.15,
     category: "ritual",
@@ -54,7 +54,7 @@ export const MOCK_DROPS: Drop[] = [
   {
     id: "drop-5",
     location: { lat: 52.24, lng: 20.995 },
-    message: "💀 The necromancer's apprentice left coordinates here. Final destination: Łazienki Park.",
+    message: "The necromancer's apprentice left coordinates here. Final destination: Łazienki.",
     isClaimed: false,
     finderReward: 0.25,
     category: "treasure",
@@ -64,7 +64,7 @@ export const MOCK_DROPS: Drop[] = [
   {
     id: "drop-6",
     location: { lat: 52.233, lng: 21.025 },
-    message: "🌙 Moonlit whispers echo through the Praga district...",
+    message: "Moonlit whispers echo through the Praga district...",
     isClaimed: false,
     finderReward: 0.03,
     category: "lore",
@@ -74,15 +74,87 @@ export const MOCK_DROPS: Drop[] = [
   {
     id: "drop-7",
     location: { lat: 52.22, lng: 21.01 },
-    message: "🗝️ The key to the on-chain crypt is hidden in plain sight near Mokotów.",
+    message: "The key to the on-chain crypt is hidden in plain sight near Mokotów.",
     isClaimed: false,
     finderReward: 0.2,
     category: "quest",
     createdBy: "revenant.sol",
     createdAt: "2026-02-14",
   },
+  // ─── New drops for density ──────────────────────────────────────────────
+  {
+    id: "drop-8",
+    location: { lat: 52.2255, lng: 21.0305 },
+    message: "Under Poniatowski Bridge, a dead protocol left its last message...",
+    isClaimed: false,
+    finderReward: 0.07,
+    category: "secret",
+    createdBy: "cipher.sol",
+    createdAt: "2026-02-14",
+  },
+  {
+    id: "drop-9",
+    location: { lat: 52.2395, lng: 21.0453 },
+    message: "The Zoo district holds more than animals. PDA seeds: zoo_vault_001",
+    isClaimed: false,
+    finderReward: 0.1,
+    category: "treasure",
+    createdBy: "keeper.sol",
+    createdAt: "2026-02-13",
+  },
+  {
+    id: "drop-10",
+    location: { lat: 52.2188, lng: 21.0215 },
+    message: "Burn rate: 13,250 CU. Cheaper than a candle. Light it.",
+    isClaimed: false,
+    finderReward: 0.04,
+    category: "ritual",
+    createdBy: "pinocchio.sol",
+    createdAt: "2026-02-15",
+  },
+  {
+    id: "drop-11",
+    location: { lat: 52.248, lng: 21.015 },
+    message: "Żoliborz remembers. The old resistance used dead drops too.",
+    isClaimed: false,
+    finderReward: 0.06,
+    category: "lore",
+    createdBy: "historia.sol",
+    createdAt: "2026-02-14",
+  },
+  {
+    id: "drop-12",
+    location: { lat: 52.2155, lng: 20.985 },
+    message: "Solana graveyard shift: when CU is cheapest, secrets are loudest.",
+    isClaimed: true,
+    finderReward: 0.09,
+    category: "secret",
+    createdBy: "nightshift.sol",
+    createdAt: "2026-02-12",
+    claimedBy: "dawn.sol",
+    claimedAt: "2026-02-13",
+  },
+  {
+    id: "drop-13",
+    location: { lat: 52.237, lng: 21.035 },
+    message: "Three wallets converge here. The ritual requires all three signatures.",
+    isClaimed: false,
+    finderReward: 0.3,
+    category: "ritual",
+    createdBy: "trinity.sol",
+    createdAt: "2026-02-15",
+  },
+  {
+    id: "drop-14",
+    location: { lat: 52.222, lng: 21.005 },
+    message: "The last anchor dev switched to Pinocchio here. Zero deps, zero regrets.",
+    isClaimed: false,
+    finderReward: 0.18,
+    category: "quest",
+    createdBy: "nativedev.sol",
+    createdAt: "2026-02-15",
+  },
 ];
 
-// Warsaw center coordinates for map initialization
-export const WARSAW_CENTER = { lat: 52.2297, lng: 21.0122 };
-export const DEFAULT_ZOOM = 14;
+export var WARSAW_CENTER = { lat: 52.2297, lng: 21.0122 };
+export var DEFAULT_ZOOM = 13;
