@@ -81,6 +81,7 @@ export default function HomePage() {
   var [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
   var [activeTab, setActiveTab] = useState<TabId>("map");
   var [flyTrigger, setFlyTrigger] = useState(0);
+  var [showConfetti, setShowConfetti] = useState(false);
   var [showCreateModal, setShowCreateModal] = useState(false);
   var [showProfile, setShowProfile] = useState(false);
   var [showWelcome, setShowWelcome] = useState(true);
@@ -209,6 +210,10 @@ export default function HomePage() {
         saveClaimedIds(newClaimed);
 
         showToast("Drop claimed! +" + dropReward + " SOL", "success", result.value);
+
+        // Confetti celebration
+        setShowConfetti(true);
+        setTimeout(function() { setShowConfetti(false); }, 2000);
 
         setActivities(function(prev) {
           return [{ icon: "⚡", text: "Claimed " + dropReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
@@ -540,6 +545,39 @@ export default function HomePage() {
       <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider">
         ⛓ Solana Devnet • Graveyard 2026
       </div>
+
+      {/* Claim celebration */}
+      {showConfetti && (
+        <>
+          <div className="claim-flash" />
+          <div className="confetti-container">
+            {Array.from({ length: 40 }).map(function(_, i) {
+              var colors = ["#a78bfa", "#34d399", "#f472b6", "#fbbf24", "#60a5fa", "#fff"];
+              var color = colors[i % colors.length];
+              var left = 20 + Math.random() * 60;
+              var delay = Math.random() * 0.4;
+              var size = 4 + Math.random() * 8;
+              var dx = (Math.random() - 0.5) * 60;
+              return (
+                <div
+                  key={"conf-" + i}
+                  className="confetti-particle"
+                  style={{
+                    left: left + "%",
+                    width: size + "px",
+                    height: size + "px",
+                    background: color,
+                    borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+                    animationDelay: delay + "s",
+                    animationDuration: (1 + Math.random()) + "s",
+                    transform: "translateX(" + dx + "vw)",
+                  }}
+                />
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

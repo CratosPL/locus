@@ -113,39 +113,33 @@ export default function MapView({
   // ─── Icons ──────────────────────────────────────────────────────────────
   const createDropIcon = (category: DropCategory, isClaimed: boolean) => {
     const config = CATEGORY_CONFIG[category];
-    const bgColor = isClaimed ? "#333" : config.color;
-    const opacity = isClaimed ? 0.5 : 1;
+    const bgColor = isClaimed ? "#444" : config.color;
+    const glowColor = isClaimed ? "transparent" : config.color;
+    const pulseClass = isClaimed ? "" : "marker-pulse";
+    const claimedStyle = isClaimed ? "opacity:0.45; filter:grayscale(0.6);" : "";
 
     return L!.divIcon({
       className: "custom-marker",
-      html: `
-        <div style="
-          width: 36px; height: 36px; border-radius: 50%;
-          background: ${bgColor}22; border: 2px solid ${bgColor};
-          display: flex; align-items: center; justify-content: center;
-          font-size: 18px; opacity: ${opacity};
-          box-shadow: 0 0 12px ${bgColor}44;
-          transition: transform 0.2s; cursor: pointer;
-        "><span style="line-height:1">${config.icon}</span></div>
-      `,
-      iconSize: [36, 36],
-      iconAnchor: [18, 18],
-      popupAnchor: [0, -20],
+      html: '<div class="drop-marker ' + pulseClass + '" style="' +
+        '--marker-color:' + bgColor + '; --glow-color:' + glowColor + ';' + claimedStyle +
+        '">' +
+        '<div class="drop-marker-inner">' +
+          '<span class="drop-marker-icon">' + config.icon + '</span>' +
+        '</div>' +
+        (isClaimed ? '' : '<div class="drop-marker-ring"></div>') +
+        '<div class="drop-marker-value">' + (isClaimed ? '✓' : '◎') + '</div>' +
+      '</div>',
+      iconSize: [44, 52],
+      iconAnchor: [22, 48],
+      popupAnchor: [0, -48],
     });
   };
 
   const userIcon = L!.divIcon({
     className: "user-marker",
-    html: `
-      <div style="
-        width: 20px; height: 20px; border-radius: 50%;
-        background: #3b82f6; border: 3px solid #fff;
-        box-shadow: 0 0 0 6px rgba(59,130,246,0.3), 0 0 20px rgba(59,130,246,0.5);
-        animation: user-pulse 2s ease-in-out infinite;
-      "></div>
-    `,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    html: '<div class="user-dot"><div class="user-dot-core"></div><div class="user-dot-ring"></div><div class="user-dot-ring2"></div></div>',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
 
   // Center on user if available
@@ -214,58 +208,26 @@ export default function MapView({
               icon={createDropIcon(drop.category, drop.isClaimed)}
               eventHandlers={{ click: () => onSelectDrop(drop) }}
             >
-              <Popup maxWidth={280} minWidth={240}>
-                <div
-                  style={{
-                    background: "#0f0a18",
-                    padding: "14px",
-                    borderRadius: "14px",
-                    border: `1px solid ${cat.color}33`,
-                    fontFamily: "monospace",
-                    minWidth: "220px",
-                  }}
-                >
-                  {/* Category + Distance */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <div
-                      style={{
-                        display: "inline-block",
-                        padding: "2px 8px",
-                        borderRadius: "12px",
-                        fontSize: "10px",
-                        fontWeight: 600,
-                        background: `${cat.color}22`,
-                        color: cat.color,
-                        border: `1px solid ${cat.color}44`,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                      }}
-                    >
+              <Popup maxWidth={290} minWidth={250} className="locus-popup">
+                <div className="drop-popup">
+                  {/* Header band */}
+                  <div className="drop-popup-header" style={{ borderColor: cat.color + "44", background: cat.color + "11" }}>
+                    <div className="drop-popup-badge" style={{ background: cat.color + "22", color: cat.color, borderColor: cat.color + "55" }}>
                       {cat.icon} {cat.label}
                     </div>
-                    <div
-                      style={{
-                        fontSize: "10px",
-                        color: nearby ? "#34d399" : "#ef4444",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {nearby ? "📍 In range" : `📍 ${distance}`}
+                    <div className={"drop-popup-distance " + (nearby ? "nearby" : "far")}>
+                      {nearby ? "✓ In range" : distance}
                     </div>
                   </div>
 
                   {/* Message */}
-                  <p style={{ color: "#c4b5fd", fontSize: "13px", lineHeight: 1.5, margin: "8px 0" }}>
-                    {drop.message}
-                  </p>
+                  <p className="drop-popup-message">{drop.message}</p>
 
-                  {/* Creator + Reward */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                    <span style={{ fontSize: "10px", color: "#666" }}>
-                      by {drop.createdBy}
-                    </span>
-                    <span style={{ fontSize: "16px", fontWeight: 800, color: "#34d399" }}>
-                      {drop.finderReward} ◎
+                  {/* Creator + Reward row */}
+                  <div className="drop-popup-meta">
+                    <span className="drop-popup-creator">by {drop.createdBy}</span>
+                    <span className="drop-popup-reward" style={{ color: cat.color }}>
+                      {drop.finderReward} <span className="sol-symbol">◎</span>
                     </span>
                   </div>
 

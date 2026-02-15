@@ -1,0 +1,18 @@
+{
+  "name": "Locus — Geo-Social on Solana",
+  "short_name": "Locus",
+  "description": "Discover and claim hidden drops across the city. A geo-social dApp built on Solana.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050208",
+  "theme_color": "#a78bfa",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-512.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

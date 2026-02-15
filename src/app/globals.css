@@ -147,3 +147,264 @@ body {
     scrollbar-width: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CUSTOM MAP MARKERS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.drop-marker {
+  position: relative;
+  width: 44px;
+  height: 52px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.drop-marker:hover {
+  transform: scale(1.15) translateY(-3px);
+}
+
+.drop-marker-inner {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 40px; height: 40px;
+  border-radius: 50% 50% 50% 0;
+  transform: translateX(-50%) rotate(-45deg);
+  background: linear-gradient(135deg, var(--marker-color) 0%, color-mix(in srgb, var(--marker-color), #000 35%) 100%);
+  border: 2px solid color-mix(in srgb, var(--marker-color), #fff 20%);
+  box-shadow:
+    0 4px 16px color-mix(in srgb, var(--glow-color), transparent 60%),
+    inset 0 1px 0 color-mix(in srgb, var(--marker-color), #fff 30%);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.drop-marker-icon {
+  display: block;
+  transform: rotate(45deg);
+  font-size: 18px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+.drop-marker-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 50px; height: 50px;
+  margin-top: -27px; margin-left: -25px;
+  border-radius: 50%;
+  border: 1.5px solid var(--marker-color);
+  opacity: 0;
+  animation: marker-ring 2.5s ease-out infinite;
+}
+
+.drop-marker-value {
+  position: absolute;
+  bottom: -2px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--marker-color);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  font-family: monospace;
+}
+
+.marker-pulse .drop-marker-inner {
+  animation: marker-glow 3s ease-in-out infinite;
+}
+
+@keyframes marker-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes marker-glow {
+  0%, 100% { box-shadow: 0 4px 16px color-mix(in srgb, var(--glow-color), transparent 60%); }
+  50% { box-shadow: 0 4px 28px color-mix(in srgb, var(--glow-color), transparent 30%), 0 0 40px color-mix(in srgb, var(--glow-color), transparent 70%); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   USER DOT
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.user-dot {
+  position: relative;
+  width: 24px; height: 24px;
+}
+
+.user-dot-core {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  border: 2.5px solid #fff;
+  box-shadow: 0 0 8px rgba(59,130,246,0.6);
+  z-index: 2;
+}
+
+.user-dot-ring {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.2);
+  animation: user-ring 2s ease-out infinite;
+}
+
+.user-dot-ring2 {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.15);
+  animation: user-ring 2s ease-out infinite 1s;
+}
+
+@keyframes user-ring {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   POPUP STYLES
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.locus-popup .leaflet-popup-content-wrapper {
+  background: rgba(12, 7, 20, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(167, 139, 250, 0.15) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(167, 139, 250, 0.08) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.locus-popup .leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.locus-popup .leaflet-popup-tip {
+  background: rgba(12, 7, 20, 0.95) !important;
+  border: 1px solid rgba(167, 139, 250, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+
+.locus-popup .leaflet-popup-close-button {
+  color: #666 !important;
+  font-size: 20px !important;
+  right: 8px !important;
+  top: 6px !important;
+  z-index: 10;
+}
+
+.drop-popup {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  min-width: 230px;
+}
+
+.drop-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid;
+}
+
+.drop-popup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.drop-popup-distance {
+  font-size: 10px;
+  font-weight: 700;
+}
+.drop-popup-distance.nearby { color: #34d399; }
+.drop-popup-distance.far { color: #ef4444; }
+
+.drop-popup-message {
+  color: #ddd6fe;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 10px 14px;
+}
+
+.drop-popup-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 14px 10px;
+}
+
+.drop-popup-creator {
+  font-size: 10px;
+  color: #555;
+}
+
+.drop-popup-reward {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.sol-symbol {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CLAIM CONFETTI
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.confetti-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.confetti-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  top: 40%;
+  animation: confetti-fall 1.5s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translateY(120vh) rotate(720deg) scale(0); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CLAIM SUCCESS FLASH
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.claim-flash {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(167,139,250,0.25), transparent 70%);
+  pointer-events: none;
+  z-index: 9998;
+  animation: claim-flash 0.8s ease-out forwards;
+}
+
+@keyframes claim-flash {
+  0% { opacity: 1; transform: scale(0.8); }
+  100% { opacity: 0; transform: scale(2); }
+}
+
