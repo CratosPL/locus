@@ -11,6 +11,7 @@ let TileLayer: any = null;
 let Marker: any = null;
 let Popup: any = null;
 let Circle: any = null;
+let useMapHook: any = null;
 
 interface MapProps {
   drops: Drop[];
@@ -26,6 +27,21 @@ interface MapProps {
   demoMode: boolean;
   formatDistance: (lat: number, lng: number) => string;
   isNearby: (lat: number, lng: number) => boolean;
+}
+
+// Inner component — flies map to user position when GPS activates
+function FlyToUser({ position }: { position: GeoPosition | null }) {
+  var map = useMapHook ? useMapHook() : null;
+  var hasFlown = React.useRef(false);
+
+  React.useEffect(function() {
+    if (map && position && !hasFlown.current) {
+      map.flyTo([position.lat, position.lng], 15, { duration: 1.5 });
+      hasFlown.current = true;
+    }
+  }, [map, position]);
+
+  return null;
 }
 
 export default function MapView({
@@ -58,6 +74,7 @@ export default function MapView({
         Marker = reactLeafletMod.Marker;
         Popup = reactLeafletMod.Popup;
         Circle = reactLeafletMod.Circle;
+        useMapHook = reactLeafletMod.useMap;
 
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({
@@ -151,6 +168,9 @@ export default function MapView({
           attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
           maxZoom={19}
         />
+
+        {/* Fly to user when GPS activates */}
+        <FlyToUser position={userPosition} />
 
         {/* ─── User position marker ─────────────────────────────────── */}
         {userPosition && (

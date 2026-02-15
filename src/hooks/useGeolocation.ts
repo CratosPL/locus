@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 export interface GeoPosition {
   lat: number;
@@ -28,22 +28,35 @@ function haversineDistance(
   return R * c;
 }
 
+export type GeoStatus = "idle" | "requesting" | "active" | "denied" | "error";
+
 export function useGeolocation() {
   var [position, setPosition] = useState<GeoPosition | null>(null);
   var [error, setError] = useState<string | null>(null);
-  var [isWatching, setIsWatching] = useState(false);
+  var [status, setStatus] = useState<GeoStatus>("idle");
   var [demoMode, setDemoMode] = useState(false);
+  var watchIdRef = useRef<number | null>(null);
 
-  useEffect(function() {
+  // Must be called from a user gesture (click) — required by iOS Safari
+  var requestLocation = useCallback(function() {
     if (!navigator.geolocation) {
       setError("Geolocation not supported");
+      setStatus("error");
       return;
     }
 
-    setIsWatching(true);
+    // Clear existing watch
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
 
-    var watchId = navigator.geolocation.watchPosition(
+    setStatus("requesting");
+    console.log("[Geo] Requesting location (user gesture)...");
+
+    // First: getCurrentPosition for immediate result + permission prompt
+    navigator.geolocation.getCurrentPosition(
       function(pos) {
+        console.log("[Geo] Got position:", pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4), "accuracy:", Math.round(pos.coords.accuracy) + "m");
         setPosition({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
@@ -51,23 +64,66 @@ export function useGeolocation() {
           timestamp: pos.timestamp,
         });
         setError(null);
-        console.log("[Geo] Position:", pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4));
+        setStatus("active");
+
+        // Then: start watching for updates
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          function(watchPos) {
+            setPosition({
+              lat: watchPos.coords.latitude,
+              lng: watchPos.coords.longitude,
+              accuracy: watchPos.coords.accuracy,
+              timestamp: watchPos.timestamp,
+            });
+          },
+          function(watchErr) {
+            console.warn("[Geo] Watch error:", watchErr.message);
+            // Don't override — we already have a position
+          },
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+        );
       },
       function(err) {
-        console.warn("[Geo] Error:", err.message);
+        console.error("[Geo] Permission/error:", err.code, err.message);
         setError(err.message);
+        if (err.code === 1) {
+          // PERMISSION_DENIED
+          setStatus("denied");
+        } else {
+          // POSITION_UNAVAILABLE or TIMEOUT — try low accuracy
+          console.log("[Geo] Trying low accuracy...");
+          navigator.geolocation.getCurrentPosition(
+            function(pos) {
+              console.log("[Geo] Low accuracy position:", pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4));
+              setPosition({
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                timestamp: pos.timestamp,
+              });
+              setError(null);
+              setStatus("active");
+            },
+            function(err2) {
+              console.error("[Geo] Low accuracy also failed:", err2.message);
+              setError(err2.message);
+              setStatus("error");
+            },
+            { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 }
+          );
+        }
       },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 15000,
-      }
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
+  }, []);
 
-    return function() {
-      navigator.geolocation.clearWatch(watchId);
-      setIsWatching(false);
-    };
+  var stopWatching = useCallback(function() {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    setStatus("idle");
+    setPosition(null);
   }, []);
 
   var distanceTo = useCallback(
@@ -90,7 +146,7 @@ export function useGeolocation() {
   var formatDistance = useCallback(
     function(lat: number, lng: number): string {
       if (demoMode) return "Demo mode";
-      if (!position) return "Locating...";
+      if (!position) return "Enable GPS";
       var dist = haversineDistance(position.lat, position.lng, lat, lng);
       if (dist < 1000) return Math.round(dist) + "m away";
       return (dist / 1000).toFixed(1) + "km away";
@@ -101,9 +157,11 @@ export function useGeolocation() {
   return {
     position: position,
     error: error,
-    isWatching: isWatching,
+    status: status,
     demoMode: demoMode,
     setDemoMode: setDemoMode,
+    requestLocation: requestLocation,
+    stopWatching: stopWatching,
     distanceTo: distanceTo,
     isNearby: isNearby,
     formatDistance: formatDistance,

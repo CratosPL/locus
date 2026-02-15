@@ -123,6 +123,8 @@ export default function HomePage() {
     setDemoMode,
     isNearby,
     formatDistance,
+    requestLocation,
+    status: geoStatus,
   } = useGeolocation();
 
   // ─── Toast helper ──────────────────────────────────────────────────────
@@ -342,6 +344,33 @@ export default function HomePage() {
               </div>
 
               <button
+                onClick={function() {
+                  if (geoStatus === "idle" || geoStatus === "error") {
+                    requestLocation();
+                  }
+                }}
+                className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
+                  geoStatus === "active"
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : geoStatus === "requesting"
+                      ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
+                      : geoStatus === "denied"
+                        ? "bg-red-500/10 border-red-500/30 text-red-400"
+                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                )}
+              >
+                <span className="text-[10px] font-mono font-bold">
+                  {geoStatus === "active"
+                    ? "📍 GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : "")
+                    : geoStatus === "requesting"
+                      ? "📍 Locating..."
+                      : geoStatus === "denied"
+                        ? "📍 GPS Denied"
+                        : "📍 Enable GPS"}
+                </span>
+              </button>
+
+              <button
                 onClick={function() { setDemoMode(!demoMode); }}
                 className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
                   demoMode
@@ -350,7 +379,7 @@ export default function HomePage() {
                 )}
               >
                 <span className="text-[10px] font-mono">
-                  {demoMode ? "📍 Demo Mode ON" : "📍 GPS Active"}
+                  {demoMode ? "🔓 Demo ON" : "🔓 Demo"}
                 </span>
               </button>
             </div>
