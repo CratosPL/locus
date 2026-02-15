@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Google Font ─────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap");
+
+/* ─── Base Styles ─────────────────────────────────────────────────────────── */
+:root {
+  --color-void: #050208;
+  --color-crypt: #a78bfa;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-void);
+  color: #e9d5ff;
+  font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.2);
+  border-radius: 4px;
+}
+
+/* ─── Leaflet Overrides ───────────────────────────────────────────────────── */
+.leaflet-container {
+  background: #050208 !important;
+  font-family: "JetBrains Mono", monospace !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+}
+
+.leaflet-popup-tip {
+  background: #0f0a18 !important;
+}
+
+.leaflet-popup-close-button {
+  color: #666 !important;
+  font-size: 18px !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(5, 2, 8, 0.8) !important;
+  color: #444 !important;
+  font-size: 9px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #666 !important;
+}
+
+/* ─── Wallet Adapter Overrides ────────────────────────────────────────────── */
+.wallet-adapter-modal-wrapper {
+  background: rgba(5, 2, 8, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.wallet-adapter-modal-container {
+  background: #1a1025 !important;
+  border: 1px solid rgba(167, 139, 250, 0.2) !important;
+  border-radius: 16px !important;
+}
+
+.wallet-adapter-modal-title {
+  color: #e9d5ff !important;
+  font-family: "JetBrains Mono", monospace !important;
+}
+
+.wallet-adapter-modal-list li {
+  background: rgba(167, 139, 250, 0.05) !important;
+  border-radius: 10px !important;
+  margin-bottom: 4px !important;
+}
+
+.wallet-adapter-modal-list li:hover {
+  background: rgba(167, 139, 250, 0.1) !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button {
+  background: transparent !important;
+  color: #c4b5fd !important;
+  font-family: "JetBrains Mono", monospace !important;
+}
+
+/* ─── Custom Animations ───────────────────────────────────────────────────── */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
