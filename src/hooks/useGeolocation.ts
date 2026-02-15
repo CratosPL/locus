@@ -78,9 +78,16 @@ export function useGeolocation() {
           },
           function(watchErr) {
             console.warn("[Geo] Watch error:", watchErr.message);
-            // Don't override — we already have a position
+            if (watchErr.code === 1) { // PERMISSION_DENIED (can happen if revoked)
+              setStatus("denied");
+              setError(watchErr.message);
+              if (watchIdRef.current !== null) {
+                navigator.geolocation.clearWatch(watchIdRef.current);
+                watchIdRef.current = null;
+              }
+            }
           },
-          { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
         );
       },
       function(err) {
