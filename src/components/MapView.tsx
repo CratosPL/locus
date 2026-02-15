@@ -22,6 +22,7 @@ interface MapProps {
   onClaim: (dropId: string) => void;
   onLike: (dropId: string) => void;
   onComment: (dropId: string, text: string) => void;
+  onConnectWallet: () => void;
   likedIds: Set<string>;
   userPosition: GeoPosition | null;
   demoMode: boolean;
@@ -53,6 +54,7 @@ export default function MapView({
   onClaim,
   onLike,
   onComment,
+  onConnectWallet,
   likedIds,
   userPosition,
   demoMode,
@@ -272,14 +274,17 @@ export default function MapView({
                       ✓ Claimed {drop.claimedBy ? `by ${drop.claimedBy.slice(0, 8)}...` : ""}
                     </div>
                   ) : !isConnected ? (
-                    <div style={{
-                      padding: "8px", borderRadius: "8px",
-                      background: "rgba(167,139,250,0.08)",
-                      border: "1px dashed rgba(167,139,250,0.3)",
-                      color: "#a78bfa", textAlign: "center", fontSize: "12px",
+                    <button
+                      onClick={function(e) { e.stopPropagation(); onConnectWallet(); }}
+                      style={{
+                      padding: "10px", borderRadius: "8px",
+                      background: "linear-gradient(135deg, rgba(167,139,250,0.15), rgba(124,58,237,0.15))",
+                      border: "1px solid rgba(167,139,250,0.4)",
+                      color: "#a78bfa", textAlign: "center" as const, fontSize: "13px",
+                      cursor: "pointer", width: "100%", fontFamily: "inherit", fontWeight: 700,
                     }}>
-                      🔗 Connect wallet to claim
-                    </div>
+                      🔗 Connect Wallet to Claim
+                    </button>
                   ) : !nearby ? (
                     <div style={{
                       padding: "8px", borderRadius: "8px",

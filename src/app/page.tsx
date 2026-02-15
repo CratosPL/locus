@@ -12,6 +12,7 @@ import TxToast from "@/components/TxToast";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { MOCK_DROPS, CATEGORY_CONFIG } from "@/utils/mockData";
 import type { Drop, DropCategory, Activity } from "@/types";
 
@@ -145,6 +146,12 @@ export default function HomePage() {
     requestLocation,
     status: geoStatus,
   } = useGeolocation();
+
+  var { setVisible: setWalletModalVisible } = useWalletModal();
+
+  var handleConnectWallet = useCallback(function() {
+    setWalletModalVisible(true);
+  }, [setWalletModalVisible]);
 
   // ─── Toast helper ──────────────────────────────────────────────────────
   var showToast = useCallback(function(message: string, type: "success" | "error" | "info", signature?: string) {
@@ -338,7 +345,7 @@ export default function HomePage() {
 
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-screen bg-void overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-void overflow-hidden">
       {/* Welcome overlay */}
       {showWelcome && (
         <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />
@@ -372,6 +379,7 @@ export default function HomePage() {
               onClaim={handleClaim}
               onLike={handleLike}
               onComment={handleComment}
+              onConnectWallet={handleConnectWallet}
               likedIds={likedIds}
               userPosition={userPosition}
               demoMode={demoMode}
@@ -462,7 +470,7 @@ export default function HomePage() {
       </div>
 
       {/* Bottom nav */}
-      <nav className="flex justify-around items-center py-2.5 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl">
+      <nav className="flex justify-around items-center py-2.5 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl shrink-0" style={{ paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}>
         {([
           { id: "map" as TabId, icon: "🗺️", label: "Map" },
           { id: "list" as TabId, icon: "📜", label: "Drops" },
@@ -481,23 +489,30 @@ export default function HomePage() {
           );
         })}
 
-        {isConnected && (
+        {isConnected ? (
           <button
             onClick={function() { setShowCreateModal(true); }}
             className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
           >
             +
           </button>
+        ) : (
+          <button
+            onClick={handleConnectWallet}
+            className="px-4 py-2.5 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-[11px] font-mono font-bold cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-4 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95 tracking-wider"
+          >
+            🔗 Connect
+          </button>
         )}
 
         <button
-          onClick={function() { if (isConnected) setShowProfile(true); }}
+          onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}
           className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-5 py-1 transition-colors " + (
-            isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-800"
+            isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-600"
           )}
         >
           <span className="text-xl">👤</span>
-          Profile
+          {isConnected ? "Profile" : "Login"}
         </button>
       </nav>
 

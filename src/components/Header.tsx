@@ -50,24 +50,24 @@ export default function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-void-100/90 backdrop-blur-xl border-b border-crypt-300/10 z-[1100] relative">
+    <header className="flex items-center justify-between px-3 py-2 bg-void-100/95 backdrop-blur-xl border-b border-crypt-300/10 z-[1100] relative shrink-0">
       {/* Logo */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center text-lg">
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center text-base">
           🪦
         </div>
         <div>
-          <h1 className="text-base font-extrabold text-crypt-100 tracking-[0.2em] font-mono">
+          <h1 className="text-sm font-extrabold text-crypt-100 tracking-[0.2em] font-mono leading-none">
             LOCUS
           </h1>
-          <p className="text-[9px] text-gray-600 tracking-[0.3em] uppercase font-mono">
+          <p className="text-[8px] text-gray-600 tracking-[0.2em] uppercase font-mono leading-none mt-0.5 hidden sm:block">
             geo-social on solana
           </p>
         </div>
       </div>
 
       {/* Right side: Network badge + Wallet */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {/* Devnet badge */}
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-void/60 border border-crypt-300/10">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -177,12 +177,13 @@ export default function Header() {
           background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%) !important;
           border-radius: 8px !important;
           font-family: "JetBrains Mono", "Fira Code", monospace !important;
-          font-size: 12px !important;
+          font-size: 11px !important;
           font-weight: 700 !important;
           letter-spacing: 0.05em !important;
-          height: 36px !important;
-          padding: 0 16px !important;
+          height: 34px !important;
+          padding: 0 12px !important;
           transition: all 0.2s !important;
+          white-space: nowrap !important;
         }
         .wallet-btn-wrapper .wallet-adapter-button:hover {
           background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;

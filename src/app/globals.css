@@ -20,6 +20,9 @@ body {
   font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
   overflow: hidden;
   height: 100%;
+  height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */

@@ -34,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
@@ -41,7 +42,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="bg-void text-crypt-100 overflow-hidden h-screen">
+      <body className="bg-void text-crypt-100 overflow-hidden h-[100dvh]">
         <AppWalletProvider>{children}</AppWalletProvider>
       </body>
     </html>
