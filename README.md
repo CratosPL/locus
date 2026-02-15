@@ -5,7 +5,7 @@
 
 **🏆 Solana Graveyard Hackathon 2026 — Tapestry On-chain Social Track**
 
-🔗 **[Live Demo](https://locus-app.vercel.app)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
+🔗 **[Live Demo](https://locus-psi-coral.vercel.app/)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
 
 ---
 
