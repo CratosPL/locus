@@ -1,70 +1,222 @@
 # 🪦 LOCUS — Geo-Social Dead Drops on Solana
 
-> *Discover and claim location-based messages with SOL rewards.*
+> **Leave messages. Hide rewards. Discover secrets.**
+> A location-based social dApp where users drop encrypted messages with SOL bounties at real-world coordinates — and others must physically walk there to claim them.
 
-**Solana Graveyard Hackathon 2026**
+**🏆 Solana Graveyard Hackathon 2026 — Tapestry On-chain Social Track**
 
-## What is Locus?
+🔗 **[Live Demo](https://locus-app.vercel.app)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
 
-Locus is a geo-social dApp where users **drop encrypted messages at real-world coordinates** with SOL bounties attached. Other users discover these "dead drops" on a map and **claim rewards by physically visiting the location** — all verified on-chain.
+---
 
-## On-chain Program
+## The Problem
 
-| | |
-|---|---|
-| **Program ID** | `HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn` |
-| **Network** | Solana Devnet |
-| **Framework** | Pinocchio (zero-dependency) |
+Geo-social apps died in 2022–2024. High costs, bad UX, and centralized infrastructure killed every attempt at location-based crypto experiences. The category was abandoned.
 
-### Architecture
+## The Solution
+
+Locus resurrects geo-social with:
+- **Pinocchio program** — zero-dependency, ~13K CU per transaction (vs ~200K for Anchor)
+- **Tapestry protocol** — on-chain social graph (profiles, likes, comments, follows)
+- **GPS verification** — must be within 150m of a drop to claim it
+- **SOL rewards** — real value locked in PDA vaults, released on claim
+
+---
+
+## How It Works
+
 ```
-Drop PDA:  seeds = ["drop",  drop_id_bytes]  → stores drop metadata
-Vault PDA: seeds = ["vault", drop_id_bytes]  → holds SOL reward
-
-Instructions:
-  0x00 = CreateDrop(lat, lng, reward, message)
-  0x01 = ClaimDrop(drop_id)
+Creator                                    Finder
+  │                                          │
+  ├─ Connects wallet                         ├─ Connects wallet
+  ├─ GPS locates position                    ├─ GPS locates position
+  ├─ Creates drop (message + SOL)            ├─ Sees drops on map
+  │   └─► CreateDrop tx → Solana             ├─ Walks within 150m radius
+  │   └─► Content node → Tapestry            ├─ Claims drop (signs tx)
+  │                                          │   └─► ClaimDrop tx → Solana
+  └─ Gets notified when claimed              │   └─► SOL transferred from vault
+                                             └─ Likes/comments via Tapestry
 ```
+
+### On-chain Architecture
+
+```
+Program: HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn (Devnet)
+
+┌─────────────────────────────────────────────────┐
+│  Locus Program (Pinocchio — zero dependencies)  │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  CreateDrop (0x00)          ClaimDrop (0x01)     │
+│  ├─ lat, lng, reward        ├─ drop_id          │
+│  ├─ message                 ├─ verify signer    │
+│  ├─ derive Drop PDA         ├─ derive vault     │
+│  └─ fund Vault PDA          └─ transfer SOL     │
+│                                                 │
+│  PDAs:                                          │
+│  Drop  = seeds["drop",  drop_id_bytes]          │
+│  Vault = seeds["vault", drop_id_bytes]          │
+│                                                 │
+│  CU cost: ~13,250 per transaction               │
+└─────────────────────────────────────────────────┘
+         │                          │
+         ▼                          ▼
+┌─────────────────┐    ┌──────────────────────┐
+│  Tapestry API   │    │   Solana Devnet      │
+│  (Social Layer) │    │   (Settlement Layer) │
+│                 │    │                      │
+│  • Profiles     │    │  • SOL transfers     │
+│  • Likes        │    │  • PDA accounts      │
+│  • Comments     │    │  • Tx confirmation   │
+│  • Follows      │    │                      │
+│  • Content      │    │                      │
+└─────────────────┘    └──────────────────────┘
+```
+
+---
+
+## Features
+
+| Feature | Description | Stack |
+|---------|-------------|-------|
+| 🗺️ Dark Map | Interactive map with categorized drop markers | Leaflet + CARTO dark tiles |
+| 📍 GPS Verification | Must be within 150m to claim (Haversine) | Browser Geolocation API |
+| ⚡ On-chain Claims | Real SOL transactions signed by wallet | Pinocchio program |
+| 🪦 Create Drops | Place drops at your GPS location with SOL reward | Pinocchio + Tapestry |
+| 👤 Tapestry Profiles | Auto-created on wallet connect | Tapestry REST API |
+| ❤️ Likes & Comments | Social engagement on drops, stored on-chain | Tapestry protocol |
+| 🔍 Demo Mode | Toggle GPS bypass for testing/judging | Client-side flag |
+| 💾 Persistent State | Claims & likes survive page refresh | localStorage |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Program** | Pinocchio (zero-dep Solana framework) |
+| **Frontend** | Next.js 14 + React 18 + TypeScript |
+| **Social** | Tapestry Protocol (on-chain social graph) |
+| **Wallet** | @solana/wallet-adapter (Phantom, Solflare) |
+| **Map** | Leaflet + react-leaflet |
+| **Styling** | Tailwind CSS (custom dark theme) |
+| **Deploy** | Vercel |
+
+---
 
 ## Quick Start
 
 ```bash
+git clone https://github.com/YOUR_USERNAME/locus.git
+cd locus
 npm install
+```
+
+Create `.env.local`:
+```env
+NEXT_PUBLIC_TAPESTRY_API_KEY=your_key_from_app.usetapestry.dev
+NEXT_PUBLIC_TAPESTRY_API_URL=https://api.usetapestry.dev/api/v1
+NEXT_PUBLIC_TAPESTRY_NAMESPACE=locus
+```
+
+```bash
 npm run dev
 # → http://localhost:3000
 ```
 
-## Tech Stack
+### Testing Flow
+1. Open app → Allow location access (or enable Demo Mode)
+2. Click "Select Wallet" → Connect Solflare/Phantom (set to Devnet)
+3. Click a drop marker → See distance → Walk closer or use Demo Mode
+4. Click "⚡ Claim Drop" → Sign transaction in wallet
+5. See transaction confirmed on [Solscan](https://solscan.io)
+6. Click **+** to create a new drop at your location
+7. Like / Comment on drops via Tapestry social buttons
 
-- **Frontend:** Next.js 14 + React 18 + TypeScript
-- **Blockchain:** Solana (devnet) + Pinocchio program
-- **Wallet:** @solana/wallet-adapter (Phantom, Solflare)
-- **Map:** Leaflet + react-leaflet (dark mode tiles)
-- **Styling:** Tailwind CSS
+---
 
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── layout.tsx          # Root layout + wallet provider
-│   ├── page.tsx            # Main page — map, drops, interactions
-│   └── globals.css         # Global styles + leaflet overrides
+│   ├── api/tapestry/route.ts   # Server-side proxy (CORS bypass)
+│   ├── layout.tsx              # Root layout + wallet provider
+│   ├── page.tsx                # Main page — map, drops, social
+│   └── globals.css             # Dark theme + Leaflet overrides
 ├── components/
-│   ├── AppWalletProvider   # Solana wallet context
-│   ├── Header              # Logo + WalletMultiButton
-│   ├── MapView             # Leaflet map with drop markers
-│   ├── StatsBar            # Active drops, rewards, claims
-│   ├── DropList            # List view of all drops
-│   └── CreateDropModal     # Create new drop form
+│   ├── AppWalletProvider.tsx    # Solana wallet context
+│   ├── Header.tsx              # Logo + wallet connect/disconnect
+│   ├── MapView.tsx             # Leaflet map + GPS + popups + social
+│   ├── StatsBar.tsx            # Active drops, rewards, claims
+│   ├── DropList.tsx            # List view of all drops
+│   ├── CreateDropModal.tsx     # Create drop at GPS location
+│   └── ProfilePanel.tsx        # Tapestry profile + stats
 ├── hooks/
-│   └── useProgram.ts       # On-chain program interaction
-├── types/
-│   └── index.ts            # TypeScript interfaces
-└── utils/
-    └── mockData.ts         # Sample drops in Warsaw
+│   ├── useProgram.ts           # Solana program interaction (claim/create)
+│   ├── useTapestry.ts          # Tapestry social API (profile/like/comment)
+│   └── useGeolocation.ts       # GPS tracking + proximity check
+├── types/index.ts
+└── utils/mockData.ts           # Sample drops in Warsaw
 ```
+
+---
+
+## Hackathon Track: Tapestry — On-chain Social ($5,000)
+
+Locus uses Tapestry to bring **social features fully on-chain**:
+
+- **Profiles** → Auto-created via `findOrCreate` on wallet connect
+- **Content Nodes** → Every drop registered as Tapestry content
+- **Likes** → On-chain engagement tracked per drop
+- **Comments** → Users leave messages on drops via Tapestry
+- **Social Graph** → Follow drop creators, build reputation
+
+This transforms a simple geo-cache into a **social discovery platform** where reputation, engagement, and location create unique on-chain experiences.
+
+---
+
+## Why Pinocchio?
+
+| | Anchor | Pinocchio |
+|---|--------|-----------|
+| CU per tx | ~200,000 | ~13,250 |
+| Binary size | ~200KB | ~30KB |
+| Dependencies | Many | Zero |
+| Rent cost | Higher | Lower |
+
+Pinocchio was chosen to demonstrate that geo-social doesn't need to be expensive. Every claim costs < 0.00003 SOL in fees.
+
+---
+
+## Verified Transaction
+
+```
+Signature: 3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY
+Block: 442129818
+CU: 13,250
+Fee: 0.000025 SOL
+Status: ✅ Finalized
+```
+
+[View on Solscan →](https://solscan.io/tx/3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY?cluster=devnet)
+
+---
+
+## Future Roadmap
+
+- 🔐 ZK geofencing (prove proximity without revealing exact location)
+- 🎫 Session keys for gas-free claiming
+- 🌍 Multi-city expansion with community-created drops
+- 🏆 Leaderboards and seasonal events
+- 📱 PWA with push notifications for nearby drops
+
+---
+
+## Team
+
+Solo developer — **Graveyard Hackathon 2026**
 
 ## License
 
-MIT — Built for Solana Graveyard Hackathon 2026
+MIT

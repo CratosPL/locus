@@ -42,7 +42,7 @@ function loadClaimedIds(): Set<string> {
 
 function saveClaimedIds(ids: Set<string>) {
   try {
-    localStorage.setItem("locus_claimed", JSON.stringify([...ids]));
+    localStorage.setItem("locus_claimed", JSON.stringify(Array.from(ids)));
   } catch {}
 }
 
@@ -62,7 +62,7 @@ export default function HomePage() {
 
   // Apply claimed state to drops
   const [extraDrops, setExtraDrops] = useState<Drop[]>([]);
-  const drops = [...MOCK_DROPS, ...extraDrops].map((d) => ({
+  const drops = MOCK_DROPS.concat(extraDrops).map((d) => ({
     ...d,
     isClaimed: d.isClaimed || claimedIds.has(d.id),
   }));
@@ -134,7 +134,7 @@ export default function HomePage() {
         setActivities((prev) => [
           {
             icon: "📍",
-            text: `Too far to claim! ${dist}`,
+            text: "Too far to claim! " + dist,
             color: "#ef4444",
             timestamp: Date.now(),
           },
@@ -155,7 +155,7 @@ export default function HomePage() {
         setActivities((prev) => [
           {
             icon: "⚡",
-            text: `Claimed ${drop.finderReward}◎ drop!`,
+            text: "Claimed " + drop.finderReward + "◎ drop!",
             color: "#34d399",
             timestamp: Date.now(),
           },
@@ -166,7 +166,7 @@ export default function HomePage() {
         setActivities((prev) => [
           {
             icon: "❌",
-            text: `Claim failed: ${result.error.message}`,
+            text: "Claim failed: " + result.error.message,
             color: "#ef4444",
             timestamp: Date.now(),
           },
@@ -200,7 +200,7 @@ export default function HomePage() {
       );
 
       if (result.ok) {
-        const newDropId = `drop-${Date.now()}`;
+        const newDropId = "drop-" + Date.now();
         const newDrop: Drop = {
           id: newDropId,
           location: { lat, lng },
@@ -209,13 +209,13 @@ export default function HomePage() {
           finderReward: data.reward,
           category: data.category,
           createdBy: profile?.username
-            ? `@${profile.username}`
+            ? "@" + profile.username
             : walletAddress
-              ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`
+              ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4)
               : "anon.sol",
           createdAt: new Date().toISOString().split("T")[0],
         };
-        setExtraDrops((prev) => [...prev, newDrop]);
+        setExtraDrops((prev) => prev.concat([newDrop]));
         setCreatedCount((c) => c + 1);
 
         // Register on Tapestry
@@ -225,7 +225,7 @@ export default function HomePage() {
         setActivities((prev) => [
           {
             icon: "🪦",
-            text: `Dropped ${cat.label.toLowerCase()} at your location`,
+            text: "Dropped " + cat.label.toLowerCase() + " at your location",
             color: cat.color,
             timestamp: Date.now(),
           },
@@ -246,12 +246,12 @@ export default function HomePage() {
         newLikes.add(dropId);
         setLikedIds(newLikes);
         try {
-          localStorage.setItem("locus_likes", JSON.stringify([...newLikes]));
+          localStorage.setItem("locus_likes", JSON.stringify(Array.from(newLikes)));
         } catch {}
         setActivities((prev) => [
           {
             icon: "❤️",
-            text: `Liked a drop`,
+            text: "Liked a drop",
             color: "#f472b6",
             timestamp: Date.now(),
           },
@@ -268,10 +268,11 @@ export default function HomePage() {
       if (!isConnected || !text.trim()) return;
       const comment = await commentOnDrop(dropId, text);
       if (comment) {
+        const preview = text.length > 30 ? text.slice(0, 30) + "..." : text;
         setActivities((prev) => [
           {
             icon: "💬",
-            text: `"${text.slice(0, 30)}${text.length > 30 ? "..." : ""}"`,
+            text: '"' + preview + '"',
             color: "#60a5fa",
             timestamp: Date.now(),
           },
@@ -320,7 +321,7 @@ export default function HomePage() {
               <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5">
                 {activities.slice(0, 3).map((a, i) => (
                   <div
-                    key={`${a.timestamp}-${i}`}
+                    key={a.timestamp + "-" + i}
                     className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur"
                   >
                     <span style={{ color: a.color }}>{a.icon}</span> {a.text}
@@ -348,11 +349,11 @@ export default function HomePage() {
               {/* Demo mode toggle */}
               <button
                 onClick={() => setDemoMode(!demoMode)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer ${
+                className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
                   demoMode
                     ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
                     : "bg-void/80 border-crypt-300/10 text-gray-600"
-                }`}
+                )}
               >
                 <span className="text-[10px] font-mono">
                   {demoMode ? "📍 Demo Mode ON" : "📍 GPS Active"}
@@ -376,9 +377,9 @@ export default function HomePage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-5 py-1 ${
+            className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-5 py-1 " + (
               activeTab === tab.id ? "text-crypt-300" : "text-gray-600"
-            }`}
+            )}
           >
             <span className="text-xl">{tab.icon}</span>
             {tab.label}
@@ -396,9 +397,9 @@ export default function HomePage() {
 
         <button
           onClick={() => isConnected && setShowProfile(true)}
-          className={`flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-5 py-1 transition-colors ${
+          className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-5 py-1 transition-colors " + (
             isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-800"
-          }`}
+          )}
         >
           <span className="text-xl">👤</span>
           Profile
