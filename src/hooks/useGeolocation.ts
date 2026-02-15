@@ -67,7 +67,7 @@ export function useGeolocation() {
         (err) => {
           console.warn("[Geo] Low accuracy also failed:", err.message);
           setError(err.message);
-          setDemoMode(true);
+          // Don't auto-enable demo mode — let user toggle it manually
         },
         {
           enableHighAccuracy: false,
