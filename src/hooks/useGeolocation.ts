@@ -5,32 +5,17 @@ import { useState, useEffect, useCallback } from "react";
 export interface GeoPosition {
   lat: number;
   lng: number;
-  accuracy: number; // meters
+  accuracy: number;
   timestamp: number;
 }
 
-/**
- * useGeolocation Hook
- *
- * Provides real GPS position for geo-verification.
- * - Watches position continuously
- * - Calculates distance to any point
- * - Checks if user is within claim radius
- *
- * CLAIM_RADIUS: 150m — user must be within 150m of a drop to claim it.
- * DEMO_MODE: bypasses geo-check for hackathon judges who aren't in Warsaw.
- */
-
 const CLAIM_RADIUS_METERS = 150;
 
-// Haversine formula — distance between two lat/lng points in meters
 function haversineDistance(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
+  lat1: number, lng1: number,
+  lat2: number, lng2: number
 ): number {
-  const R = 6371000; // Earth's radius in meters
+  const R = 6371000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
   const a =
@@ -49,48 +34,85 @@ export function useGeolocation() {
   const [isWatching, setIsWatching] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
 
-  // Start watching GPS
   useEffect(() => {
     if (!navigator.geolocation) {
       setError("Geolocation not supported");
-      setDemoMode(true); // auto-enable demo mode
+      setDemoMode(true);
       return;
     }
 
     setIsWatching(true);
+    let watchId: number | null = null;
+    let fallbackStarted = false;
 
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        setPosition({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-          timestamp: pos.timestamp,
-        });
-        setError(null);
-      },
+    const onSuccess = (pos: GeolocationPosition) => {
+      setPosition({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy,
+        timestamp: pos.timestamp,
+      });
+      setError(null);
+    };
+
+    const startLowAccuracy = () => {
+      if (fallbackStarted) return;
+      fallbackStarted = true;
+      console.log("[Geo] Falling back to low accuracy");
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      watchId = navigator.geolocation.watchPosition(
+        onSuccess,
+        (err) => {
+          console.warn("[Geo] Low accuracy also failed:", err.message);
+          setError(err.message);
+          setDemoMode(true);
+        },
+        {
+          enableHighAccuracy: false,
+          maximumAge: 60000,
+          timeout: 30000,
+        }
+      );
+    };
+
+    // Try high accuracy first
+    watchId = navigator.geolocation.watchPosition(
+      onSuccess,
       (err) => {
-        console.warn("[Geo] Error:", err.message);
+        console.warn("[Geo] High accuracy failed:", err.message);
         setError(err.message);
-        // If user denies GPS, auto-enable demo mode
         if (err.code === err.PERMISSION_DENIED) {
           setDemoMode(true);
+        } else {
+          // Timeout or unavailable → try low accuracy
+          startLowAccuracy();
         }
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 15000,
+        maximumAge: 15000,
+        timeout: 10000,
       }
     );
 
+    // Safety: if no position after 12s, try low accuracy
+    const fallbackTimer = setTimeout(() => {
+      if (!position) {
+        startLowAccuracy();
+      }
+    }, 12000);
+
     return () => {
-      navigator.geolocation.clearWatch(watchId);
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      clearTimeout(fallbackTimer);
       setIsWatching(false);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Calculate distance from user to a point
   const distanceTo = useCallback(
     (lat: number, lng: number): number | null => {
       if (!position) return null;
@@ -99,25 +121,22 @@ export function useGeolocation() {
     [position]
   );
 
-  // Check if user is within claim radius of a point
   const isNearby = useCallback(
     (lat: number, lng: number): boolean => {
-      if (demoMode) return true; // demo mode bypasses geo-check
+      if (demoMode) return true;
       if (!position) return false;
-      const dist = haversineDistance(position.lat, position.lng, lat, lng);
-      return dist <= CLAIM_RADIUS_METERS;
+      return haversineDistance(position.lat, position.lng, lat, lng) <= CLAIM_RADIUS_METERS;
     },
     [position, demoMode]
   );
 
-  // Format distance for display
   const formatDistance = useCallback(
     (lat: number, lng: number): string => {
       if (demoMode) return "Demo mode";
       if (!position) return "Locating...";
       const dist = haversineDistance(position.lat, position.lng, lat, lng);
-      if (dist < 1000) return `${Math.round(dist)}m away`;
-      return `${(dist / 1000).toFixed(1)}km away`;
+      if (dist < 1000) return Math.round(dist) + "m away";
+      return (dist / 1000).toFixed(1) + "km away";
     },
     [position, demoMode]
   );
