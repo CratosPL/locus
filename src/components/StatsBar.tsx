@@ -22,13 +22,14 @@ export default function StatsBar({ drops, claimedCount }: StatsBarProps) {
   ];
 
   return (
-    <div className="flex gap-2 px-3 py-2 overflow-x-auto scrollbar-hide">
+    <div className="flex gap-2 px-3 py-2 overflow-x-auto scrollbar-hide" suppressHydrationWarning>
       {stats.map((s) => (
         <div
           key={s.label}
           className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-void-100/60 border border-crypt-300/8"
+          suppressHydrationWarning
         >
-          <span className="text-sm">{s.icon}</span>
+          <span className="text-sm" suppressHydrationWarning>{s.icon}</span>
           <div>
             <div className="text-[9px] text-gray-700 font-mono uppercase tracking-widest leading-none">
               {s.label}
@@ -36,6 +37,7 @@ export default function StatsBar({ drops, claimedCount }: StatsBarProps) {
             <div
               className="text-sm font-bold font-mono leading-tight"
               style={{ color: s.color }}
+              suppressHydrationWarning
             >
               {s.value}
             </div>
