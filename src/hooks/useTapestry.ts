@@ -146,8 +146,8 @@ export function useTapestry() {
     async (dropId: string, message: string) => {
       if (!publicKey) return null;
       try {
-        const result = await apiCall("/contents", "POST", {
-          id: `drop_${dropId}`,
+        const result = await apiCall("/content", "POST", {
+          id: "drop_" + dropId,
           namespace: NAMESPACE,
           authorWalletAddress: publicKey.toBase58(),
           contentType: "drop",
@@ -170,8 +170,8 @@ export function useTapestry() {
     async (dropId: string) => {
       if (!publicKey) return false;
       try {
-        await apiCall("/likes", "POST", {
-          targetContentId: `drop_${dropId}`,
+        await apiCall("/like", "POST", {
+          targetContentId: "drop_" + dropId,
           namespace: NAMESPACE,
           authorWalletAddress: publicKey.toBase58(),
           blockchain: "SOLANA",
@@ -180,8 +180,9 @@ export function useTapestry() {
         console.log("[Tapestry] ✅ Liked:", dropId);
         return true;
       } catch (error) {
-        console.warn("[Tapestry] Like failed:", error);
-        return false;
+        console.warn("[Tapestry] Like API failed (local state still updated):", error);
+        // Return true anyway — local UI tracks likes, Tapestry is bonus
+        return true;
       }
     },
     [publicKey, apiCall]
@@ -192,8 +193,8 @@ export function useTapestry() {
     async (dropId: string, text: string): Promise<TapestryComment | null> => {
       if (!publicKey) return null;
       try {
-        const result = await apiCall("/comments", "POST", {
-          targetContentId: `drop_${dropId}`,
+        const result = await apiCall("/comment", "POST", {
+          targetContentId: "drop_" + dropId,
           namespace: NAMESPACE,
           authorWalletAddress: publicKey.toBase58(),
           text,
@@ -202,15 +203,20 @@ export function useTapestry() {
         });
         console.log("[Tapestry] ✅ Comment added:", dropId);
         return {
-          id: result?.id || `comment_${Date.now()}`,
+          id: result?.id || ("comment_" + Date.now()),
           text,
           author:
             profile?.username || publicKey.toBase58().slice(0, 8) + "...",
           createdAt: new Date().toISOString(),
         };
       } catch (error) {
-        console.warn("[Tapestry] Comment failed:", error);
-        return null;
+        console.warn("[Tapestry] Comment API failed (local state still updated):", error);
+        return {
+          id: "comment_" + Date.now(),
+          text,
+          author: profile?.username || publicKey.toBase58().slice(0, 8) + "...",
+          createdAt: new Date().toISOString(),
+        };
       }
     },
     [publicKey, profile, apiCall]
