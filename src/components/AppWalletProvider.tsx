@@ -6,6 +6,10 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import {
+  PhantomWalletAdapter,
+  SolflareWalletAdapter,
+} from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 
 // Import default wallet adapter styles
@@ -15,22 +19,18 @@ interface Props {
   children: ReactNode;
 }
 
-/**
- * AppWalletProvider
- *
- * CRITICAL FIX: This component MUST wrap all components that use wallet hooks.
- * Previous bug: components using useWallet()/useConnection() were rendered
- * OUTSIDE this provider tree, causing "read publicKey on WalletContext" errors.
- *
- * Provider hierarchy:
- * ConnectionProvider → WalletProvider → WalletModalProvider → children
- */
 export default function AppWalletProvider({ children }: Props) {
   const endpoint = useMemo(() => clusterApiUrl("devnet"), []);
 
-  // Wallet adapters auto-detected via wallet-standard.
-  // No need to manually list Phantom, Solflare, etc. — they register themselves.
-  const wallets = useMemo(() => [], []);
+  // Explicit adapters — required for mobile deep links (iPhone/Android)
+  // On desktop, wallet-standard auto-detection also works alongside these
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter(),
+    ],
+    []
+  );
 
   return (
     <ConnectionProvider endpoint={endpoint}>
