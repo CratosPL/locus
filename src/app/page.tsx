@@ -148,8 +148,12 @@ export default function HomePage() {
       var drop = drops.find(function(d) { return d.id === dropId; });
       if (!drop) return;
 
-      if (!isNearby(drop.location.lat, drop.location.lng)) {
-        var dist = formatDistance(drop.location.lat, drop.location.lng);
+      var dropReward = drop.finderReward;
+      var dropLat = drop.location.lat;
+      var dropLng = drop.location.lng;
+
+      if (!isNearby(dropLat, dropLng)) {
+        var dist = formatDistance(dropLat, dropLng);
         showToast("Too far! " + dist, "info");
         return;
       }
@@ -162,10 +166,10 @@ export default function HomePage() {
         setClaimedIds(newClaimed);
         saveClaimedIds(newClaimed);
 
-        showToast("Drop claimed! +" + drop.finderReward + " SOL", "success", result.value);
+        showToast("Drop claimed! +" + dropReward + " SOL", "success", result.value);
 
         setActivities(function(prev) {
-          return [{ icon: "⚡", text: "Claimed " + drop.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
+          return [{ icon: "⚡", text: "Claimed " + dropReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
         });
         setSelectedDrop(null);
       } else {
