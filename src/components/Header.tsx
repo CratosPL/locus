@@ -1,18 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-
-// Still need this for the connect modal
-const WalletMultiButton = dynamic(
-  () =>
-    import("@solana/wallet-adapter-react-ui").then(
-      (mod) => mod.WalletMultiButton
-    ),
-  { ssr: false }
-);
 
 export default function Header() {
   const { publicKey, connected, disconnect, wallet } = useWallet();
@@ -78,9 +68,22 @@ export default function Header() {
 
         {/* Wallet button */}
         {!connected ? (
-          <div className="wallet-btn-wrapper">
-            <WalletMultiButton />
-          </div>
+          <button
+            onClick={() => setVisible(true)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg font-mono text-[11px] font-bold tracking-wider cursor-pointer transition-all border-none text-white"
+            style={{
+              background: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+              boxShadow: "0 0 0 0 rgba(167, 139, 250, 0.4)",
+              animation: "pulse-glow 2s ease-in-out infinite",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="6" width="20" height="14" rx="3" />
+              <path d="M2 10h20" />
+              <circle cx="17" cy="15" r="1.5" fill="currentColor" stroke="none" />
+            </svg>
+            Connect
+          </button>
         ) : (
           <div className="relative" ref={menuRef}>
             {/* Connected button */}
@@ -171,27 +174,8 @@ export default function Header() {
         )}
       </div>
 
-      {/* Wallet adapter style overrides (only for connect button) */}
+      {/* Wallet adapter style overrides (modal only) */}
       <style jsx global>{`
-        .wallet-btn-wrapper .wallet-adapter-button {
-          background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%) !important;
-          border-radius: 8px !important;
-          font-family: "JetBrains Mono", "Fira Code", monospace !important;
-          font-size: 11px !important;
-          font-weight: 700 !important;
-          letter-spacing: 0.05em !important;
-          height: 34px !important;
-          padding: 0 12px !important;
-          transition: all 0.2s !important;
-          white-space: nowrap !important;
-        }
-        .wallet-btn-wrapper .wallet-adapter-button:hover {
-          background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%) !important;
-          transform: translateY(-1px);
-        }
-        .wallet-btn-wrapper .wallet-adapter-button-trigger {
-          animation: pulse-glow 2s ease-in-out infinite;
-        }
         @keyframes pulse-glow {
           0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.4); }
           50% { box-shadow: 0 0 0 8px rgba(167, 139, 250, 0); }

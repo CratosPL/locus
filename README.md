@@ -145,7 +145,7 @@ npm install
 Create `.env.local`:
 ```env
 NEXT_PUBLIC_TAPESTRY_API_KEY=your_key_from_app.usetapestry.dev
-NEXT_PUBLIC_TAPESTRY_API_URL=https://api.usetapestry.dev/api/v1
+NEXT_PUBLIC_TAPESTRY_API_URL=https://api.usetapestry.dev/v1
 NEXT_PUBLIC_TAPESTRY_NAMESPACE=locus
 ```
 
