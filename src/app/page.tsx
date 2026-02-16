@@ -138,6 +138,10 @@ export default function HomePage() {
 
     var currentProgress = trailProgress[activeTrailId] || new Set();
     var changed = false;
+    var trailColor = trail.color;
+    var trailName = trail.name;
+    var trailReward = trail.reward;
+    var totalWaypoints = trail.waypoints.length;
 
     trail.waypoints.forEach(function(wp) {
       if (!currentProgress.has(wp.id) && isNearby(wp.location.lat, wp.location.lng)) {
@@ -145,7 +149,7 @@ export default function HomePage() {
         changed = true;
         showToast("📍 Waypoint checked: " + wp.name, "success");
         setActivities(function(prev) {
-          return [{ icon: "🗺️", text: "Reached " + wp.name, color: trail.color, timestamp: Date.now() }].concat(prev);
+          return [{ icon: "🗺️", text: "Reached " + wp.name, color: trailColor, timestamp: Date.now() }].concat(prev);
         });
       }
     });
@@ -162,8 +166,8 @@ export default function HomePage() {
       saveJSON("locus_trail_progress", toSave);
 
       // Check completion
-      if (currentProgress.size >= trail.waypoints.length) {
-        showToast("🏆 Trail Complete! " + trail.name + " — +" + trail.reward + " SOL bonus!", "success");
+      if (currentProgress.size >= totalWaypoints) {
+        showToast("🏆 Trail Complete! " + trailName + " — +" + trailReward + " SOL bonus!", "success");
         setShowConfetti(true);
         setTimeout(function() { setShowConfetti(false); }, 2500);
         setCompletedTrails(function(c) { return c + 1; });

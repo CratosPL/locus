@@ -6,9 +6,6 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import {
-  PhantomWalletAdapter,
-} from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 
 // Import default wallet adapter styles
@@ -21,14 +18,9 @@ interface Props {
 export default function AppWalletProvider({ children }: Props) {
   const endpoint = useMemo(() => clusterApiUrl("devnet"), []);
 
-  // Explicit adapters — required for mobile deep links (iPhone/Android)
-  // On desktop, wallet-standard auto-detection also works alongside these
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-    ],
-    []
-  );
+  // Empty array — wallets auto-register via wallet-standard protocol
+  // Phantom, Solflare, Backpack etc. all register themselves
+  const wallets = useMemo(() => [], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
