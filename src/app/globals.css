@@ -154,7 +154,15 @@ body {
    ═══════════════════════════════════════════════════════════════════════ */
 
 .map-tiles-themed {
-  filter: brightness(0.75) contrast(1.1) saturate(0.5) hue-rotate(20deg);
+  transition: filter 1s ease-in-out;
+}
+
+.map-tiles-night {
+  filter: brightness(0.7) contrast(1.2) saturate(0.6) hue-rotate(20deg) opacity(0.9);
+}
+
+.map-tiles-day {
+  filter: brightness(1.1) contrast(0.95) saturate(1.1);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

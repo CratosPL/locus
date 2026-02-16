@@ -79,6 +79,26 @@ export default function MapView({
   const [leafletReady, setLeafletReady] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentingDropId, setCommentingDropId] = useState<string | null>(null);
+  const [isNight, setIsNight] = useState(true);
+
+  useEffect(() => {
+    // Determine if it's night (18:00 - 06:00)
+    const hour = new Date().getHours();
+    setIsNight(hour >= 18 || hour < 6);
+
+    const interval = setInterval(() => {
+      const h = new Date().getHours();
+      setIsNight(h >= 18 || h < 6);
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    // Determine if it's night (18:00 - 06:00)
+    const hour = new Date().getHours();
+    setIsNight(hour >= 18 || hour < 6);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -207,18 +227,29 @@ export default function MapView({
 
   return (
     <div className="w-full h-full relative">
+      {/* Time mode indicator */}
+      <div className="absolute top-4 left-4 z-[1000] pointer-events-none">
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-wider ${isNight ? 'bg-void-100/40 text-crypt-300' : 'bg-white/40 text-gray-800'}`}>
+          {isNight ? '🌙 Night Mode' : '☀️ Day Mode'}
+        </div>
+      </div>
+
       <MapContainer
         center={mapCenter}
         zoom={DEFAULT_ZOOM}
         className="w-full h-full"
-        style={{ background: "#050208" }}
+        style={{ background: isNight ? "#050208" : "#f4f1ea" }}
         zoomControl={false}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url={isNight 
+            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          }
           attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
           maxZoom={19}
-          className="map-tiles-themed"
+          className={`map-tiles-themed ${isNight ? "map-tiles-night" : "map-tiles-day"}`}
+          key={isNight ? 'night' : 'day'}
         />
 
         {/* Fly to user when GPS activates */}
@@ -231,13 +262,26 @@ export default function MapView({
               position={[userPosition.lat, userPosition.lng]}
               icon={userIcon}
             />
+            {/* Accuracy ring */}
+            <Circle
+              center={[userPosition.lat, userPosition.lng]}
+              radius={Math.max(15, userPosition.accuracy)}
+              pathOptions={{
+                color: isNight ? "#818cf8" : "#4f46e5",
+                fillColor: isNight ? "#a78bfa" : "#6366f1",
+                fillOpacity: isNight ? 0.08 : 0.04,
+                weight: 1,
+                dashArray: "4 4",
+              }}
+            />
+            {/* Claim radius ring */}
             <Circle
               center={[userPosition.lat, userPosition.lng]}
               radius={150}
               pathOptions={{
-                color: "#818cf8",
-                fillColor: "#a78bfa",
-                fillOpacity: 0.08,
+                color: isNight ? "#818cf8" : "#4f46e5",
+                fillColor: "transparent",
+                fillOpacity: 0,
                 weight: 1.5,
                 dashArray: "6 4",
               }}
@@ -529,7 +573,7 @@ export default function MapView({
           top: 8px !important;
           right: 8px !important;
         }
-        .leaflet-container { background: #050208 !important; }
+        .leaflet-container { background: ${isNight ? "#050208" : "#f4f1ea"} !important; }
         .custom-marker:hover > div { transform: scale(1.2) !important; }
         @keyframes user-pulse {
           0%, 100% { box-shadow: 0 0 0 6px rgba(59,130,246,0.3), 0 0 20px rgba(59,130,246,0.5); }
