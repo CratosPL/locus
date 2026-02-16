@@ -130,51 +130,6 @@ export default function HomePage() {
     return function() { clearTimeout(timer); };
   }, [activities.length]);
 
-  // ─── Trail proximity check — auto check-in waypoints ───────────────────
-  useEffect(function() {
-    if (!activeTrailId || !userPosition) return;
-    var trail = MOCK_TRAILS.find(function(t) { return t.id === activeTrailId; });
-    if (!trail) return;
-
-    var currentProgress = trailProgress[activeTrailId] || new Set();
-    var changed = false;
-    var trailColor = trail.color;
-    var trailName = trail.name;
-    var trailReward = trail.reward;
-    var totalWaypoints = trail.waypoints.length;
-
-    trail.waypoints.forEach(function(wp) {
-      if (!currentProgress.has(wp.id) && isNearby(wp.location.lat, wp.location.lng)) {
-        currentProgress.add(wp.id);
-        changed = true;
-        showToast("📍 Waypoint checked: " + wp.name, "success");
-        setActivities(function(prev) {
-          return [{ icon: "🗺️", text: "Reached " + wp.name, color: trailColor, timestamp: Date.now() }].concat(prev);
-        });
-      }
-    });
-
-    if (changed) {
-      var newProgress = { ...trailProgress, [activeTrailId]: currentProgress };
-      setTrailProgress(newProgress);
-
-      // Save (convert Sets to arrays)
-      var toSave: Record<string, string[]> = {};
-      Object.keys(newProgress).forEach(function(k) {
-        toSave[k] = Array.from(newProgress[k]);
-      });
-      saveJSON("locus_trail_progress", toSave);
-
-      // Check completion
-      if (currentProgress.size >= totalWaypoints) {
-        showToast("🏆 Trail Complete! " + trailName + " — +" + trailReward + " SOL bonus!", "success");
-        setShowConfetti(true);
-        setTimeout(function() { setShowConfetti(false); }, 2500);
-        setCompletedTrails(function(c) { return c + 1; });
-      }
-    }
-  }, [activeTrailId, userPosition]);
-
   // Build drops array
   var drops = MOCK_DROPS.concat(extraDrops).map(function(d) {
     return { ...d, isClaimed: d.isClaimed || claimedIds.has(d.id) };
@@ -201,6 +156,48 @@ export default function HomePage() {
   useEffect(function() {
     if (isConnected && walletAddress && !profile) findOrCreateProfile();
   }, [isConnected, walletAddress, profile, findOrCreateProfile]);
+
+  // ─── Trail proximity check — auto check-in waypoints ───────────────────
+  useEffect(function() {
+    if (!activeTrailId || !userPosition) return;
+    var trail = MOCK_TRAILS.find(function(t) { return t.id === activeTrailId; });
+    if (!trail) return;
+
+    var currentProgress = trailProgress[activeTrailId] || new Set();
+    var changed = false;
+    var trailColor = trail.color;
+    var trailName = trail.name;
+    var trailReward = trail.reward;
+    var totalWaypoints = trail.waypoints.length;
+
+    trail.waypoints.forEach(function(wp) {
+      if (!currentProgress.has(wp.id) && isNearby(wp.location.lat, wp.location.lng)) {
+        currentProgress.add(wp.id);
+        changed = true;
+        setActivities(function(prev) {
+          return [{ icon: "🗺️", text: "Reached " + wp.name, color: trailColor, timestamp: Date.now() }].concat(prev);
+        });
+      }
+    });
+
+    if (changed) {
+      var newProgress = { ...trailProgress, [activeTrailId]: currentProgress };
+      setTrailProgress(newProgress);
+
+      var toSave: Record<string, string[]> = {};
+      Object.keys(newProgress).forEach(function(k) {
+        toSave[k] = Array.from(newProgress[k]);
+      });
+      saveJSON("locus_trail_progress", toSave);
+
+      if (currentProgress.size >= totalWaypoints) {
+        showToast("🏆 Trail Complete! " + trailName + " — +" + trailReward + " SOL bonus!", "success");
+        setShowConfetti(true);
+        setTimeout(function() { setShowConfetti(false); }, 2500);
+        setCompletedTrails(function(c) { return c + 1; });
+      }
+    }
+  }, [activeTrailId, userPosition]);
 
   // ─── Check badges after actions ────────────────────────────────────────
   var checkBadges = useCallback(function(stats: { claims: number; creates: number; ghosts: number; trails: number; rep: number }) {
