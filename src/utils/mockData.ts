@@ -1,4 +1,4 @@
-import { Drop, CategoryConfig, DropCategory } from "@/types";
+import { Drop, CategoryConfig, DropCategory, GhostMark, QuestTrail, NFTBadge } from "@/types";
 
 export var CATEGORY_CONFIG: Record<DropCategory, CategoryConfig> = {
   lore: { icon: "👻", color: "#a78bfa", label: "Lore" },
@@ -158,3 +158,101 @@ export var MOCK_DROPS: Drop[] = [
 
 export var WARSAW_CENTER = { lat: 52.2297, lng: 21.0122 };
 export var DEFAULT_ZOOM = 13;
+
+// ─── Ghost Mark Emojis ───────────────────────────────────────────────────────
+
+export var GHOST_EMOJIS = [
+  { emoji: "👻" as const, label: "Ghost" },
+  { emoji: "💭" as const, label: "Thought" },
+  { emoji: "⚠️" as const, label: "Warning" },
+  { emoji: "📸" as const, label: "Photo spot" },
+  { emoji: "🎵" as const, label: "Music" },
+  { emoji: "💀" as const, label: "Danger" },
+  { emoji: "🔥" as const, label: "Hot spot" },
+  { emoji: "❄️" as const, label: "Chill" },
+];
+
+// ─── Mock Ghost Marks ────────────────────────────────────────────────────────
+
+export var MOCK_GHOSTS: GhostMark[] = [
+  { id: "g1", location: { lat: 52.2310, lng: 21.0060 }, message: "Best pierogi spot in Warsaw, trust me 🥟", emoji: "🔥", createdBy: "anon", createdAt: Date.now() - 3600000, reactions: 7 },
+  { id: "g2", location: { lat: 52.2280, lng: 21.0150 }, message: "Watch out, slippery stairs near the metro", emoji: "⚠️", createdBy: "anon", createdAt: Date.now() - 7200000, reactions: 3 },
+  { id: "g3", location: { lat: 52.2340, lng: 21.0020 }, message: "Amazing sunset view from this rooftop", emoji: "📸", createdBy: "anon", createdAt: Date.now() - 1800000, reactions: 12 },
+  { id: "g4", location: { lat: 52.2250, lng: 21.0250 }, message: "Street musician plays here every evening", emoji: "🎵", createdBy: "anon", createdAt: Date.now() - 5400000, reactions: 5 },
+  { id: "g5", location: { lat: 52.2370, lng: 21.0100 }, message: "This alley gives major spooky vibes at night", emoji: "💀", createdBy: "anon", createdAt: Date.now() - 14400000, reactions: 8 },
+];
+
+// ─── Quest Trails ────────────────────────────────────────────────────────────
+
+export var MOCK_TRAILS: QuestTrail[] = [
+  {
+    id: "trail-1",
+    name: "Old Town Haunting",
+    description: "Follow the ghosts through Warsaw's medieval heart. Visit 4 haunted spots and claim the final treasure.",
+    icon: "🏰",
+    color: "#a78bfa",
+    reward: 0.5,
+    createdBy: "lich.sol",
+    difficulty: "easy",
+    estimatedTime: "30 min",
+    distance: "1.2 km",
+    waypoints: [
+      { id: "t1-w1", location: { lat: 52.2497, lng: 21.0122 }, name: "Castle Square", hint: "Where the old king's ghost still wanders", order: 1 },
+      { id: "t1-w2", location: { lat: 52.2510, lng: 21.0080 }, name: "Cathedral Crypt", hint: "Listen for whispers in the stone walls", order: 2 },
+      { id: "t1-w3", location: { lat: 52.2490, lng: 21.0040 }, name: "Barbican Gate", hint: "The ancient defenders left something behind", order: 3 },
+      { id: "t1-w4", location: { lat: 52.2475, lng: 21.0005 }, name: "Freta Street End", hint: "Marie Curie's spirit guards the final drop", order: 4 },
+    ],
+  },
+  {
+    id: "trail-2",
+    name: "Vistula Death March",
+    description: "A riverside quest along the Vistula. Each checkpoint reveals a piece of Solana's buried history.",
+    icon: "🌊",
+    color: "#60a5fa",
+    reward: 0.8,
+    createdBy: "revenant.sol",
+    difficulty: "medium",
+    estimatedTime: "45 min",
+    distance: "2.8 km",
+    waypoints: [
+      { id: "t2-w1", location: { lat: 52.2350, lng: 21.0350 }, name: "Copernicus Centre", hint: "The stars align for those who seek", order: 1 },
+      { id: "t2-w2", location: { lat: 52.2300, lng: 21.0300 }, name: "Świętokrzyski Bridge", hint: "Cross the bridge between worlds", order: 2 },
+      { id: "t2-w3", location: { lat: 52.2250, lng: 21.0280 }, name: "National Stadium", hint: "Where champions fall and rise again", order: 3 },
+      { id: "t2-w4", location: { lat: 52.2200, lng: 21.0320 }, name: "Saska Kępa", hint: "The quiet district hides the loudest secret", order: 4 },
+      { id: "t2-w5", location: { lat: 52.2180, lng: 21.0380 }, name: "Riverside End", hint: "The Vistula reveals its final truth", order: 5 },
+    ],
+  },
+  {
+    id: "trail-3",
+    name: "Crypto Graveyard Tour",
+    description: "Visit the burial sites of dead crypto projects around Śródmieście. Learn from the fallen.",
+    icon: "⚰️",
+    color: "#f472b6",
+    reward: 1.0,
+    createdBy: "phantom.sol",
+    difficulty: "hard",
+    estimatedTime: "60 min",
+    distance: "3.5 km",
+    waypoints: [
+      { id: "t3-w1", location: { lat: 52.2319, lng: 21.0067 }, name: "Palace of Culture", hint: "Where centralized dreams went to die", order: 1 },
+      { id: "t3-w2", location: { lat: 52.2270, lng: 21.0180 }, name: "Nowy Świat", hint: "The new world wasn't ready for web3", order: 2 },
+      { id: "t3-w3", location: { lat: 52.2220, lng: 21.0150 }, name: "Łazienki Gate", hint: "Even kings couldn't hold their bags", order: 3 },
+      { id: "t3-w4", location: { lat: 52.2150, lng: 21.0200 }, name: "Mokotów Fields", hint: "Yield farming's final resting place", order: 4 },
+      { id: "t3-w5", location: { lat: 52.2100, lng: 21.0100 }, name: "Southern Crypt", hint: "The last validator signed off here", order: 5 },
+      { id: "t3-w6", location: { lat: 52.2050, lng: 21.0050 }, name: "Wilanów Gate", hint: "From this graveyard, Solana rises", order: 6 },
+    ],
+  },
+];
+
+// ─── NFT Badge Definitions ───────────────────────────────────────────────────
+
+export var BADGE_DEFINITIONS: NFTBadge[] = [
+  { id: "first-blood",    name: "First Blood",    description: "Claim your first drop",          icon: "🩸", threshold: 1,   thresholdType: "claims",     rarity: "common",    color: "#ef4444" },
+  { id: "explorer",       name: "Explorer",       description: "Claim 5 drops",                  icon: "🧭", threshold: 5,   thresholdType: "claims",     rarity: "rare",      color: "#3b82f6" },
+  { id: "phantom-hunter", name: "Phantom Hunter", description: "Claim 10 drops",                 icon: "👻", threshold: 10,  thresholdType: "claims",     rarity: "epic",      color: "#a78bfa" },
+  { id: "lich-lord",      name: "Lich Lord",      description: "Claim 25 drops",                 icon: "👑", threshold: 25,  thresholdType: "claims",     rarity: "legendary", color: "#fbbf24" },
+  { id: "gravedigger",    name: "Gravedigger",    description: "Create 3 drops",                 icon: "⚰️", threshold: 3,   thresholdType: "creates",    rarity: "common",    color: "#6b7280" },
+  { id: "haunter",        name: "Haunter",        description: "Leave 5 ghost marks",            icon: "💭", threshold: 5,   thresholdType: "ghosts",     rarity: "rare",      color: "#8b5cf6" },
+  { id: "trail-walker",   name: "Trail Walker",   description: "Complete a quest trail",          icon: "🗺️", threshold: 1,   thresholdType: "trails",     rarity: "rare",      color: "#10b981" },
+  { id: "legend",         name: "Legend",          description: "Reach 200 reputation",           icon: "⭐", threshold: 200, thresholdType: "reputation", rarity: "legendary", color: "#f59e0b" },
+];

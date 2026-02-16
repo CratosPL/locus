@@ -12,7 +12,7 @@ export interface Drop {
   location: GeoLocation;
   message: string;
   isClaimed: boolean;
-  finderReward: number; // in SOL
+  finderReward: number;
   category: DropCategory;
   createdBy: string;
   createdAt: string;
@@ -26,15 +26,61 @@ export interface CategoryConfig {
   label: string;
 }
 
-// ─── Solana Types (aligned with @solana/kit patterns) ────────────────────────
+// ─── Ghost Marks (ephemeral, free, no SOL) ───────────────────────────────────
 
-/** Branded Address type (matches @solana/kit Address) */
+export type GhostEmoji = "👻" | "💭" | "⚠️" | "📸" | "🎵" | "💀" | "🔥" | "❄️";
+
+export interface GhostMark {
+  id: string;
+  location: GeoLocation;
+  message: string;
+  emoji: GhostEmoji;
+  createdBy: string;
+  createdAt: number; // timestamp for 24h expiry
+  reactions: number;
+}
+
+// ─── Quest Trails ────────────────────────────────────────────────────────────
+
+export interface QuestTrail {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  waypoints: TrailWaypoint[];
+  reward: number;
+  createdBy: string;
+  difficulty: "easy" | "medium" | "hard";
+  estimatedTime: string;
+  distance: string;
+}
+
+export interface TrailWaypoint {
+  id: string;
+  location: GeoLocation;
+  name: string;
+  hint: string;
+  order: number;
+}
+
+// ─── NFT Badges ──────────────────────────────────────────────────────────────
+
+export interface NFTBadge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  threshold: number;
+  thresholdType: "claims" | "creates" | "ghosts" | "trails" | "reputation";
+  rarity: "common" | "rare" | "epic" | "legendary";
+  color: string;
+}
+
+// ─── Solana Types ────────────────────────────────────────────────────────────
+
 export type Address = string & { readonly __brand: unique symbol };
-
-/** Branded Signature type */
 export type Signature = string & { readonly __brand: unique symbol };
-
-/** Result type following @solana/kit pattern */
 export type Result<T, E = Error> =
   | { ok: true; value: T }
   | { ok: false; error: E };

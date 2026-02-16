@@ -8,70 +8,51 @@ import DropList from "@/components/DropList";
 import CreateDropModal from "@/components/CreateDropModal";
 import ProfilePanel from "@/components/ProfilePanel";
 import Leaderboard from "@/components/Leaderboard";
+import QuestTrails from "@/components/QuestTrails";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { MOCK_DROPS, CATEGORY_CONFIG } from "@/utils/mockData";
-import type { Drop, DropCategory, Activity } from "@/types";
+import { MOCK_DROPS, MOCK_GHOSTS, MOCK_TRAILS, CATEGORY_CONFIG, BADGE_DEFINITIONS } from "@/utils/mockData";
+import type { Drop, DropCategory, GhostMark, GhostEmoji, QuestTrail, Activity } from "@/types";
 
-const MapView = dynamic(function() { return import("@/components/MapView"); }, {
+var MapView = dynamic(function() { return import("@/components/MapView"); }, {
   ssr: false,
   loading: function() {
     return (
       <div className="w-full h-full flex items-center justify-center bg-void">
         <div className="text-center">
           <div className="text-4xl mb-4 animate-float">🗺️</div>
-          <p className="text-crypt-300 font-mono text-sm animate-pulse">
-            Summoning the map...
-          </p>
+          <p className="text-crypt-300 font-mono text-sm animate-pulse">Summoning the map...</p>
         </div>
       </div>
     );
   },
 });
 
-type TabId = "map" | "list" | "leaderboard";
+type TabId = "map" | "list" | "trails" | "leaderboard";
 
 interface ToastData {
-  id: number;
-  message: string;
-  signature?: string;
-  type: "success" | "error" | "info";
+  id: number; message: string; signature?: string; type: "success" | "error" | "info";
 }
 
-function loadClaimedIds(): Set<string> {
+// ─── localStorage helpers ────────────────────────────────────────────────────
+
+function loadSet(key: string): Set<string> {
   if (typeof window === "undefined") return new Set();
-  try {
-    var saved = localStorage.getItem("locus_claimed");
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  } catch {
-    return new Set();
-  }
+  try { var s = localStorage.getItem(key); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
 }
-
-function saveClaimedIds(ids: Set<string>) {
-  try {
-    localStorage.setItem("locus_claimed", JSON.stringify(Array.from(ids)));
-  } catch {}
+function saveSet(key: string, set: Set<string>) {
+  try { localStorage.setItem(key, JSON.stringify(Array.from(set))); } catch {}
 }
-
-function loadExtraDrops(): Drop[] {
-  if (typeof window === "undefined") return [];
-  try {
-    var saved = localStorage.getItem("locus_extra_drops");
-    return saved ? JSON.parse(saved) : [];
-  } catch {
-    return [];
-  }
+function loadJSON<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try { var s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; } catch { return fallback; }
 }
-
-function saveExtraDrops(drops: Drop[]) {
-  try {
-    localStorage.setItem("locus_extra_drops", JSON.stringify(drops));
-  } catch {}
+function saveJSON(key: string, val: any) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
 }
 
 export default function HomePage() {
@@ -79,6 +60,7 @@ export default function HomePage() {
   var [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
   var [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   var [extraDrops, setExtraDrops] = useState<Drop[]>([]);
+  var [ghostMarks, setGhostMarks] = useState<GhostMark[]>([]);
   var [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
   var [activeTab, setActiveTab] = useState<TabId>("map");
   var [flyTrigger, setFlyTrigger] = useState(0);
@@ -87,22 +69,56 @@ export default function HomePage() {
   var [showProfile, setShowProfile] = useState(false);
   var [showWelcome, setShowWelcome] = useState(true);
   var [createdCount, setCreatedCount] = useState(0);
+  var [ghostCount, setGhostCount] = useState(0);
   var [toasts, setToasts] = useState<ToastData[]>([]);
   var [activities, setActivities] = useState<Activity[]>([
     { icon: "🪦", text: "lich.sol dropped treasure near Łazienki", color: "#34d399", timestamp: Date.now() - 60000 },
-    { icon: "⚡", text: "shade.sol created a ritual drop", color: "#fbbf24", timestamp: Date.now() - 120000 },
+    { icon: "👻", text: "anon left a ghost mark in Old Town", color: "#8b5cf6", timestamp: Date.now() - 90000 },
   ]);
+
+  // Trail state
+  var [activeTrailId, setActiveTrailId] = useState<string | null>(null);
+  var [trailProgress, setTrailProgress] = useState<Record<string, Set<string>>>({});
+  var [completedTrails, setCompletedTrails] = useState(0);
+
+  // Badge mint tracking
+  var [mintedBadges, setMintedBadges] = useState<Set<string>>(new Set());
+  var [pendingBadge, setPendingBadge] = useState<string | null>(null);
 
   // Load persisted state
   useEffect(function() {
-    setClaimedIds(loadClaimedIds());
-    var savedDrops = loadExtraDrops();
+    setClaimedIds(loadSet("locus_claimed"));
+    setLikedIds(loadSet("locus_likes"));
+    setMintedBadges(loadSet("locus_minted_badges"));
+
+    var savedDrops = loadJSON<Drop[]>("locus_extra_drops", []);
     setExtraDrops(savedDrops);
     setCreatedCount(savedDrops.length);
-    try {
-      var savedLikes = localStorage.getItem("locus_likes");
-      if (savedLikes) setLikedIds(new Set(JSON.parse(savedLikes)));
-    } catch {}
+
+    // Load ghost marks + filter expired (24h)
+    var savedGhosts = loadJSON<GhostMark[]>("locus_ghosts", []);
+    var now = Date.now();
+    var activeGhosts = savedGhosts.filter(function(g) { return now - g.createdAt < 86400000; });
+    // Merge mock ghosts (also check 24h) with saved
+    var allGhosts = MOCK_GHOSTS.filter(function(g) { return now - g.createdAt < 86400000; }).concat(activeGhosts);
+    setGhostMarks(allGhosts);
+    setGhostCount(activeGhosts.length);
+
+    // Load trail progress
+    var savedProgress = loadJSON<Record<string, string[]>>("locus_trail_progress", {});
+    var progressSets: Record<string, Set<string>> = {};
+    Object.keys(savedProgress).forEach(function(k) {
+      progressSets[k] = new Set(savedProgress[k]);
+    });
+    setTrailProgress(progressSets);
+
+    // Count completed trails
+    var completed = 0;
+    MOCK_TRAILS.forEach(function(trail) {
+      var p = progressSets[trail.id];
+      if (p && p.size >= trail.waypoints.length) completed++;
+    });
+    setCompletedTrails(completed);
   }, []);
 
   // Auto-remove old activities
@@ -114,50 +130,60 @@ export default function HomePage() {
     return function() { clearTimeout(timer); };
   }, [activities.length]);
 
+  // ─── Trail proximity check — auto check-in waypoints ───────────────────
+  useEffect(function() {
+    if (!activeTrailId || !userPosition) return;
+    var trail = MOCK_TRAILS.find(function(t) { return t.id === activeTrailId; });
+    if (!trail) return;
+
+    var currentProgress = trailProgress[activeTrailId] || new Set();
+    var changed = false;
+
+    trail.waypoints.forEach(function(wp) {
+      if (!currentProgress.has(wp.id) && isNearby(wp.location.lat, wp.location.lng)) {
+        currentProgress.add(wp.id);
+        changed = true;
+        showToast("📍 Waypoint checked: " + wp.name, "success");
+        setActivities(function(prev) {
+          return [{ icon: "🗺️", text: "Reached " + wp.name, color: trail.color, timestamp: Date.now() }].concat(prev);
+        });
+      }
+    });
+
+    if (changed) {
+      var newProgress = { ...trailProgress, [activeTrailId]: currentProgress };
+      setTrailProgress(newProgress);
+
+      // Save (convert Sets to arrays)
+      var toSave: Record<string, string[]> = {};
+      Object.keys(newProgress).forEach(function(k) {
+        toSave[k] = Array.from(newProgress[k]);
+      });
+      saveJSON("locus_trail_progress", toSave);
+
+      // Check completion
+      if (currentProgress.size >= trail.waypoints.length) {
+        showToast("🏆 Trail Complete! " + trail.name + " — +" + trail.reward + " SOL bonus!", "success");
+        setShowConfetti(true);
+        setTimeout(function() { setShowConfetti(false); }, 2500);
+        setCompletedTrails(function(c) { return c + 1; });
+      }
+    }
+  }, [activeTrailId, userPosition]);
+
   // Build drops array
   var drops = MOCK_DROPS.concat(extraDrops).map(function(d) {
-    return {
-      ...d,
-      isClaimed: d.isClaimed || claimedIds.has(d.id),
-    };
+    return { ...d, isClaimed: d.isClaimed || claimedIds.has(d.id) };
   });
 
   // ─── Hooks ──────────────────────────────────────────────────────────────
-  var {
-    claimDrop: claimDropOnChain,
-    createDrop: createDropOnChain,
-    isProcessing,
-    isConnected,
-    walletAddress,
-  } = useProgram();
-
-  var {
-    profile,
-    isConfigured: tapestryConfigured,
-    findOrCreateProfile,
-    registerDropAsContent,
-    likeDrop,
-    commentOnDrop,
-  } = useTapestry();
-
-  var {
-    position: userPosition,
-    demoMode,
-    setDemoMode,
-    isNearby,
-    distanceTo,
-    formatDistance,
-    requestLocation,
-    status: geoStatus,
-  } = useGeolocation();
-
+  var { claimDrop: claimDropOnChain, createDrop: createDropOnChain, isProcessing, isConnected, walletAddress } = useProgram();
+  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop } = useTapestry();
+  var { position: userPosition, demoMode, setDemoMode, isNearby, distanceTo, formatDistance, requestLocation, status: geoStatus } = useGeolocation();
   var { setVisible: setWalletModalVisible } = useWalletModal();
 
-  var handleConnectWallet = useCallback(function() {
-    setWalletModalVisible(true);
-  }, [setWalletModalVisible]);
+  var handleConnectWallet = useCallback(function() { setWalletModalVisible(true); }, [setWalletModalVisible]);
 
-  // ─── Toast helper ──────────────────────────────────────────────────────
   var showToast = useCallback(function(message: string, type: "success" | "error" | "info", signature?: string) {
     var id = Date.now();
     setToasts(function(prev) { return prev.concat([{ id: id, message: message, type: type, signature: signature }]); });
@@ -167,12 +193,46 @@ export default function HomePage() {
     setToasts(function(prev) { return prev.filter(function(t) { return t.id !== id; }); });
   }, []);
 
-  // ─── Auto-create Tapestry profile ──────────────────────────────────────
+  // Auto-create Tapestry profile
   useEffect(function() {
-    if (isConnected && walletAddress && !profile) {
-      findOrCreateProfile();
-    }
+    if (isConnected && walletAddress && !profile) findOrCreateProfile();
   }, [isConnected, walletAddress, profile, findOrCreateProfile]);
+
+  // ─── Check badges after actions ────────────────────────────────────────
+  var checkBadges = useCallback(function(stats: { claims: number; creates: number; ghosts: number; trails: number; rep: number }) {
+    BADGE_DEFINITIONS.forEach(function(badge) {
+      if (mintedBadges.has(badge.id)) return;
+      var value = 0;
+      if (badge.thresholdType === "claims") value = stats.claims;
+      else if (badge.thresholdType === "creates") value = stats.creates;
+      else if (badge.thresholdType === "ghosts") value = stats.ghosts;
+      else if (badge.thresholdType === "trails") value = stats.trails;
+      else if (badge.thresholdType === "reputation") value = stats.rep;
+
+      if (value >= badge.threshold) {
+        setPendingBadge(badge.id);
+      }
+    });
+  }, [mintedBadges]);
+
+  var handleMintBadge = useCallback(function(badgeId: string) {
+    // Simulate NFT mint — in production would call Metaplex Bubblegum
+    var badge = BADGE_DEFINITIONS.find(function(b) { return b.id === badgeId; });
+    if (!badge) return;
+
+    showToast("🏅 Minting NFT Badge: " + badge.name + "...", "info");
+    setTimeout(function() {
+      var newMinted = new Set(mintedBadges);
+      newMinted.add(badgeId);
+      setMintedBadges(newMinted);
+      saveSet("locus_minted_badges", newMinted);
+      setPendingBadge(null);
+
+      showToast("🎉 NFT Badge Minted! " + badge.icon + " " + badge.name, "success", "MOCK_" + Date.now().toString(36));
+      setShowConfetti(true);
+      setTimeout(function() { setShowConfetti(false); }, 2000);
+    }, 1500);
+  }, [mintedBadges, showToast]);
 
   // ─── Claim Handler ─────────────────────────────────────────────────────
   var handleClaim = useCallback(
@@ -180,121 +240,79 @@ export default function HomePage() {
       var drop = drops.find(function(d) { return d.id === dropId; });
       if (!drop) return;
 
-      // Can't claim your own drop
       var myName = profile?.username ? "@" + profile.username : walletAddress ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4) : "";
-      if (myName && drop.createdBy === myName) {
-        showToast("Can't claim your own drop!", "error");
-        return;
-      }
+      if (myName && drop.createdBy === myName) { showToast("Can't claim your own drop!", "error"); return; }
+      if (claimedIds.has(dropId)) { showToast("Already claimed!", "info"); return; }
 
-      // Already claimed
-      if (claimedIds.has(dropId)) {
-        showToast("Already claimed!", "info");
-        return;
-      }
-
-      var dropReward = drop.finderReward;
-      var dropLat = drop.location.lat;
-      var dropLng = drop.location.lng;
-
-      if (!isNearby(dropLat, dropLng)) {
-        var dist = formatDistance(dropLat, dropLng);
-        showToast("Too far! " + dist, "info");
-        return;
+      if (!isNearby(drop.location.lat, drop.location.lng)) {
+        showToast("Too far! " + formatDistance(drop.location.lat, drop.location.lng), "info"); return;
       }
 
       var result = await claimDropOnChain(dropId);
-
       if (result.ok) {
         var newClaimed = new Set(claimedIds);
         newClaimed.add(dropId);
         setClaimedIds(newClaimed);
-        saveClaimedIds(newClaimed);
+        saveSet("locus_claimed", newClaimed);
 
-        showToast("Drop claimed! +" + dropReward + " SOL", "success", result.value);
-
-        // Confetti celebration
+        showToast("Drop claimed! +" + drop.finderReward + " SOL", "success", result.value);
         setShowConfetti(true);
         setTimeout(function() { setShowConfetti(false); }, 2000);
 
         setActivities(function(prev) {
-          return [{ icon: "⚡", text: "Claimed " + dropReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
+          return [{ icon: "⚡", text: "Claimed " + drop.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
         });
         setSelectedDrop(null);
+
+        // Check badges
+        var newClaimCount = newClaimed.size;
+        var rep = newClaimCount * 10 + createdCount * 5 + likedIds.size * 2;
+        checkBadges({ claims: newClaimCount, creates: createdCount, ghosts: ghostCount, trails: completedTrails, rep: rep });
       } else {
         showToast("Claim failed: " + result.error.message, "error");
       }
     },
-    [claimDropOnChain, drops, claimedIds, isNearby, formatDistance, showToast, profile, walletAddress]
+    [claimDropOnChain, drops, claimedIds, isNearby, formatDistance, showToast, profile, walletAddress, checkBadges, createdCount, likedIds, ghostCount, completedTrails]
   );
 
   // ─── Create Drop Handler ──────────────────────────────────────────────
   var handleCreateDrop = useCallback(
     async function(data: { message: string; reward: number; category: DropCategory }) {
-      // ─── Anti-spam: max 5 active drops per wallet ──────────────
       var myDrops = extraDrops.filter(function(d) { return !d.isClaimed; });
-      if (myDrops.length >= 5) {
-        showToast("Max 5 active drops per wallet", "error");
-        return;
-      }
+      if (myDrops.length >= 5) { showToast("Max 5 active drops per wallet", "error"); return; }
 
-      // ─── Anti-spam: 60s cooldown ──────────────────────────────
-      var lastDrop = extraDrops[extraDrops.length - 1];
-      if (lastDrop) {
-        var lastTime = new Date(lastDrop.createdAt).getTime();
-        var now = Date.now();
-        // createdAt is date-only string, so check localStorage for precise time
-        try {
-          var lastDropTime = parseInt(localStorage.getItem("locus_last_drop_time") || "0");
-          if (now - lastDropTime < 60000) {
-            var wait = Math.ceil((60000 - (now - lastDropTime)) / 1000);
-            showToast("Cooldown: wait " + wait + "s", "info");
-            return;
-          }
-        } catch {}
-      }
+      try {
+        var lastDropTime = parseInt(localStorage.getItem("locus_last_drop_time") || "0");
+        if (Date.now() - lastDropTime < 60000) {
+          var wait = Math.ceil((60000 - (Date.now() - lastDropTime)) / 1000);
+          showToast("Cooldown: wait " + wait + "s", "info"); return;
+        }
+      } catch {}
 
-      // ─── Anti-spam: minimum reward ────────────────────────────
-      if (data.reward < 0.01) {
-        showToast("Minimum reward: 0.01 SOL", "error");
-        return;
-      }
+      if (data.reward < 0.01) { showToast("Minimum reward: 0.01 SOL", "error"); return; }
 
       var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
       var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
 
       var result = await createDropOnChain(data.message, lat, lng, data.reward);
-
       if (result.ok) {
-        var newDropId = "drop-" + Date.now();
-        var creatorName = profile?.username
-          ? "@" + profile.username
-          : walletAddress
-            ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4)
-            : "anon.sol";
-
+        var creatorName = profile?.username ? "@" + profile.username : walletAddress ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4) : "anon.sol";
         var newDrop: Drop = {
-          id: newDropId,
-          location: { lat: lat, lng: lng },
-          message: data.message,
-          isClaimed: false,
-          finderReward: data.reward,
-          category: data.category,
-          createdBy: creatorName,
-          createdAt: new Date().toISOString().split("T")[0],
+          id: "drop-" + Date.now(), location: { lat: lat, lng: lng },
+          message: data.message, isClaimed: false, finderReward: data.reward,
+          category: data.category, createdBy: creatorName, createdAt: new Date().toISOString().split("T")[0],
         };
 
         try { localStorage.setItem("locus_last_drop_time", String(Date.now())); } catch {}
 
         setExtraDrops(function(prev) {
           var updated = prev.concat([newDrop]);
-          saveExtraDrops(updated);
+          saveJSON("locus_extra_drops", updated);
           return updated;
         });
         setCreatedCount(function(c) { return c + 1; });
 
-        await registerDropAsContent(newDropId, data.message);
-
+        await registerDropAsContent(newDrop.id, data.message);
         var cat = CATEGORY_CONFIG[data.category];
         showToast("Drop created! " + cat.icon + " " + data.reward + " SOL", "success", result.value);
 
@@ -308,6 +326,53 @@ export default function HomePage() {
     [createDropOnChain, userPosition, walletAddress, profile, registerDropAsContent, showToast, extraDrops]
   );
 
+  // ─── Ghost Mark Handler ────────────────────────────────────────────────
+  var handleCreateGhost = useCallback(
+    function(data: { message: string; emoji: GhostEmoji }) {
+      var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
+      var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
+
+      var ghost: GhostMark = {
+        id: "ghost-" + Date.now(),
+        location: { lat: lat, lng: lng },
+        message: data.message,
+        emoji: data.emoji,
+        createdBy: profile?.username ? "@" + profile.username : "anon",
+        createdAt: Date.now(),
+        reactions: 0,
+      };
+
+      setGhostMarks(function(prev) {
+        var updated = prev.concat([ghost]);
+        // Only save user-created ghosts (not mock ones)
+        var userGhosts = updated.filter(function(g) { return g.id.startsWith("ghost-"); });
+        saveJSON("locus_ghosts", userGhosts);
+        return updated;
+      });
+      setGhostCount(function(c) { return c + 1; });
+
+      showToast("👻 Ghost mark left!", "success");
+      setActivities(function(prev) {
+        return [{ icon: "👻", text: "Left a ghost mark " + data.emoji, color: "#8b5cf6", timestamp: Date.now() }].concat(prev);
+      });
+
+      // Check badges
+      var newGhostCount = ghostCount + 1;
+      var rep = claimedIds.size * 10 + createdCount * 5 + likedIds.size * 2;
+      checkBadges({ claims: claimedIds.size, creates: createdCount, ghosts: newGhostCount, trails: completedTrails, rep: rep });
+    },
+    [userPosition, profile, showToast, ghostCount, claimedIds, createdCount, likedIds, completedTrails, checkBadges]
+  );
+
+  // Ghost reaction
+  var handleReactGhost = useCallback(function(ghostId: string) {
+    setGhostMarks(function(prev) {
+      return prev.map(function(g) {
+        return g.id === ghostId ? { ...g, reactions: g.reactions + 1 } : g;
+      });
+    });
+  }, []);
+
   // ─── Like Handler ──────────────────────────────────────────────────────
   var handleLike = useCallback(
     async function(dropId: string) {
@@ -317,9 +382,7 @@ export default function HomePage() {
         var newLikes = new Set(likedIds);
         newLikes.add(dropId);
         setLikedIds(newLikes);
-        try {
-          localStorage.setItem("locus_likes", JSON.stringify(Array.from(newLikes)));
-        } catch {}
+        saveSet("locus_likes", newLikes);
         setActivities(function(prev) {
           return [{ icon: "❤️", text: "Liked a drop", color: "#f472b6", timestamp: Date.now() }].concat(prev);
         });
@@ -348,29 +411,64 @@ export default function HomePage() {
     setActiveTab("map");
   }, []);
 
+  // ─── Trail handlers ────────────────────────────────────────────────────
+  var handleSelectTrail = useCallback(function(trail: QuestTrail) {
+    setActiveTrailId(trail.id);
+    setActiveTab("map");
+    // Fly to first waypoint
+    setFlyTrigger(Date.now());
+  }, []);
+
+  var handleStartTrail = useCallback(function(trailId: string) {
+    setActiveTrailId(trailId);
+    showToast("🗺️ Quest started! Walk to the waypoints.", "info");
+  }, [showToast]);
+
   var claimedCount = claimedIds.size;
   var likesCount = likedIds.size;
+  var activeTrail = activeTrailId ? MOCK_TRAILS.find(function(t) { return t.id === activeTrailId; }) || null : null;
+  var activeTrailProgress = activeTrailId ? trailProgress[activeTrailId] || new Set<string>() : new Set<string>();
 
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-[100dvh] bg-void overflow-hidden">
-      {/* Welcome overlay */}
-      {showWelcome && (
-        <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />
-      )}
+      {showWelcome && <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />}
 
-      {/* Tx Toast notifications */}
       {toasts.map(function(toast) {
-        return (
-          <TxToast
-            key={toast.id}
-            message={toast.message}
-            signature={toast.signature}
-            type={toast.type}
-            onDismiss={function() { removeToast(toast.id); }}
-          />
-        );
+        return <TxToast key={toast.id} message={toast.message} signature={toast.signature} type={toast.type} onDismiss={function() { removeToast(toast.id); }} />;
       })}
+
+      {/* Badge mint popup */}
+      {pendingBadge && (function() {
+        var badge = BADGE_DEFINITIONS.find(function(b) { return b.id === pendingBadge; });
+        if (!badge) return null;
+        return (
+          <div className="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="w-72 bg-void-100/[0.98] border border-crypt-300/20 rounded-2xl p-6 animate-slide-up text-center">
+              <div className="text-5xl mb-3">{badge.icon}</div>
+              <h3 className="text-crypt-200 font-mono text-lg font-bold mb-1">{badge.name}</h3>
+              <p className="text-[11px] text-gray-500 font-mono mb-1">{badge.description}</p>
+              <span className={"inline-block text-[9px] font-mono font-bold px-2 py-0.5 rounded-full mb-4 uppercase"} style={{ color: badge.color, background: badge.color + "15", border: "1px solid " + badge.color + "33" }}>
+                {badge.rarity}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={function() { setPendingBadge(null); }}
+                  className="flex-1 py-2.5 rounded-xl border border-crypt-300/20 bg-transparent text-gray-500 font-mono text-[11px] cursor-pointer"
+                >
+                  Later
+                </button>
+                <button
+                  onClick={function() { handleMintBadge(badge.id); }}
+                  className="flex-[2] py-2.5 rounded-xl border-none bg-gradient-to-r from-crypt-300 to-crypt-500 text-white font-mono text-[11px] font-bold cursor-pointer"
+                >
+                  🏅 Mint NFT Badge
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <Header />
       <StatsBar drops={drops} claimedCount={claimedCount} />
@@ -380,6 +478,9 @@ export default function HomePage() {
           <>
             <MapView
               drops={drops}
+              ghosts={ghostMarks}
+              activeTrail={activeTrail}
+              trailProgress={activeTrailProgress}
               selectedDrop={selectedDrop}
               onSelectDrop={setSelectedDrop}
               isConnected={isConnected}
@@ -388,6 +489,7 @@ export default function HomePage() {
               onLike={handleLike}
               onComment={handleComment}
               onConnectWallet={handleConnectWallet}
+              onReactGhost={handleReactGhost}
               likedIds={likedIds}
               userPosition={userPosition}
               demoMode={demoMode}
@@ -396,11 +498,30 @@ export default function HomePage() {
               flyTrigger={flyTrigger}
             />
 
-            {/* Explore hint — GPS on, no drops in range */}
-            {geoStatus === "active" && userPosition && (function() {
-              var nearbyDrops = drops.filter(function(d) {
-                return !d.isClaimed && isNearby(d.location.lat, d.location.lng);
-              });
+            {/* Active trail banner */}
+            {activeTrail && (
+              <div className="absolute top-3 right-3 z-[1000] w-48">
+                <div className="px-3 py-2 rounded-xl bg-void/90 backdrop-blur border border-crypt-300/15 text-center">
+                  <div className="text-[10px] font-mono text-gray-500">{activeTrail.icon} Active Quest</div>
+                  <div className="text-[12px] font-mono font-bold text-crypt-200 truncate">{activeTrail.name}</div>
+                  <div className="flex items-center gap-1 mt-1 justify-center">
+                    <div className="flex-1 h-1 rounded-full bg-gray-800/50 overflow-hidden">
+                      <div className="h-full rounded-full" style={{
+                        width: Math.round((activeTrailProgress.size / activeTrail.waypoints.length) * 100) + "%",
+                        background: activeTrail.color,
+                      }} />
+                    </div>
+                    <span className="text-[9px] font-mono" style={{ color: activeTrail.color }}>
+                      {activeTrailProgress.size}/{activeTrail.waypoints.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Explore hint */}
+            {geoStatus === "active" && userPosition && !activeTrail && (function() {
+              var nearbyDrops = drops.filter(function(d) { return !d.isClaimed && isNearby(d.location.lat, d.location.lng); });
               if (nearbyDrops.length > 0) return null;
               var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
               var distances = unclaimed.map(function(d) {
@@ -415,12 +536,10 @@ export default function HomePage() {
                     <div className="text-[11px] font-mono text-crypt-200 font-bold">No drops in range</div>
                     {nearest && nearest < Infinity ? (
                       <div className="text-[10px] font-mono text-gray-500 mt-1">
-                        Nearest drop is {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"} away — keep exploring!
+                        Nearest drop is {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"} away
                       </div>
                     ) : (
-                      <div className="text-[10px] font-mono text-gray-500 mt-1">
-                        Be the first to drop a secret here
-                      </div>
+                      <div className="text-[10px] font-mono text-gray-500 mt-1">Be the first to drop a secret here</div>
                     )}
                   </div>
                 </div>
@@ -428,14 +547,11 @@ export default function HomePage() {
             })()}
 
             {/* Activity feed */}
-            {activities.length > 0 && (
+            {activities.length > 0 && !activeTrail && (
               <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5 pointer-events-none">
                 {activities.slice(0, 3).map(function(a, i) {
                   return (
-                    <div
-                      key={a.timestamp + "-" + i}
-                      className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur"
-                    >
+                    <div key={a.timestamp + "-" + i} className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur">
                       <span style={{ color: a.color }}>{a.icon}</span> {a.text}
                     </div>
                   );
@@ -448,11 +564,8 @@ export default function HomePage() {
               <div className="px-3 py-1.5 rounded-lg bg-void/80 backdrop-blur border border-crypt-300/10 font-mono text-[10px] text-gray-600 tracking-wider">
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>
-                    {drops.filter(function(d) { return !d.isClaimed; }).length} active drops
-                  </span>
+                  <span>{drops.filter(function(d) { return !d.isClaimed; }).length} drops • {ghostMarks.length} ghosts</span>
                 </div>
-                {/* Nearby drops indicator */}
                 {userPosition && (function() {
                   var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
                   var nearbyCount = unclaimed.filter(function(d) { return isNearby(d.location.lat, d.location.lng); }).length;
@@ -465,76 +578,58 @@ export default function HomePage() {
                     <div className="mt-1 pt-1 border-t border-crypt-300/10">
                       {nearbyCount > 0 ? (
                         <div className="flex items-center gap-1.5 text-emerald-400">
-                          <span className="text-[10px]">⚡</span>
-                          <span>{nearbyCount} in range!</span>
+                          <span className="text-[10px]">⚡</span><span>{nearbyCount} in range!</span>
                         </div>
                       ) : nearest && nearest < Infinity ? (
                         <div className="flex items-center gap-1.5 text-yellow-500/80">
-                          <span className="text-[10px]">→</span>
-                          <span>Nearest: {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"}</span>
+                          <span className="text-[10px]">→</span><span>Nearest: {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"}</span>
                         </div>
                       ) : null}
                     </div>
                   );
                 })()}
-                {profile && (
-                  <div className="text-[9px] text-crypt-300 mt-0.5">
-                    @{profile.username}
-                  </div>
-                )}
+                {profile && <div className="text-[9px] text-crypt-300 mt-0.5">@{profile.username}</div>}
               </div>
 
               <button
                 onClick={function() {
-                  if (geoStatus === "active") {
-                    // Re-center map on current position
-                    setFlyTrigger(Date.now());
-                  } else if (geoStatus === "idle" || geoStatus === "error") {
-                    requestLocation();
-                  }
+                  if (geoStatus === "active") setFlyTrigger(Date.now());
+                  else if (geoStatus === "idle" || geoStatus === "error") requestLocation();
                 }}
                 className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
-                  geoStatus === "active"
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                    : geoStatus === "requesting"
-                      ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
-                      : geoStatus === "denied"
-                        ? "bg-red-500/10 border-red-500/30 text-red-400"
-                        : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                  geoStatus === "active" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : geoStatus === "requesting" ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
+                    : geoStatus === "denied" ? "bg-red-500/10 border-red-500/30 text-red-400"
+                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                 )}
               >
                 <span className="text-[10px] font-mono font-bold">
-                  {geoStatus === "active"
-                    ? (userPosition && userPosition.source === "ip"
-                        ? "📍 ~IP loc"
-                        : "📍 GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
-                    : geoStatus === "requesting"
-                      ? "📍 Locating..."
-                      : geoStatus === "denied"
-                        ? "📍 GPS Denied"
-                        : "📍 Enable GPS"}
+                  {geoStatus === "active" ? (userPosition && userPosition.source === "ip" ? "📍 ~IP loc" : "📍 GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
+                    : geoStatus === "requesting" ? "📍 Locating..."
+                    : geoStatus === "denied" ? "📍 GPS Denied"
+                    : "📍 Enable GPS"}
                 </span>
               </button>
 
               <button
                 onClick={function() { setDemoMode(!demoMode); }}
                 className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
-                  demoMode
-                    ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
-                    : "bg-void/80 border-crypt-300/10 text-gray-600"
+                  demoMode ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400" : "bg-void/80 border-crypt-300/10 text-gray-600"
                 )}
               >
-                <span className="text-[10px] font-mono">
-                  {demoMode ? "🔓 Demo ON" : "🔓 Demo"}
-                </span>
+                <span className="text-[10px] font-mono">{demoMode ? "🔓 Demo ON" : "🔓 Demo"}</span>
               </button>
             </div>
           </>
         ) : activeTab === "list" ? (
-          <DropList
-            drops={drops}
-            onSelectDrop={handleSelectDropFromList}
-            formatDistance={formatDistance}
+          <DropList drops={drops} onSelectDrop={handleSelectDropFromList} formatDistance={formatDistance} />
+        ) : activeTab === "trails" ? (
+          <QuestTrails
+            trails={MOCK_TRAILS}
+            trailProgress={trailProgress}
+            activeTrailId={activeTrailId}
+            onSelectTrail={handleSelectTrail}
+            onStartTrail={handleStartTrail}
           />
         ) : (
           <Leaderboard
@@ -549,45 +644,37 @@ export default function HomePage() {
         {([
           { id: "map" as TabId, icon: "🗺️", label: "Map" },
           { id: "list" as TabId, icon: "📜", label: "Drops" },
+          { id: "trails" as TabId, icon: "🧭", label: "Quests" },
           { id: "leaderboard" as TabId, icon: "🏆", label: "Rank" },
         ]).map(function(tab) {
           return (
             <button
               key={tab.id}
               onClick={function() { setActiveTab(tab.id); }}
-              className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-5 py-1 " + (
+              className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-3 py-1 " + (
                 activeTab === tab.id ? "text-crypt-300" : "text-gray-600"
               )}
             >
-              <span className="text-xl">{tab.icon}</span>
+              <span className="text-lg">{tab.icon}</span>
               {tab.label}
             </button>
           );
         })}
 
-        {isConnected ? (
-          <button
-            onClick={function() { setShowCreateModal(true); }}
-            className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
-          >
-            +
-          </button>
-        ) : (
-          <button
-            onClick={handleConnectWallet}
-            className="px-4 py-2.5 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-[11px] font-mono font-bold cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-4 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95 tracking-wider"
-          >
-            🔗 Connect
-          </button>
-        )}
+        <button
+          onClick={function() { setShowCreateModal(true); }}
+          className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
+        >
+          +
+        </button>
 
         <button
           onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}
-          className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-5 py-1 transition-colors " + (
+          className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-3 py-1 transition-colors " + (
             isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-600"
           )}
         >
-          <span className="text-xl">👤</span>
+          <span className="text-lg">👤</span>
           {isConnected ? "Profile" : "Login"}
         </button>
       </nav>
@@ -596,13 +683,17 @@ export default function HomePage() {
         <CreateDropModal
           onClose={function() { setShowCreateModal(false); }}
           onCreate={handleCreateDrop}
+          onCreateGhost={handleCreateGhost}
           userPosition={userPosition}
+          isConnected={isConnected}
         />
       )}
 
       <ProfilePanel
         profile={profile}
-        stats={{ claimed: claimedCount, created: createdCount, likes: likesCount }}
+        stats={{ claimed: claimedCount, created: createdCount, likes: likesCount, ghosts: ghostCount, trails: completedTrails }}
+        mintedBadges={mintedBadges}
+        onMintBadge={handleMintBadge}
         isOpen={showProfile}
         onClose={function() { setShowProfile(false); }}
         tapestryConfigured={tapestryConfigured}
@@ -629,13 +720,9 @@ export default function HomePage() {
                   key={"conf-" + i}
                   className="confetti-particle"
                   style={{
-                    left: left + "%",
-                    width: size + "px",
-                    height: size + "px",
-                    background: color,
-                    borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-                    animationDelay: delay + "s",
-                    animationDuration: (1 + Math.random()) + "s",
+                    left: left + "%", width: size + "px", height: size + "px",
+                    background: color, borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+                    animationDelay: delay + "s", animationDuration: (1 + Math.random()) + "s",
                     transform: "translateX(" + dx + "vw)",
                   }}
                 />

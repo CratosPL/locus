@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Drop, DropCategory } from "@/types";
+import { Drop, DropCategory, GhostMark, QuestTrail } from "@/types";
 import { CATEGORY_CONFIG, WARSAW_CENTER, DEFAULT_ZOOM } from "@/utils/mockData";
 import type { GeoPosition } from "@/hooks/useGeolocation";
 
@@ -11,10 +11,14 @@ let TileLayer: any = null;
 let Marker: any = null;
 let Popup: any = null;
 let Circle: any = null;
+let Polyline: any = null;
 let useMapHook: any = null;
 
 interface MapProps {
   drops: Drop[];
+  ghosts: GhostMark[];
+  activeTrail: QuestTrail | null;
+  trailProgress?: Set<string>;
   selectedDrop: Drop | null;
   onSelectDrop: (drop: Drop | null) => void;
   isConnected: boolean;
@@ -23,6 +27,7 @@ interface MapProps {
   onLike: (dropId: string) => void;
   onComment: (dropId: string, text: string) => void;
   onConnectWallet: () => void;
+  onReactGhost?: (ghostId: string) => void;
   likedIds: Set<string>;
   userPosition: GeoPosition | null;
   demoMode: boolean;
@@ -51,6 +56,9 @@ function FlyToUser({ position, flyTrigger }: { position: GeoPosition | null; fly
 
 export default function MapView({
   drops,
+  ghosts,
+  activeTrail,
+  trailProgress,
   selectedDrop,
   onSelectDrop,
   isConnected,
@@ -59,6 +67,7 @@ export default function MapView({
   onLike,
   onComment,
   onConnectWallet,
+  onReactGhost,
   likedIds,
   userPosition,
   demoMode,
@@ -81,6 +90,7 @@ export default function MapView({
         Marker = reactLeafletMod.Marker;
         Popup = reactLeafletMod.Popup;
         Circle = reactLeafletMod.Circle;
+        Polyline = reactLeafletMod.Polyline;
         useMapHook = reactLeafletMod.useMap;
 
         delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -152,6 +162,35 @@ export default function MapView({
     iconSize: [24, 24],
     iconAnchor: [12, 12],
   });
+
+  // Ghost mark icon — translucent, ethereal
+  const createGhostIcon = (emoji: string) => {
+    return L!.divIcon({
+      className: "custom-marker",
+      html: '<div class="ghost-marker">' +
+        '<div class="ghost-marker-inner">' + emoji + '</div>' +
+        '<div class="ghost-marker-ring"></div>' +
+      '</div>',
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
+      popupAnchor: [0, -20],
+    });
+  };
+
+  // Trail waypoint icon
+  const createTrailIcon = (order: number, color: string, isVisited: boolean) => {
+    return L!.divIcon({
+      className: "custom-marker",
+      html: '<div class="trail-waypoint" style="--trail-color:' + color + ';">' +
+        '<div class="trail-waypoint-inner ' + (isVisited ? 'trail-visited' : '') + '">' +
+          '<span class="trail-waypoint-num">' + (isVisited ? '✓' : order) + '</span>' +
+        '</div>' +
+      '</div>',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -18],
+    });
+  };
 
   // Center on user if available
   const mapCenter: [number, number] = userPosition
@@ -380,6 +419,95 @@ export default function MapView({
             </Marker>
           );
         })}
+
+        {/* ─── Ghost Markers ─────────────────────────────────────────── */}
+        {ghosts.map(function(ghost) {
+          var age = Date.now() - ghost.createdAt;
+          var hoursLeft = Math.max(0, Math.round((86400000 - age) / 3600000));
+          return (
+            <Marker
+              key={ghost.id}
+              position={[ghost.location.lat, ghost.location.lng]}
+              icon={createGhostIcon(ghost.emoji)}
+            >
+              <Popup className="locus-popup ghost-popup">
+                <div style={{
+                  fontFamily: "JetBrains Mono, monospace",
+                  padding: "12px", minWidth: "180px",
+                }}>
+                  <div style={{ fontSize: "24px", textAlign: "center", marginBottom: "6px" }}>
+                    {ghost.emoji}
+                  </div>
+                  <p style={{ color: "#c4b5fd", fontSize: "12px", textAlign: "center", margin: "0 0 8px" }}>
+                    {ghost.message}
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "9px", color: "#666" }}>
+                      ⏳ {hoursLeft}h left
+                    </span>
+                    <button
+                      onClick={function() { if (onReactGhost) onReactGhost(ghost.id); }}
+                      style={{
+                        background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)",
+                        borderRadius: "12px", padding: "3px 10px", cursor: "pointer",
+                        color: "#a78bfa", fontSize: "11px", fontFamily: "inherit",
+                      }}
+                    >
+                      👻 {ghost.reactions}
+                    </button>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+
+        {/* ─── Active Trail Polyline + Waypoints ─────────────────────── */}
+        {activeTrail && Polyline && (
+          <>
+            <Polyline
+              positions={activeTrail.waypoints.map(function(wp) {
+                return [wp.location.lat, wp.location.lng] as [number, number];
+              })}
+              pathOptions={{
+                color: activeTrail.color,
+                weight: 3,
+                opacity: 0.6,
+                dashArray: "8 6",
+              }}
+            />
+            {activeTrail.waypoints.map(function(wp) {
+              var visited = trailProgress && trailProgress.has(wp.id);
+              return (
+                <Marker
+                  key={wp.id}
+                  position={[wp.location.lat, wp.location.lng]}
+                  icon={createTrailIcon(wp.order, activeTrail.color, !!visited)}
+                >
+                  <Popup className="locus-popup">
+                    <div style={{
+                      fontFamily: "JetBrains Mono, monospace",
+                      padding: "10px", minWidth: "160px",
+                    }}>
+                      <div style={{
+                        fontSize: "11px", fontWeight: 700,
+                        color: activeTrail.color, marginBottom: "4px",
+                      }}>
+                        #{wp.order} — {wp.name}
+                      </div>
+                      <p style={{ color: "#999", fontSize: "11px", margin: "0 0 6px", fontStyle: "italic" }}>
+                        {wp.hint}
+                      </p>
+                      <div style={{ fontSize: "10px", color: visited ? "#34d399" : "#666" }}>
+                        {visited ? "✓ Visited" : "Walk within 150m to check in"}
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
+          </>
+        )}
       </MapContainer>
 
       {/* Custom styles */}

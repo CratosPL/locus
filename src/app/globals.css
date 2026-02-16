@@ -463,3 +463,86 @@ body {
   100% { opacity: 0; transform: scale(2.5); }
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GHOST MARKERS — ethereal, translucent
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.ghost-marker {
+  position: relative;
+  width: 36px; height: 36px;
+  cursor: pointer;
+  animation: ghost-float 3s ease-in-out infinite;
+}
+
+.ghost-marker-inner {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.2), rgba(139,92,246,0.05));
+  border: 1.5px solid rgba(139,92,246,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 20px rgba(139,92,246,0.15);
+}
+
+.ghost-marker-ring {
+  position: absolute;
+  top: 0; left: 0;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(139,92,246,0.2);
+  animation: ghost-ring 3s ease-out infinite;
+}
+
+@keyframes ghost-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes ghost-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TRAIL WAYPOINTS — numbered circles
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.trail-waypoint {
+  position: relative;
+  width: 32px; height: 32px;
+  cursor: pointer;
+}
+
+.trail-waypoint-inner {
+  width: 28px; height: 28px;
+  margin: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--trail-color), color-mix(in srgb, var(--trail-color), #000 30%));
+  border: 2.5px solid color-mix(in srgb, var(--trail-color), #fff 30%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow:
+    0 2px 8px color-mix(in srgb, var(--trail-color), transparent 50%),
+    0 0 16px color-mix(in srgb, var(--trail-color), transparent 70%);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.trail-waypoint:hover .trail-waypoint-inner {
+  transform: scale(1.15);
+  box-shadow: 0 2px 16px color-mix(in srgb, var(--trail-color), transparent 30%);
+}
+
+.trail-waypoint-inner.trail-visited {
+  background: linear-gradient(135deg, #34d399, #059669);
+  border-color: #6ee7b7;
+  box-shadow: 0 2px 8px rgba(52,211,153,0.4);
+}
+
+.trail-waypoint-num {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  font-family: "JetBrains Mono", monospace;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
