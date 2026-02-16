@@ -229,7 +229,7 @@ export default function HomePage() {
       saveSet("locus_minted_badges", newMinted);
       setPendingBadge(null);
 
-      showToast("🎉 NFT Badge Minted! " + badge.icon + " " + badge.name, "success", "MOCK_" + Date.now().toString(36));
+ showToast("🎉 NFT Badge Minted! " + badge!.icon + " " + badge!.name, "success", "MOCK_" + Date.now().toString(36));
       setShowConfetti(true);
       setTimeout(function() { setShowConfetti(false); }, 2000);
     }, 1500);
@@ -261,7 +261,7 @@ export default function HomePage() {
         setTimeout(function() { setShowConfetti(false); }, 2000);
 
         setActivities(function(prev) {
-          return [{ icon: "⚡", text: "Claimed " + drop.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
+          return [{ icon: "⚡", text: "Claimed " + drop!.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
         });
         setSelectedDrop(null);
 
@@ -460,7 +460,7 @@ export default function HomePage() {
                   Later
                 </button>
                 <button
-                  onClick={function() { handleMintBadge(badge.id); }}
+                  onClick={function() { handleMintBadge(badge!.id); }}
                   className="flex-[2] py-2.5 rounded-xl border-none bg-gradient-to-r from-crypt-300 to-crypt-500 text-white font-mono text-[11px] font-bold cursor-pointer"
                 >
                   🏅 Mint NFT Badge
