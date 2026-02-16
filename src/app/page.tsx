@@ -661,12 +661,21 @@ export default function HomePage() {
           );
         })}
 
-        <button
-          onClick={function() { setShowCreateModal(true); }}
-          className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
-        >
-          +
-        </button>
+        {isConnected ? (
+          <button
+            onClick={function() { setShowCreateModal(true); }}
+            className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
+          >
+            +
+          </button>
+        ) : (
+          <button
+            onClick={handleConnectWallet}
+            className="px-4 py-2.5 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-[11px] font-mono font-bold cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-4 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95 tracking-wider"
+          >
+            🔗 Connect
+          </button>
+        )}
 
         <button
           onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}

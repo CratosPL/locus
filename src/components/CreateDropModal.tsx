@@ -31,7 +31,7 @@ var TOKEN_OPTIONS = [
 export default function CreateDropModal({
   onClose, onCreate, onCreateGhost, userPosition, isConnected,
 }: CreateDropModalProps) {
-  var [mode, setMode] = useState<CreateMode>(isConnected ? "drop" : "ghost");
+  var [mode, setMode] = useState<CreateMode>("drop");
   var [message, setMessage] = useState("");
   var [reward, setReward] = useState("0.05");
   var [category, setCategory] = useState<DropCategory>("lore");
@@ -72,13 +72,11 @@ export default function CreateDropModal({
         {/* Mode toggle */}
         <div className="flex gap-1 mb-4 p-1 rounded-xl bg-void/60 border border-crypt-300/10">
           <button
-            onClick={function() { if (isConnected) setMode("drop"); }}
+            onClick={function() { setMode("drop"); }}
             className={"flex-1 py-2 rounded-lg font-mono text-[11px] font-bold transition-all cursor-pointer border-none " + (
               mode === "drop"
                 ? "bg-crypt-300/15 text-crypt-300"
-                : isConnected
-                  ? "bg-transparent text-gray-600 hover:text-gray-400"
-                  : "bg-transparent text-gray-700 cursor-not-allowed"
+                : "bg-transparent text-gray-600 hover:text-gray-400"
             )}
           >
             🪦 Drop (SOL)
@@ -91,14 +89,14 @@ export default function CreateDropModal({
                 : "bg-transparent text-gray-600 hover:text-gray-400"
             )}
           >
-            👻 Ghost (Free)
+            👻 Ghost Mark
           </button>
         </div>
 
         {/* Ghost mode explainer */}
         {mode === "ghost" && (
           <div className="mb-3 px-3 py-2 rounded-lg bg-purple-500/5 border border-purple-500/15 text-[10px] text-purple-300/70 font-mono">
-            Ghost marks are free, no wallet needed. They disappear after 24h — ephemeral like whispers.
+            Ghost marks are ephemeral — they disappear after 24h. No SOL reward, just whispers on the map. Saved to Tapestry social graph.
           </div>
         )}
 

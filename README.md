@@ -1,9 +1,9 @@
 # 🪦 LOCUS — Geo-Social Dead Drops on Solana
 
-> **Leave messages. Hide rewards. Discover secrets.**
-> A location-based social dApp where users drop encrypted messages with SOL bounties at real-world coordinates — and others must physically walk there to claim them.
+> **Leave messages. Hide rewards. Discover secrets. Walk quests. Mint badges.**
+> A location-based social dApp where users drop messages with SOL bounties, leave ephemeral ghost marks, walk quest trails, and mint NFT achievement badges — all on Solana.
 
-**🏆 Solana Graveyard Hackathon 2026 — Tapestry On-chain Social Track**
+**🏆 Solana Graveyard Hackathon 2026 — Tapestry On-chain Social + DRiP NFT Tracks**
 
 🔗 **[Live Demo](https://locus-psi-coral.vercel.app)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
 
@@ -79,17 +79,64 @@ Program: HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn (Devnet)
 
 | Feature | Description | Stack |
 |---------|-------------|-------|
-| 🗺️ Dark Map | Interactive map with categorized drop markers | Leaflet + CARTO dark tiles |
+| 🗺️ Dark Map | Interactive themed map with custom SVG markers | Leaflet + CARTO + CSS filters |
 | 📍 GPS Verification | Must be within 150m to claim (Haversine) | Browser Geolocation API |
 | ⚡ On-chain Claims | Real SOL transactions signed by wallet | Pinocchio program |
 | 🪦 Create Drops | Place drops at your GPS location with SOL reward | Pinocchio + Tapestry |
+| 👻 Ghost Marks | Ephemeral marks on the map — disappear after 24h | Tapestry content nodes |
+| 🗺️ Quest Trails | Multi-waypoint routes with auto check-in + bonus SOL | GPS proximity + localStorage |
+| 🏅 NFT Badges | Mint achievement NFTs for claims, creates, quests | Metaplex Bubblegum (planned) |
 | 👤 Tapestry Profiles | Auto-created on wallet connect | Tapestry REST API |
 | ❤️ Likes & Comments | Social engagement on drops, stored on-chain | Tapestry protocol |
-| 🏅 Badges & Ranks | 7 discovery badges, reputation system (Lost Soul → Lich) | Client + Tapestry |
+| 🏆 Leaderboard | Reputation ranking: Claims ×10 + Created ×5 + Likes ×2 | Client + Tapestry |
+| 🏅 Badges & Ranks | 8 NFT badges, reputation system (Lost Soul → Lich) | Client + Tapestry |
 | 🔍 Demo Mode | Toggle GPS bypass for testing/judging | Client-side flag |
-| 💾 Persistent State | Claims, likes, and created drops survive refresh | localStorage |
+| 💾 Persistent State | Claims, likes, ghosts, trails survive refresh | localStorage |
 | 🛡️ Anti-spam | Max 5 drops/wallet, 60s cooldown, min reward, no self-claim | Client-side guards |
-| 🪙 Token Selector | SOL active, BONK/USDC coming soon | UI roadmap |
+| 📱 PWA | Add to Home Screen, standalone mode | Web App Manifest |
+
+---
+
+### 👻 Ghost Marks — Ephemeral Social Layer
+
+Ghost Marks are short-lived messages on the map that **disappear after 24 hours**. Unlike Drops (which hold SOL), Ghost Marks are lightweight social signals — tips, warnings, photos, vibes.
+
+- 8 emoji types: 👻 💭 ⚠️ 📸 🎵 💀 🔥 ❄️
+- Placed at your GPS location
+- Other users can react (👻 button)
+- Stored as Tapestry content nodes
+- Creates FOMO: "what was on the map yesterday?"
+
+### 🗺️ Quest Trails — Multi-Waypoint Routes
+
+Quest Trails link multiple waypoints into a walking route. Users follow the trail, physically visit each checkpoint, and earn a bonus SOL reward for completing the full quest.
+
+- 3 pre-built trails in Warsaw (Old Town Haunting, Vistula Death March, Crypto Graveyard Tour)
+- Dashed polyline rendered on map connecting waypoints
+- **Auto check-in**: GPS proximity (150m) automatically marks waypoints as visited
+- Progress bar per trail with real-time tracking
+- Difficulty levels: Easy / Medium / Hard
+- Bonus SOL on completion (0.5–1.0 SOL)
+
+### 🏅 NFT Badges — Proof of Discovery
+
+Achievement badges that can be minted as compressed NFTs on Solana. Tracks user milestones across all features.
+
+| Badge | Requirement | Rarity |
+|-------|------------|--------|
+| 🩸 First Blood | Claim 1 drop | Common |
+| 🧭 Explorer | Claim 5 drops | Rare |
+| 👻 Phantom Hunter | Claim 10 drops | Epic |
+| 👑 Lich Lord | Claim 25 drops | Legendary |
+| ⚰️ Gravedigger | Create 3 drops | Common |
+| 💭 Haunter | Leave 5 ghost marks | Rare |
+| 🗺️ Trail Walker | Complete a quest trail | Rare |
+| ⭐ Legend | Reach 200 reputation | Legendary |
+
+- Auto-popup when threshold reached: "Badge earned! Mint NFT?"
+- Progress bars in Profile panel
+- Rarity tiers with colors
+- Production: Metaplex Bubblegum compressed NFTs (~0.001 SOL per mint)
 
 ---
 
@@ -157,13 +204,15 @@ npm run dev
 ### Testing Flow
 1. Open app → Complete 3-step welcome tour
 2. Click **"📍 Enable GPS"** to activate location (or enable Demo Mode)
-3. Click "Select Wallet" → Connect Solflare/Phantom (set to Devnet)
+3. Click "Connect" → Connect Phantom/Solflare (set to Devnet)
 4. Click a drop marker → See distance → Walk closer or use Demo Mode
-5. Click "⚡ Claim Drop" → Sign transaction in wallet
-6. See transaction confirmed on [Solscan](https://solscan.io)
-7. Click **+** to create a new drop at your location (max 5 per wallet, 60s cooldown)
-8. Like / Comment on drops via social buttons
-9. Open Profile → Check your badges and reputation rank
+5. Click "⚡ Claim Drop" → Sign transaction in wallet → 🎉 Confetti!
+6. Check Profile → See NFT badge popup → Mint your first badge
+7. Click **+** → Choose "👻 Ghost Mark" → Leave an ephemeral mark
+8. Click **+** → Choose "🪦 Drop" → Create a new drop with SOL reward
+9. Open **🧭 Quests** tab → Start a quest trail → Walk waypoints
+10. Open **🏆 Rank** tab → Check your leaderboard position
+11. Like / Comment on drops via social buttons
 
 ---
 
@@ -173,40 +222,55 @@ npm run dev
 src/
 ├── app/
 │   ├── api/tapestry/route.ts   # Server-side proxy (CORS bypass)
-│   ├── layout.tsx              # Root layout + wallet provider
-│   ├── page.tsx                # Main page — map, drops, social
-│   └── globals.css             # Dark theme + Leaflet overrides
+│   ├── layout.tsx              # Root layout + wallet provider + PWA
+│   ├── page.tsx                # Main page — map, drops, ghosts, trails, badges
+│   └── globals.css             # Dark theme + markers + ghost/trail CSS
 ├── components/
 │   ├── AppWalletProvider.tsx    # Solana wallet context
-│   ├── Header.tsx              # Logo + wallet connect/disconnect
-│   ├── MapView.tsx             # Leaflet map + GPS + popups + social
+│   ├── Header.tsx              # Logo + generic wallet connect/disconnect
+│   ├── MapView.tsx             # Leaflet map + drop/ghost/trail markers + popups
 │   ├── StatsBar.tsx            # Active drops, rewards, claims
 │   ├── DropList.tsx            # List view with category filters + sorting
-│   ├── CreateDropModal.tsx     # Create drop with token selector + GPS coords
-│   ├── ProfilePanel.tsx        # Tapestry profile + badges + reputation
+│   ├── CreateDropModal.tsx     # Create drop OR ghost mark (tabbed modal)
+│   ├── ProfilePanel.tsx        # Profile + NFT badges + reputation + mint
+│   ├── Leaderboard.tsx         # Top players by reputation
+│   ├── QuestTrails.tsx         # Trail listing + progress + start quest
 │   ├── WelcomeOverlay.tsx      # 3-step onboarding for first-time users
 │   └── TxToast.tsx             # Transaction success/error notifications
 ├── hooks/
 │   ├── useProgram.ts           # Solana program interaction (claim/create)
 │   ├── useTapestry.ts          # Tapestry social API (profile/like/comment)
-│   └── useGeolocation.ts       # GPS on user gesture (iOS-compatible) + proximity
-├── types/index.ts
-└── utils/mockData.ts           # Sample drops in Warsaw
+│   └── useGeolocation.ts       # GPS + IP fallback + proximity
+├── types/index.ts              # Drop, GhostMark, QuestTrail, NFTBadge types
+└── utils/mockData.ts           # Sample drops, ghosts, trails, badge defs
+public/
+├── manifest.json               # PWA manifest
+└── icon-512.svg                # App icon
 ```
 
 ---
 
-## Hackathon Track: Tapestry — On-chain Social ($5,000)
+## Hackathon Tracks
+
+### Tapestry — On-chain Social ($5,000)
 
 Locus uses Tapestry to bring **social features fully on-chain**:
 
 - **Profiles** → Auto-created via `findOrCreate` on wallet connect
-- **Content Nodes** → Every drop registered as Tapestry content
+- **Content Nodes** → Every drop and ghost mark registered as Tapestry content
 - **Likes** → On-chain engagement tracked per drop
 - **Comments** → Users leave messages on drops via Tapestry
 - **Social Graph** → Follow drop creators, build reputation
 
-This transforms a simple geo-cache into a **social discovery platform** where reputation, engagement, and location create unique on-chain experiences.
+### DRiP — NFT Track ($2,500)
+
+Locus implements **NFT achievement badges** as Proof-of-Discovery tokens:
+
+- **8 badge definitions** with rarity tiers (Common → Legendary)
+- **Auto-trigger** when user hits milestone (claims, creates, trails, reputation)
+- **Mint flow** — popup with badge preview → confirm → mint compressed NFT
+- **Profile gallery** — minted badges displayed with rarity + progress bars
+- **Production path** → Metaplex Bubblegum for ~0.001 SOL per compressed NFT
 
 ---
 
@@ -249,11 +313,12 @@ CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
 - 🛡️ **On-chain sybil resistance** — PDA counters, quadratic staking, reputation gates
 - 🪙 **Multi-token rewards** — BONK, USDC, and SPL token support for drop bounties
 - 🎫 **Session keys** — gas-free claiming for onboarding new users
-- 🖼️ **NFT badges** — mint Proof-of-Discovery NFTs for completed quests
 - 🌍 **Multi-city expansion** — community-created drop zones worldwide
-- 🏆 **Leaderboards** — seasonal events with prize pools
-- 📱 **PWA** — push notifications for nearby drops, offline map caching
+- 🏆 **Seasonal events** — time-limited trails with leaderboard prize pools
 - 🤝 **Multi-sig drops** — require N finders to unlock a shared vault
+- 🔔 **Push notifications** — alert when new drops appear near your location
+- 📷 **Photo drops** — attach images to drops and ghost marks
+- 🏪 **Creator marketplace** — buy/sell quest trail templates
 
 ---
 
