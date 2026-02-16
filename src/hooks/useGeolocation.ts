@@ -7,6 +7,7 @@ export interface GeoPosition {
   lng: number;
   accuracy: number;
   timestamp: number;
+  source?: "gps" | "ip" | "manual";
 }
 
 var CLAIM_RADIUS_METERS = 150;
@@ -29,6 +30,44 @@ function haversineDistance(
 }
 
 export type GeoStatus = "idle" | "requesting" | "active" | "denied" | "error";
+
+// ─── IP-based geolocation fallback ────────────────────────────────────────
+async function getIPLocation(): Promise<GeoPosition | null> {
+  // Try multiple free IP geolocation APIs
+  var apis = [
+    {
+      url: "https://ipapi.co/json/",
+      parse: function(d: any) { return { lat: d.latitude, lng: d.longitude }; }
+    },
+    {
+      url: "https://ip-api.com/json/?fields=lat,lon",
+      parse: function(d: any) { return { lat: d.lat, lng: d.lon }; }
+    },
+  ];
+
+  for (var i = 0; i < apis.length; i++) {
+    try {
+      var resp = await fetch(apis[i].url, { signal: AbortSignal.timeout(5000) });
+      if (resp.ok) {
+        var data = await resp.json();
+        var coords = apis[i].parse(data);
+        if (coords.lat && coords.lng) {
+          console.log("[Geo] IP fallback success:", coords.lat.toFixed(4), coords.lng.toFixed(4));
+          return {
+            lat: coords.lat,
+            lng: coords.lng,
+            accuracy: 5000, // ~5km accuracy for IP
+            timestamp: Date.now(),
+            source: "ip",
+          };
+        }
+      }
+    } catch (e) {
+      console.warn("[Geo] IP API " + i + " failed:", e);
+    }
+  }
+  return null;
+}
 
 export function useGeolocation() {
   var [position, setPosition] = useState<GeoPosition | null>(null);
@@ -55,7 +94,6 @@ export function useGeolocation() {
   var startWatch = useCallback(function() {
     if (!navigator.geolocation) return;
 
-    // Clear existing watch
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -63,22 +101,22 @@ export function useGeolocation() {
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       function(pos) {
-        var newPos = {
+        var newPos: GeoPosition = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
           timestamp: pos.timestamp,
+          source: "gps",
         };
-        console.log("[Geo] Position:", newPos.lat.toFixed(4), newPos.lng.toFixed(4), "±" + Math.round(newPos.accuracy) + "m");
+        console.log("[Geo] GPS:", newPos.lat.toFixed(4), newPos.lng.toFixed(4), "±" + Math.round(newPos.accuracy) + "m");
         setPosition(newPos);
         setError(null);
         setStatus("active");
-        retryCountRef.current = 0; // Reset retry count on success
+        retryCountRef.current = 0;
       },
       function(err) {
         console.warn("[Geo] Watch error:", err.code, err.message);
         if (err.code === 1) {
-          // PERMISSION_DENIED — don't retry
           setStatus("denied");
           setError("Location permission denied");
           if (watchIdRef.current !== null) {
@@ -86,27 +124,17 @@ export function useGeolocation() {
             watchIdRef.current = null;
           }
         } else {
-          // POSITION_UNAVAILABLE or TIMEOUT — auto-retry
-          // Keep status as "active" if we had a previous position (just stale)
-          if (!position) {
-            setStatus("error");
-          }
+          if (!position) setStatus("error");
           retryCountRef.current++;
-          if (retryCountRef.current <= 5) {
-            var delay = Math.min(retryCountRef.current * 3000, 15000);
-            console.log("[Geo] Will retry in " + (delay / 1000) + "s (attempt " + retryCountRef.current + "/5)");
+          if (retryCountRef.current <= 3) {
+            var delay = retryCountRef.current * 5000;
+            console.log("[Geo] Will retry in " + (delay / 1000) + "s");
             if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-            retryTimerRef.current = setTimeout(function() {
-              startWatch();
-            }, delay);
+            retryTimerRef.current = setTimeout(startWatch, delay);
           }
         }
       },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 15000,    // Allow 15s cached position (was 0 — too aggressive)
-        timeout: 20000,
-      }
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
     );
   }, [position]);
 
@@ -132,53 +160,68 @@ export function useGeolocation() {
     setStatus("requesting");
     console.log("[Geo] Requesting location (user gesture)...");
 
-    // First: getCurrentPosition for permission prompt + immediate result
+    // Attempt 1: High accuracy
     navigator.geolocation.getCurrentPosition(
       function(pos) {
-        console.log("[Geo] Got position:", pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4), "±" + Math.round(pos.coords.accuracy) + "m");
+        console.log("[Geo] Got GPS:", pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4), "±" + Math.round(pos.coords.accuracy) + "m");
         setPosition({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
           timestamp: pos.timestamp,
+          source: "gps",
         });
         setError(null);
         setStatus("active");
-
-        // Then start continuous watching
         startWatch();
       },
       function(err) {
-        console.error("[Geo] Initial error:", err.code, err.message);
+        console.warn("[Geo] High accuracy failed:", err.code, err.message);
+
         if (err.code === 1) {
           setStatus("denied");
           setError("Location permission denied");
-        } else {
-          // Try with relaxed settings
-          console.log("[Geo] Trying relaxed settings...");
-          navigator.geolocation.getCurrentPosition(
-            function(pos) {
-              console.log("[Geo] Relaxed position:", pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4));
-              setPosition({
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude,
-                accuracy: pos.coords.accuracy,
-                timestamp: pos.timestamp,
-              });
-              setError(null);
-              setStatus("active");
-              startWatch();
-            },
-            function(err2) {
-              console.error("[Geo] Relaxed also failed:", err2.message);
-              setError(err2.message);
-              setStatus("error");
-            },
-            { enableHighAccuracy: false, maximumAge: 60000, timeout: 30000 }
-          );
+          return;
         }
+
+        // Attempt 2: Low accuracy, accept cached
+        console.log("[Geo] Trying low accuracy...");
+        navigator.geolocation.getCurrentPosition(
+          function(pos) {
+            console.log("[Geo] Low accuracy GPS:", pos.coords.latitude.toFixed(4), pos.coords.longitude.toFixed(4));
+            setPosition({
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              timestamp: pos.timestamp,
+              source: "gps",
+            });
+            setError(null);
+            setStatus("active");
+            startWatch();
+          },
+          function(err2) {
+            console.warn("[Geo] Low accuracy also failed:", err2.message);
+
+            // Attempt 3: IP geolocation fallback
+            console.log("[Geo] Trying IP geolocation fallback...");
+            getIPLocation().then(function(ipPos) {
+              if (ipPos) {
+                setPosition(ipPos);
+                setError("Using approximate location (IP). GPS unavailable.");
+                setStatus("active");
+                // Still try to start GPS watch — it might work later
+                startWatch();
+              } else {
+                setError("Location unavailable. Check browser permissions in System Settings → Privacy → Location Services.");
+                setStatus("error");
+              }
+            });
+          },
+          { enableHighAccuracy: false, maximumAge: 300000, timeout: 15000 }
+        );
       },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+      { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 }
     );
   }, [startWatch]);
 

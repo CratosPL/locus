@@ -505,7 +505,9 @@ export default function HomePage() {
               >
                 <span className="text-[10px] font-mono font-bold">
                   {geoStatus === "active"
-                    ? "📍 GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : "")
+                    ? (userPosition && userPosition.source === "ip"
+                        ? "📍 ~IP loc"
+                        : "📍 GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
                     : geoStatus === "requesting"
                       ? "📍 Locating..."
                       : geoStatus === "denied"
