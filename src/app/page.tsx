@@ -7,6 +7,7 @@ import StatsBar from "@/components/StatsBar";
 import DropList from "@/components/DropList";
 import CreateDropModal from "@/components/CreateDropModal";
 import ProfilePanel from "@/components/ProfilePanel";
+import Leaderboard from "@/components/Leaderboard";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
 import { useProgram } from "@/hooks/useProgram";
@@ -32,7 +33,7 @@ const MapView = dynamic(function() { return import("@/components/MapView"); }, {
   },
 });
 
-type TabId = "map" | "list";
+type TabId = "map" | "list" | "leaderboard";
 
 interface ToastData {
   id: number;
@@ -144,6 +145,7 @@ export default function HomePage() {
     demoMode,
     setDemoMode,
     isNearby,
+    distanceTo,
     formatDistance,
     requestLocation,
     status: geoStatus,
@@ -394,6 +396,37 @@ export default function HomePage() {
               flyTrigger={flyTrigger}
             />
 
+            {/* Explore hint — GPS on, no drops in range */}
+            {geoStatus === "active" && userPosition && (function() {
+              var nearbyDrops = drops.filter(function(d) {
+                return !d.isClaimed && isNearby(d.location.lat, d.location.lng);
+              });
+              if (nearbyDrops.length > 0) return null;
+              var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
+              var distances = unclaimed.map(function(d) {
+                var dist = distanceTo(d.location.lat, d.location.lng);
+                return dist !== null ? dist : Infinity;
+              }).sort(function(a, b) { return a - b; });
+              var nearest = distances[0];
+              return (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] w-72">
+                  <div className="px-4 py-3 rounded-2xl bg-void/90 backdrop-blur-xl border border-crypt-300/15 shadow-[0_8px_32px_rgba(0,0,0,0.4)] text-center">
+                    <div className="text-2xl mb-1">🧭</div>
+                    <div className="text-[11px] font-mono text-crypt-200 font-bold">No drops in range</div>
+                    {nearest && nearest < Infinity ? (
+                      <div className="text-[10px] font-mono text-gray-500 mt-1">
+                        Nearest drop is {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"} away — keep exploring!
+                      </div>
+                    ) : (
+                      <div className="text-[10px] font-mono text-gray-500 mt-1">
+                        Be the first to drop a secret here
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Activity feed */}
             {activities.length > 0 && (
               <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5 pointer-events-none">
@@ -419,6 +452,31 @@ export default function HomePage() {
                     {drops.filter(function(d) { return !d.isClaimed; }).length} active drops
                   </span>
                 </div>
+                {/* Nearby drops indicator */}
+                {userPosition && (function() {
+                  var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
+                  var nearbyCount = unclaimed.filter(function(d) { return isNearby(d.location.lat, d.location.lng); }).length;
+                  var distances = unclaimed.map(function(d) {
+                    var dist = distanceTo(d.location.lat, d.location.lng);
+                    return dist !== null ? dist : Infinity;
+                  }).sort(function(a, b) { return a - b; });
+                  var nearest = distances[0];
+                  return (
+                    <div className="mt-1 pt-1 border-t border-crypt-300/10">
+                      {nearbyCount > 0 ? (
+                        <div className="flex items-center gap-1.5 text-emerald-400">
+                          <span className="text-[10px]">⚡</span>
+                          <span>{nearbyCount} in range!</span>
+                        </div>
+                      ) : nearest && nearest < Infinity ? (
+                        <div className="flex items-center gap-1.5 text-yellow-500/80">
+                          <span className="text-[10px]">→</span>
+                          <span>Nearest: {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })()}
                 {profile && (
                   <div className="text-[9px] text-crypt-300 mt-0.5">
                     @{profile.username}
@@ -470,11 +528,16 @@ export default function HomePage() {
               </button>
             </div>
           </>
-        ) : (
+        ) : activeTab === "list" ? (
           <DropList
             drops={drops}
             onSelectDrop={handleSelectDropFromList}
             formatDistance={formatDistance}
+          />
+        ) : (
+          <Leaderboard
+            currentUser={profile ? profile.username : undefined}
+            currentStats={{ claimed: claimedCount, created: createdCount, likes: likesCount }}
           />
         )}
       </div>
@@ -484,6 +547,7 @@ export default function HomePage() {
         {([
           { id: "map" as TabId, icon: "🗺️", label: "Map" },
           { id: "list" as TabId, icon: "📜", label: "Drops" },
+          { id: "leaderboard" as TabId, icon: "🏆", label: "Rank" },
         ]).map(function(tab) {
           return (
             <button

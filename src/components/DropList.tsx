@@ -154,8 +154,24 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
         })}
 
         {filtered.length === 0 && (
-          <div className="text-center py-8 text-gray-700 font-mono text-sm">
-            No drops in this category yet
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+            <div className="text-5xl mb-4 opacity-40">
+              {filter === "all" ? "🪦" : CATEGORY_CONFIG[filter as DropCategory].icon}
+            </div>
+            <h4 className="text-crypt-200 font-mono text-sm font-bold mb-2">
+              {filter === "all" ? "No drops yet" : "No " + CATEGORY_CONFIG[filter as DropCategory].label.toLowerCase() + " drops"}
+            </h4>
+            <p className="text-gray-600 font-mono text-[11px] leading-relaxed max-w-[240px]">
+              {filter === "all"
+                ? "The graveyard is quiet... Be the first to drop a secret on the map."
+                : "No drops in this category. Try another filter or create one yourself."
+              }
+            </p>
+            <div className="mt-4 px-4 py-2 rounded-full border border-crypt-300/15 bg-crypt-300/5">
+              <span className="text-[10px] text-crypt-300 font-mono">
+                Tap + to create a drop
+              </span>
+            </div>
           </div>
         )}
       </div>
