@@ -148,82 +148,138 @@ body {
   }
 }
 
+
 /* ═══════════════════════════════════════════════════════════════════════
-   CUSTOM MAP MARKERS
+   MAP TILE ATMOSPHERE — purple tint for graveyard theme
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.map-tiles-themed {
+  filter: brightness(0.75) contrast(1.1) saturate(0.5) hue-rotate(20deg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CUSTOM MAP MARKERS — SVG-based, professional design
    ═══════════════════════════════════════════════════════════════════════ */
 
 .drop-marker {
   position: relative;
-  width: 44px;
-  height: 52px;
+  width: 48px;
+  height: 58px;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s;
+  filter: drop-shadow(0 2px 8px color-mix(in srgb, var(--glow-color), transparent 50%));
 }
 .drop-marker:hover {
-  transform: scale(1.15) translateY(-3px);
+  transform: scale(1.2) translateY(-4px);
+  filter: drop-shadow(0 4px 20px color-mix(in srgb, var(--glow-color), transparent 20%));
 }
 
 .drop-marker-inner {
   position: absolute;
   top: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 40px; height: 40px;
-  border-radius: 50% 50% 50% 0;
-  transform: translateX(-50%) rotate(-45deg);
-  background: linear-gradient(135deg, var(--marker-color) 0%, color-mix(in srgb, var(--marker-color), #000 35%) 100%);
-  border: 2px solid color-mix(in srgb, var(--marker-color), #fff 20%);
-  box-shadow:
-    0 4px 16px color-mix(in srgb, var(--glow-color), transparent 60%),
-    inset 0 1px 0 color-mix(in srgb, var(--marker-color), #fff 30%);
+  width: 38px; height: 38px;
+  margin-left: -19px;
+  border-radius: 50%;
+  background: linear-gradient(145deg,
+    color-mix(in srgb, var(--marker-color), #fff 15%) 0%,
+    var(--marker-color) 40%,
+    color-mix(in srgb, var(--marker-color), #000 30%) 100%);
+  border: 2.5px solid color-mix(in srgb, var(--marker-color), #fff 30%);
   display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
 }
 
-.drop-marker-icon {
-  display: block;
-  transform: rotate(45deg);
-  font-size: 18px;
-  line-height: 1;
+/* Glass highlight on marker */
+.drop-marker-inner::before {
+  content: '';
+  position: absolute;
+  top: 2px; left: 4px; right: 4px;
+  height: 40%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.drop-marker-svg {
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
 }
+.drop-marker-svg svg {
+  width: 18px; height: 18px;
+}
 
+/* Pointed bottom of marker */
+.drop-marker-pointer {
+  position: absolute;
+  bottom: 6px; left: 50%;
+  width: 12px; height: 12px;
+  margin-left: -6px;
+  background: var(--marker-color);
+  transform: rotate(45deg);
+  border-right: 2.5px solid color-mix(in srgb, var(--marker-color), #fff 30%);
+  border-bottom: 2.5px solid color-mix(in srgb, var(--marker-color), #fff 30%);
+}
+
+/* Expanding ring animation */
 .drop-marker-ring {
   position: absolute;
-  top: 50%; left: 50%;
-  width: 50px; height: 50px;
-  margin-top: -27px; margin-left: -25px;
+  top: 0; left: 50%;
+  width: 38px; height: 38px;
+  margin-left: -19px;
   border-radius: 50%;
-  border: 1.5px solid var(--marker-color);
+  border: 2px solid var(--marker-color);
   opacity: 0;
   animation: marker-ring 2.5s ease-out infinite;
+  pointer-events: none;
 }
 
-.drop-marker-value {
+/* Emoji label under marker */
+.drop-marker-reward {
   position: absolute;
-  bottom: -2px; left: 50%;
+  bottom: -4px; left: 50%;
   transform: translateX(-50%);
-  font-size: 8px;
-  font-weight: 800;
-  color: var(--marker-color);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  font-family: monospace;
+  font-size: 12px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
 }
 
+/* Pulse glow for unclaimed */
 .marker-pulse .drop-marker-inner {
   animation: marker-glow 3s ease-in-out infinite;
 }
 
+/* Claimed markers — faded */
+.drop-marker-claimed {
+  opacity: 0.35;
+  filter: grayscale(0.7) drop-shadow(none);
+}
+.drop-marker-claimed:hover {
+  opacity: 0.55;
+  filter: grayscale(0.5);
+}
+
 @keyframes marker-ring {
-  0% { transform: scale(0.8); opacity: 0.6; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(2); opacity: 0; }
 }
 
 @keyframes marker-glow {
-  0%, 100% { box-shadow: 0 4px 16px color-mix(in srgb, var(--glow-color), transparent 60%); }
-  50% { box-shadow: 0 4px 28px color-mix(in srgb, var(--glow-color), transparent 30%), 0 0 40px color-mix(in srgb, var(--glow-color), transparent 70%); }
+  0%, 100% {
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--glow-color), transparent 50%),
+      inset 0 0 8px color-mix(in srgb, var(--glow-color), transparent 70%);
+  }
+  50% {
+    box-shadow:
+      0 0 28px color-mix(in srgb, var(--glow-color), transparent 20%),
+      0 0 48px color-mix(in srgb, var(--glow-color), transparent 60%),
+      inset 0 0 12px color-mix(in srgb, var(--glow-color), transparent 50%);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   USER DOT
+   USER POSITION DOT — radar style
    ═══════════════════════════════════════════════════════════════════════ */
 
 .user-dot {
@@ -237,47 +293,46 @@ body {
   transform: translate(-50%, -50%);
   width: 14px; height: 14px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  background: linear-gradient(135deg, #818cf8, #6366f1);
   border: 2.5px solid #fff;
-  box-shadow: 0 0 8px rgba(59,130,246,0.6);
+  box-shadow: 0 0 10px rgba(99,102,241,0.7);
   z-index: 2;
 }
 
-.user-dot-ring {
+.user-dot-ring, .user-dot-ring2 {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   width: 24px; height: 24px;
   border-radius: 50%;
-  background: rgba(59,130,246,0.2);
+  background: rgba(99,102,241,0.2);
   animation: user-ring 2s ease-out infinite;
 }
 
 .user-dot-ring2 {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: rgba(59,130,246,0.15);
-  animation: user-ring 2s ease-out infinite 1s;
+  animation-delay: 1s;
+  background: rgba(99,102,241,0.12);
 }
 
 @keyframes user-ring {
   0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   POPUP STYLES
+   POPUP STYLES — glass morphism
    ═══════════════════════════════════════════════════════════════════════ */
 
 .locus-popup .leaflet-popup-content-wrapper {
-  background: rgba(12, 7, 20, 0.95) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(167, 139, 250, 0.15) !important;
+  background: rgba(10, 6, 18, 0.92) !important;
+  backdrop-filter: blur(24px) saturate(1.5) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.5) !important;
+  border: 1px solid rgba(167, 139, 250, 0.12) !important;
   border-radius: 16px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(167, 139, 250, 0.08) !important;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 1px rgba(167, 139, 250, 0.3),
+    0 0 60px rgba(167, 139, 250, 0.05) !important;
   padding: 0 !important;
   overflow: hidden;
 }
@@ -288,17 +343,21 @@ body {
 }
 
 .locus-popup .leaflet-popup-tip {
-  background: rgba(12, 7, 20, 0.95) !important;
-  border: 1px solid rgba(167, 139, 250, 0.15) !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  background: rgba(10, 6, 18, 0.92) !important;
+  border: 1px solid rgba(167, 139, 250, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
 }
 
 .locus-popup .leaflet-popup-close-button {
-  color: #666 !important;
-  font-size: 20px !important;
+  color: #555 !important;
+  font-size: 18px !important;
   right: 8px !important;
   top: 6px !important;
   z-index: 10;
+  transition: color 0.2s;
+}
+.locus-popup .leaflet-popup-close-button:hover {
+  color: #a78bfa !important;
 }
 
 .drop-popup {
@@ -337,7 +396,7 @@ body {
 .drop-popup-message {
   color: #ddd6fe;
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.6;
   margin: 0;
   padding: 10px 14px;
 }
@@ -355,18 +414,18 @@ body {
 }
 
 .drop-popup-reward {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
   letter-spacing: -0.02em;
 }
 
 .sol-symbol {
   font-size: 14px;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   CLAIM CONFETTI
+   CLAIM CELEBRATION
    ═══════════════════════════════════════════════════════════════════════ */
 
 .confetti-container {
@@ -379,32 +438,28 @@ body {
 
 .confetti-particle {
   position: absolute;
-  width: 8px;
-  height: 8px;
-  top: 40%;
-  animation: confetti-fall 1.5s ease-out forwards;
+  width: 8px; height: 8px;
+  top: 30%;
+  animation: confetti-fall 1.8s ease-out forwards;
 }
 
 @keyframes confetti-fall {
   0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
-  100% { transform: translateY(120vh) rotate(720deg) scale(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(120vh) rotate(900deg) scale(0.3); opacity: 0; }
 }
-
-/* ═══════════════════════════════════════════════════════════════════════
-   CLAIM SUCCESS FLASH
-   ═══════════════════════════════════════════════════════════════════════ */
 
 .claim-flash {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(167,139,250,0.25), transparent 70%);
+  background: radial-gradient(circle at 50% 40%, rgba(167,139,250,0.3), transparent 70%);
   pointer-events: none;
   z-index: 9998;
-  animation: claim-flash 0.8s ease-out forwards;
+  animation: claim-flash 1s ease-out forwards;
 }
 
 @keyframes claim-flash {
   0% { opacity: 1; transform: scale(0.8); }
-  100% { opacity: 0; transform: scale(2); }
+  100% { opacity: 0; transform: scale(2.5); }
 }
 

@@ -110,28 +110,39 @@ export default function MapView({
     );
   }
 
+  // ─── SVG Icons per category ─────────────────────────────────────────────
+  const SVG_ICONS: Record<string, string> = {
+    lore: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6.48 2 2 6 2 10.5c0 3 1.5 5.5 4 7L12 22l6-4.5c2.5-1.5 4-4 4-7C22 6 17.52 2 12 2z"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>',
+    quest: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>',
+    secret: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>',
+    ritual: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>',
+    treasure: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h4l3-9 6 18 3-9h4"/></svg>',
+  };
+
   // ─── Icons ──────────────────────────────────────────────────────────────
   const createDropIcon = (category: DropCategory, isClaimed: boolean) => {
     const config = CATEGORY_CONFIG[category];
     const bgColor = isClaimed ? "#444" : config.color;
     const glowColor = isClaimed ? "transparent" : config.color;
-    const pulseClass = isClaimed ? "" : "marker-pulse";
-    const claimedStyle = isClaimed ? "opacity:0.45; filter:grayscale(0.6);" : "";
+    const claimedClass = isClaimed ? "drop-marker-claimed" : "marker-pulse";
+    const svgIcon = SVG_ICONS[category] || SVG_ICONS.lore;
 
     return L!.divIcon({
       className: "custom-marker",
-      html: '<div class="drop-marker ' + pulseClass + '" style="' +
-        '--marker-color:' + bgColor + '; --glow-color:' + glowColor + ';' + claimedStyle +
-        '">' +
+      html: '<div class="drop-marker ' + claimedClass + '" style="' +
+        '--marker-color:' + bgColor + '; --glow-color:' + glowColor + ';">' +
         '<div class="drop-marker-inner">' +
-          '<span class="drop-marker-icon">' + config.icon + '</span>' +
+          '<div class="drop-marker-svg" style="color:' + (isClaimed ? '#666' : '#fff') + '">' + svgIcon + '</div>' +
         '</div>' +
+        '<div class="drop-marker-pointer"></div>' +
         (isClaimed ? '' : '<div class="drop-marker-ring"></div>') +
-        '<div class="drop-marker-value">' + (isClaimed ? '✓' : '◎') + '</div>' +
+        '<div class="drop-marker-reward" style="color:' + bgColor + '">' +
+          (isClaimed ? '✓' : config.icon) +
+        '</div>' +
       '</div>',
-      iconSize: [44, 52],
-      iconAnchor: [22, 48],
-      popupAnchor: [0, -48],
+      iconSize: [48, 58],
+      iconAnchor: [24, 54],
+      popupAnchor: [0, -54],
     });
   };
 
@@ -168,6 +179,7 @@ export default function MapView({
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
           maxZoom={19}
+          className="map-tiles-themed"
         />
 
         {/* Fly to user when GPS activates */}
@@ -184,10 +196,10 @@ export default function MapView({
               center={[userPosition.lat, userPosition.lng]}
               radius={150}
               pathOptions={{
-                color: "#3b82f6",
-                fillColor: "#3b82f6",
-                fillOpacity: 0.06,
-                weight: 1,
+                color: "#818cf8",
+                fillColor: "#a78bfa",
+                fillOpacity: 0.08,
+                weight: 1.5,
                 dashArray: "6 4",
               }}
             />
