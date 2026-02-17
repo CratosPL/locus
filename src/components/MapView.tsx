@@ -80,25 +80,22 @@ export default function MapView({
   const [commentText, setCommentText] = useState("");
   const [commentingDropId, setCommentingDropId] = useState<string | null>(null);
   const [isNight, setIsNight] = useState(true);
+  const [isAutoTheme, setIsAutoTheme] = useState(true);
 
   useEffect(() => {
-    // Determine if it's night (18:00 - 06:00)
-    const hour = new Date().getHours();
-    setIsNight(hour >= 18 || hour < 6);
+    if (!isAutoTheme) return;
 
-    const interval = setInterval(() => {
-      const h = new Date().getHours();
-      setIsNight(h >= 18 || h < 6);
-    }, 60000); // Check every minute
+    // Determine if it's night (18:00 - 06:00)
+    const updateTheme = () => {
+      const hour = new Date().getHours();
+      setIsNight(hour >= 18 || hour < 6);
+    };
+
+    updateTheme();
+    const interval = setInterval(updateTheme, 60000); // Check every minute
 
     return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    // Determine if it's night (18:00 - 06:00)
-    const hour = new Date().getHours();
-    setIsNight(hour >= 18 || hour < 6);
-  }, []);
+  }, [isAutoTheme]);
 
   useEffect(() => {
     setMounted(true);
@@ -227,11 +224,32 @@ export default function MapView({
 
   return (
     <div className="w-full h-full relative">
-      {/* Time mode indicator */}
-      <div className="absolute top-4 left-4 z-[1000] pointer-events-none">
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-wider ${isNight ? 'bg-void-100/40 text-crypt-300' : 'bg-white/40 text-gray-800'}`}>
+      {/* Time mode indicator & manual toggle */}
+      <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-wider shadow-lg pointer-events-none ${isNight ? 'bg-void-100/40 text-crypt-300' : 'bg-white/40 text-gray-800'}`}>
           {isNight ? '🌙 Night Mode' : '☀️ Day Mode'}
+          {isAutoTheme && <span className="ml-1 opacity-50 font-normal normal-case italic">(Auto)</span>}
         </div>
+        
+        <button
+          onClick={() => {
+            setIsAutoTheme(false);
+            setIsNight(!isNight);
+          }}
+          className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md border border-white/10 shadow-lg transition-all active:scale-90 ${isNight ? 'bg-void-100/60 text-crypt-300 hover:bg-void-100/80' : 'bg-white/60 text-gray-800 hover:bg-white/80'}`}
+          title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
+        >
+          {isNight ? '☀️' : '🌙'}
+        </button>
+        
+        {!isAutoTheme && (
+          <button
+            onClick={() => setIsAutoTheme(true)}
+            className={`px-2 py-1 rounded-md backdrop-blur-md border border-white/10 text-[8px] font-bold uppercase tracking-tighter shadow-lg transition-all active:scale-95 ${isNight ? 'bg-crypt-500/20 text-crypt-400' : 'bg-gray-200/50 text-gray-600'}`}
+          >
+            Reset Auto
+          </button>
+        )}
       </div>
 
       <MapContainer
