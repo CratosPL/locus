@@ -100,6 +100,23 @@ export default function ProfilePanel({
 
         <p className="text-[12px] text-gray-500 font-mono mb-4 leading-relaxed">{profile.bio}</p>
 
+        {/* Social Graph Info */}
+        <div className="flex gap-4 mb-4 border-y border-crypt-300/10 py-3">
+          <div className="flex flex-col">
+            <span className="text-xl font-bold font-mono text-crypt-200">{profile.followersCount || 0}</span>
+            <span className="text-[8px] text-gray-600 uppercase tracking-widest">Followers</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xl font-bold font-mono text-crypt-200">{profile.followingCount || 0}</span>
+            <span className="text-[8px] text-gray-600 uppercase tracking-widest">Following</span>
+          </div>
+          <div className="ml-auto flex items-center">
+             <div className="text-[10px] font-mono text-crypt-400 bg-crypt-400/10 px-2 py-1 rounded border border-crypt-400/20">
+               Tapestry Node
+             </div>
+          </div>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-5 gap-1.5 mb-4">
           {[

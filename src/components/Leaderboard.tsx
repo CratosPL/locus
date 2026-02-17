@@ -9,6 +9,7 @@ interface LeaderboardEntry {
   created: number;
   likes: number;
   reputation: number;
+  isMagicBlock?: boolean; // Track if they are using gaming enhancements
 }
 
 interface LeaderboardProps {
@@ -124,11 +125,17 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
         return (
           <div
             key={entry.rank + "-" + entry.username}
-            className={"flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r border transition-all " +
+            className={"relative flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r border transition-all " +
               getRankStyle(entry.rank) +
               (isMe ? " ring-1 ring-crypt-300/40" : "")
             }
           >
+            {/* Gaming Track Badge (MagicBlock) */}
+            {entry.rank <= 5 && (
+              <div className="absolute -top-1 -right-1 flex gap-1">
+                <div className="bg-blue-500 text-[6px] text-white px-1 py-0.5 rounded shadow-lg animate-pulse" title="MagicBlock Gaming Tier">MAGIC</div>
+              </div>
+            )}
             {/* Rank */}
             <div className="w-8 text-center shrink-0">
               {entry.rank <= 3 ? (
@@ -160,9 +167,14 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
       })}
 
       {/* Footer note */}
-      <div className="text-center pt-3 pb-6">
+      <div className="text-center pt-3 pb-6 space-y-2">
+        <div className="flex justify-center gap-2">
+          <span className="text-[8px] px-2 py-0.5 rounded-full bg-crypt-300/10 text-crypt-400 border border-crypt-300/20">#TapestrySocial</span>
+          <span className="text-[8px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">#MagicBlockGaming</span>
+          <span className="text-[8px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">#TorqueLoyalty</span>
+        </div>
         <p className="text-[9px] text-gray-700 font-mono">
-          Future: on-chain leaderboard via Tapestry social graph
+          On-chain leaderboard powered by Tapestry social graph
         </p>
       </div>
     </div>

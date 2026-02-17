@@ -3,9 +3,34 @@
 > **Leave messages. Hide rewards. Discover secrets. Walk quests. Mint badges.**
 > A location-based social dApp where users drop messages with SOL bounties, leave ephemeral ghost marks, walk quest trails, and mint NFT achievement badges — all on Solana.
 
-**🏆 Solana Graveyard Hackathon 2026 — Tapestry On-chain Social + DRiP NFT Tracks**
+**🏆 Solana Graveyard Hackathon 2026 (Feb 12-27)**
 
 🔗 **[Live Demo](https://locus-psi-coral.vercel.app)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
+
+---
+
+## 🏆 Hackathon Tracks Integration
+
+### 1. Tapestry (On-chain Social) - $5,000 Prize
+Locus is a social protocol at its core. Every "drop" is registered as a content node on **Tapestry**, allowing for:
+- **On-chain Social Graph**: Profiles, followers, and following are managed via Tapestry.
+- **Interactions**: Likes and comments on physical locations are stored on-chain.
+- **Social Discovery**: Find other explorers near you via their Tapestry activity.
+
+### 2. MagicBlock (Gaming) - $5,000 Prize
+The app uses a "Game Engine" approach to the real world:
+- **Quest Trails**: Sequenced waypoints that must be visited in order (using gaming logic).
+- **Ghost Marks**: Ephemeral messages that disappear, creating a "now or never" gaming loop.
+- **Gaming Tiers**: Reputation ranks (Lost Soul -> Spirit -> Wraith -> Lich) displayed on a competitive leaderboard.
+
+### 3. Sunrise (Migrations & Onboarding) - $7,000 Prize
+Locus serves as a perfect onboarding tool:
+- **Sunrise Quest Trail**: A dedicated tutorial path that guides new users through setting up a wallet, making their first on-chain interaction, and understanding social graphs.
+- **Educational Lore**: "Lore" drops that explain Solana concepts (CU, PDA, Rent) in an immersive way.
+
+### 4. Torque (Loyalty) - $1,000 Prize
+- **Loyalty Badges**: NFT-based rewards for consistent explorers.
+- **Streak Mechanics**: (Planned) Daily check-ins at locations to earn Torque-powered rewards.
 
 ---
 

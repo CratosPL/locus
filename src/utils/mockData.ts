@@ -242,6 +242,23 @@ export var MOCK_TRAILS: QuestTrail[] = [
       { id: "t3-w6", location: { lat: 52.2050, lng: 21.0050 }, name: "Wilanów Gate", hint: "From this graveyard, Solana rises", order: 6 },
     ],
   },
+  {
+    id: "trail-sunrise",
+    name: "Sunrise: Web3 Onboarding",
+    description: "New to Solana? This trail will guide you through creating a wallet, using Tapestry, and discovering on-chain social. (Sunrise Track)",
+    icon: "☀️",
+    color: "#f59e0b",
+    reward: 0.3,
+    createdBy: "sunrise_dao",
+    difficulty: "easy",
+    estimatedTime: "20 min",
+    distance: "0.8 km",
+    waypoints: [
+      { id: "ts-w1", location: { lat: 52.2290, lng: 21.0110 }, name: "Genesis Point", hint: "Start your journey. Every great protocol began with a single block.", order: 1 },
+      { id: "ts-w2", location: { lat: 52.2305, lng: 21.0150 }, name: "Social Node", hint: "Follow another explorer on Tapestry to proceed.", order: 2 },
+      { id: "ts-w3", location: { lat: 52.2320, lng: 21.0180 }, name: "Graveyard Gate", hint: "Learn why building in a bear market is the best time.", order: 3 },
+    ],
+  },
 ];
 
 // ─── NFT Badge Definitions ───────────────────────────────────────────────────
@@ -254,5 +271,8 @@ export var BADGE_DEFINITIONS: NFTBadge[] = [
   { id: "gravedigger",    name: "Gravedigger",    description: "Create 3 drops",                 icon: "⚰️", threshold: 3,   thresholdType: "creates",    rarity: "common",    color: "#6b7280" },
   { id: "haunter",        name: "Haunter",        description: "Leave 5 ghost marks",            icon: "💭", threshold: 5,   thresholdType: "ghosts",     rarity: "rare",      color: "#8b5cf6" },
   { id: "trail-walker",   name: "Trail Walker",   description: "Complete a quest trail",          icon: "🗺️", threshold: 1,   thresholdType: "trails",     rarity: "rare",      color: "#10b981" },
+  { id: "social-butterfly", name: "Social Butterfly", description: "Follow 5 explorers on Tapestry", icon: "🦋", threshold: 5,   thresholdType: "reputation", rarity: "rare",      color: "#ec4899" },
+  { id: "torque-loyalist", name: "Torque Loyalist",  description: "Maintain a 7-day streak (Torque)", icon: "🛡️", threshold: 7,   thresholdType: "claims",     rarity: "epic",      color: "#f59e0b" },
+  { id: "magicblock-hero", name: "Magic Hero",      description: "Master of gaming quests",        icon: "⚔️", threshold: 50,  thresholdType: "reputation", rarity: "legendary", color: "#3b82f6" },
   { id: "legend",         name: "Legend",          description: "Reach 200 reputation",           icon: "⭐", threshold: 200, thresholdType: "reputation", rarity: "legendary", color: "#f59e0b" },
 ];
