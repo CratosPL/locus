@@ -18,6 +18,7 @@ body {
   background: var(--color-void);
   color: #e9d5ff;
   font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+  font-size: 16px; /* Base font size increased for accessibility */
   overflow: hidden;
   height: 100%;
   height: 100dvh;
@@ -403,10 +404,10 @@ body {
 
 .drop-popup-message {
   color: #ddd6fe;
-  font-size: 13px;
+  font-size: 15px; /* Font size increased */
   line-height: 1.6;
   margin: 0;
-  padding: 10px 14px;
+  padding: 12px 16px; /* Padding increased */
 }
 
 .drop-popup-meta {

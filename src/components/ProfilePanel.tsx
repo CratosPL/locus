@@ -83,42 +83,42 @@ export default function ProfilePanel({
         </div>
 
         {/* Avatar + Username + Rank */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(167,139,250,0.3)]">🪦</div>
+        <div className="flex items-center gap-6 mb-6">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(167,139,250,0.4)] border-2 border-white/20">🪦</div>
           <div>
-            <div className="text-crypt-200 font-mono font-bold text-base">@{profile.username}</div>
-            <div className="flex items-center gap-2 mt-0.5">
-              <button onClick={copyAddress} className="text-[11px] text-gray-600 font-mono bg-transparent border-none cursor-pointer hover:text-crypt-300 transition-colors p-0">
+            <div className="text-crypt-100 font-mono font-bold text-2xl">@{profile.username}</div>
+            <div className="flex items-center gap-3 mt-1">
+              <button onClick={copyAddress} className="text-sm text-gray-500 font-mono bg-transparent border-none cursor-pointer hover:text-crypt-300 transition-colors p-0">
                 {copied ? "✓ Copied!" : shortAddr}
               </button>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full" style={{ color: rank.color, background: rank.color + "15", border: "1px solid " + rank.color + "33" }}>
+              <span className="text-xs font-mono font-extrabold px-3 py-1 rounded-full uppercase tracking-tighter" style={{ color: rank.color, background: rank.color + "15", border: "1px solid " + rank.color + "33" }}>
                 {rank.name}
               </span>
             </div>
           </div>
         </div>
 
-        <p className="text-[12px] text-gray-500 font-mono mb-4 leading-relaxed">{profile.bio}</p>
+        <p className="text-sm text-gray-400 font-mono mb-6 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5 italic">"{profile.bio}"</p>
 
         {/* Social Graph Info */}
-        <div className="flex gap-4 mb-4 border-y border-crypt-300/10 py-3">
-          <div className="flex flex-col">
-            <span className="text-xl font-bold font-mono text-crypt-200">{profile.followersCount || 0}</span>
-            <span className="text-[8px] text-gray-600 uppercase tracking-widest">Followers</span>
+        <div className="flex gap-8 mb-6 border-y border-crypt-300/10 py-4 px-2 bg-crypt-300/5 rounded-lg">
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold font-mono text-crypt-100">{profile.followersCount || 0}</span>
+            <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Followers</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold font-mono text-crypt-200">{profile.followingCount || 0}</span>
-            <span className="text-[8px] text-gray-600 uppercase tracking-widest">Following</span>
+          <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold font-mono text-crypt-100">{profile.followingCount || 0}</span>
+            <span className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Following</span>
           </div>
           <div className="ml-auto flex items-center">
-             <div className="text-[10px] font-mono text-crypt-400 bg-crypt-400/10 px-2 py-1 rounded border border-crypt-400/20">
-               Tapestry Node
+             <div className="text-xs font-mono text-crypt-300 bg-crypt-300/10 px-3 py-1.5 rounded-lg border border-crypt-300/30 font-bold animate-pulse">
+               Tapestry Active
              </div>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-5 gap-1.5 mb-4">
+        <div className="grid grid-cols-5 gap-2.5 mb-6">
           {[
             { label: "Claims", value: stats.claimed, color: "text-emerald-400", icon: "⚡" },
             { label: "Drops", value: stats.created, color: "text-blue-400", icon: "🪦" },
@@ -127,10 +127,10 @@ export default function ProfilePanel({
             { label: "Quests", value: stats.trails, color: "text-yellow-400", icon: "🗺️" },
           ].map(function(s) {
             return (
-              <div key={s.label} className="bg-crypt-300/5 border border-crypt-300/10 rounded-xl p-2 text-center">
-                <div className="text-sm mb-0.5">{s.icon}</div>
-                <div className={"text-base font-bold font-mono " + s.color}>{s.value}</div>
-                <div className="text-[7px] text-gray-600 uppercase tracking-widest mt-0.5">{s.label}</div>
+              <div key={s.label} className="bg-void/50 border border-crypt-300/15 rounded-2xl p-3 text-center shadow-inner hover:bg-crypt-300/5 transition-colors">
+                <div className="text-xl mb-1">{s.icon}</div>
+                <div className={"text-lg font-extrabold font-mono " + s.color}>{s.value}</div>
+                <div className="text-[8px] text-gray-500 uppercase tracking-tighter font-bold mt-1">{s.label}</div>
               </div>
             );
           })}

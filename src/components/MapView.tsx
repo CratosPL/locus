@@ -97,6 +97,11 @@ export default function MapView({
     return () => clearInterval(interval);
   }, [isAutoTheme]);
 
+  // Clean up markers to reduce map clutter
+  // In a real app we'd use clustering, for now we limit visibility or density
+  const visibleDrops = drops.slice(0, 15); 
+  const visibleGhosts = ghosts.slice(0, 10);
+
   useEffect(() => {
     setMounted(true);
     Promise.all([import("leaflet"), import("react-leaflet")])
@@ -308,7 +313,7 @@ export default function MapView({
         )}
 
         {/* ─── Drop markers ─────────────────────────────────────────── */}
-        {drops.map((drop) => {
+        {visibleDrops.map((drop) => {
           const cat = CATEGORY_CONFIG[drop.category];
           const nearby = isNearby(drop.location.lat, drop.location.lng);
           const distance = formatDistance(drop.location.lat, drop.location.lng);
@@ -483,7 +488,7 @@ export default function MapView({
         })}
 
         {/* ─── Ghost Markers ─────────────────────────────────────────── */}
-        {ghosts.map(function(ghost) {
+        {visibleGhosts.map(function(ghost) {
           var age = Date.now() - ghost.createdAt;
           var hoursLeft = Math.max(0, Math.round((86400000 - age) / 3600000));
           return (

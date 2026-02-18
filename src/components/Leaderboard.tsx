@@ -125,9 +125,9 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
         return (
           <div
             key={entry.rank + "-" + entry.username}
-            className={"relative flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r border transition-all " +
+            className={"relative flex items-center gap-5 p-4 rounded-2xl bg-gradient-to-r border transition-all " +
               getRankStyle(entry.rank) +
-              (isMe ? " ring-1 ring-crypt-300/40" : "")
+              (isMe ? " ring-2 ring-crypt-300/60 shadow-lg" : "")
             }
           >
             {/* Gaming Track Badge (MagicBlock) */}
@@ -147,20 +147,20 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
 
             {/* Username */}
             <div className="flex-1 min-w-0">
-              <div className={"text-[12px] font-bold font-mono truncate " + (isMe ? "text-crypt-300" : "text-crypt-200")}>
+              <div className={"text-base font-extrabold font-mono truncate " + (isMe ? "text-crypt-200" : "text-crypt-100")}>
                 {entry.username} {isMe ? "← you" : ""}
               </div>
-              <div className="text-[9px] text-gray-600 font-mono">
-                {entry.claimed} claims • {entry.created} drops • {entry.likes} likes
+              <div className="text-[11px] text-gray-500 font-mono mt-0.5">
+                {entry.claimed} claims • {entry.created} drops
               </div>
             </div>
 
             {/* Reputation */}
-            <div className="text-right shrink-0">
-              <div className={"text-sm font-extrabold font-mono " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
+            <div className="text-right shrink-0 bg-void/30 px-3 py-1.5 rounded-xl border border-white/5">
+              <div className={"text-lg font-black font-mono " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
                 {entry.reputation}
               </div>
-              <div className="text-[8px] text-gray-600">RP</div>
+              <div className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">Reputation</div>
             </div>
           </div>
         );
