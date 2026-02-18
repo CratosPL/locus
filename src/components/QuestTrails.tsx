@@ -31,6 +31,7 @@ export default function QuestTrails({ trails, trailProgress, activeTrailId, onSe
       </div>
 
       {trails.map(function(trail) {
+        var isSunrise = trail.id === "trail-sunrise";
         var progress = trailProgress[trail.id];
         var visited = progress ? progress.size : 0;
         var total = trail.waypoints.length;
@@ -60,8 +61,11 @@ export default function QuestTrails({ trails, trailProgress, activeTrailId, onSe
                   {trail.icon}
                 </div>
                 <div>
-                  <div className="text-[13px] font-bold text-crypt-200 font-mono">
+                  <div className="text-[13px] font-bold text-crypt-200 font-mono flex items-center gap-2">
                     {trail.name}
+                    {isSunrise && (
+                      <span className="text-[8px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30 animate-pulse">SUNRISE</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span
