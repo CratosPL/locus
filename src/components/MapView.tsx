@@ -241,10 +241,10 @@ export default function MapView({
             setIsAutoTheme(false);
             setIsNight(!isNight);
           }}
-          className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md border border-white/10 shadow-lg transition-all active:scale-90 ${isNight ? 'bg-void-100/60 text-crypt-300 hover:bg-void-100/80' : 'bg-white/60 text-gray-800 hover:bg-white/80'}`}
+          className={`flex items-center justify-center w-12 h-12 rounded-full backdrop-blur-md border-2 border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all active:scale-90 pointer-events-auto ${isNight ? 'bg-void-100/80 text-crypt-300 hover:bg-void-100' : 'bg-white/80 text-gray-800 hover:bg-white'}`}
           title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
         >
-          {isNight ? '☀️' : '🌙'}
+          <span className="text-xl">{isNight ? '☀️' : '🌙'}</span>
         </button>
         
         {!isAutoTheme && (

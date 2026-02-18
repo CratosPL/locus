@@ -11,6 +11,7 @@ import Leaderboard from "@/components/Leaderboard";
 import QuestTrails from "@/components/QuestTrails";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
+import InfoPanel from "@/components/InfoPanel";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -68,6 +69,7 @@ export default function HomePage() {
   var [showCreateModal, setShowCreateModal] = useState(false);
   var [showProfile, setShowProfile] = useState(false);
   var [showWelcome, setShowWelcome] = useState(true);
+  var [showInfo, setShowInfo] = useState(false);
   var [createdCount, setCreatedCount] = useState(0);
   var [ghostCount, setGhostCount] = useState(0);
   var [toasts, setToasts] = useState<ToastData[]>([]);
@@ -633,6 +635,13 @@ export default function HomePage() {
               >
                 <span className="text-[10px] font-mono">{demoMode ? "🔓 Demo ON" : "🔓 Demo"}</span>
               </button>
+
+              <button
+                onClick={function() { setShowInfo(true); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-crypt-300/10 border border-crypt-300/30 text-crypt-300 backdrop-blur transition-all cursor-pointer hover:bg-crypt-300/20"
+              >
+                <span className="text-[10px] font-mono font-bold italic">💡 Info / Jury</span>
+              </button>
             </div>
           </>
         ) : activeTab === "list" ? (
@@ -734,6 +743,11 @@ export default function HomePage() {
         isOpen={showProfile}
         onClose={function() { setShowProfile(false); }}
         tapestryConfigured={tapestryConfigured}
+      />
+
+      <InfoPanel
+        isOpen={showInfo}
+        onClose={function() { setShowInfo(false); }}
       />
 
       <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider">
