@@ -11,6 +11,15 @@
   --color-crypt: #a78bfa;
 }
 
+/* Background effects for Desktop */
+.desktop-bg-effects {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 30%, rgba(167, 139, 250, 0.05) 0%, transparent 40%),
+              radial-gradient(circle at 80% 70%, rgba(167, 139, 250, 0.03) 0%, transparent 40%);
+  z-index: -1;
+}
+
 html,
 body {
   margin: 0;

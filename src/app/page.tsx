@@ -445,7 +445,9 @@ export default function HomePage() {
 
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[100dvh] bg-void overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-void overflow-hidden items-center">
+      {/* Desktop Wrapper for larger screens */}
+      <div className="flex flex-col w-full h-full max-w-[500px] bg-void relative shadow-[0_0_100px_rgba(167,139,250,0.1)] border-x border-crypt-300/5">
       {showWelcome && <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />}
 
       {toasts.map(function(toast) {
@@ -754,6 +756,7 @@ export default function HomePage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
