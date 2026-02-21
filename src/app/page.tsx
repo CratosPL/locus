@@ -314,7 +314,10 @@ export default function HomePage() {
         }
       } catch {}
 
-      if (data.reward < 0.01) { showToast("Minimum reward: 0.01 SOL", "error"); return; }
+      if (data.dropType === "crypto" && data.reward < 0.01) {
+        showToast("Minimum reward: 0.01 SOL", "error");
+        return;
+      }
 
       var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
       var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
@@ -351,7 +354,8 @@ export default function HomePage() {
           type: data.dropType === "memory" ? "memory-drop" : "geo-drop"
         });
         var cat = CATEGORY_CONFIG[data.category];
-        showToast("Drop created! " + cat.icon + " " + data.reward + " SOL", "success", result.value);
+        var rewardText = data.dropType === "memory" ? "Memory recorded" : data.reward + " SOL";
+        showToast("Drop created! " + cat.icon + " " + rewardText, "success", result.value);
 
         setActivities(function(prev) {
           return [{ icon: "🪦", text: "Dropped " + cat.label.toLowerCase() + " at your location", color: cat.color, timestamp: Date.now() }].concat(prev);
@@ -745,7 +749,7 @@ export default function HomePage() {
         {/* Center: Action Button (Plus) */}
         <div className="flex flex-col items-center pb-2">
           <button
-            onClick={function() { if (isConnected) setShowCreateModal(true); else handleConnectWallet(); }}
+            onClick={function() { setShowCreateModal(true); }}
             className="w-14 h-14 rounded-full border-2 border-void-100 bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-3xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90"
           >
             +

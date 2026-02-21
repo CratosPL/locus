@@ -73,7 +73,7 @@ export default function CreateDropModal({
       >
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-crypt-300 font-mono text-lg font-bold">
-            {mode === "drop" ? "🪦 New Drop" : "👻 Ghost Mark"}
+            {mode === "drop" ? (dropType === "memory" ? "📸 Memory Drop" : "🪦 New Drop") : "👻 Ghost Mark"}
           </h3>
           <button
             onClick={onClose}
@@ -144,6 +144,12 @@ export default function CreateDropModal({
               </button>
             </div>
 
+            {dropType === "memory" && (
+              <div className="mb-4 px-3 py-2 rounded-lg bg-emerald-500/5 border border-emerald-500/15 text-[10px] text-emerald-300/70 font-mono">
+                Memory drops are social marks. No SOL reward required. Your message and location are saved on-chain and to Tapestry.
+              </div>
+            )}
+
             {/* Category selector */}
             <div className="mb-3">
               <label className="block text-[10px] text-gray-600 font-mono mb-2 uppercase tracking-widest">Category</label>
@@ -180,29 +186,31 @@ export default function CreateDropModal({
             </div>
 
             {/* Token selector */}
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-600 font-mono mb-2 uppercase tracking-widest">Reward Token</label>
-              <div className="flex gap-2">
-                {TOKEN_OPTIONS.map(function(token) {
-                  var isSelected = selectedToken === token.id;
-                  return (
-                    <button
-                      key={token.id}
-                      onClick={function() { if (token.active) setSelectedToken(token.id); }}
-                      className={"relative flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border font-mono text-[11px] transition-all " + (
-                        !token.active ? "border-gray-800/30 bg-gray-900/20 text-gray-700 cursor-not-allowed"
-                          : isSelected ? "border-crypt-300/50 bg-crypt-300/10 text-crypt-200 cursor-pointer"
-                          : "border-crypt-300/10 bg-transparent text-gray-600 cursor-pointer hover:border-crypt-300/20"
-                      )}
-                    >
-                      <span className="text-lg">{token.icon}</span>
-                      <span className="font-bold">{token.name}</span>
-                      {!token.active && <span className="absolute -top-1.5 right-1 text-[8px] bg-gray-800 text-gray-500 px-1.5 py-0.5 rounded-full">Soon</span>}
-                    </button>
-                  );
-                })}
+            {dropType === "crypto" && (
+              <div className="mb-3">
+                <label className="block text-[10px] text-gray-600 font-mono mb-2 uppercase tracking-widest">Reward Token</label>
+                <div className="flex gap-2">
+                  {TOKEN_OPTIONS.map(function(token) {
+                    var isSelected = selectedToken === token.id;
+                    return (
+                      <button
+                        key={token.id}
+                        onClick={function() { if (token.active) setSelectedToken(token.id); }}
+                        className={"relative flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border font-mono text-[11px] transition-all " + (
+                          !token.active ? "border-gray-800/30 bg-gray-900/20 text-gray-700 cursor-not-allowed"
+                            : isSelected ? "border-crypt-300/50 bg-crypt-300/10 text-crypt-200 cursor-pointer"
+                            : "border-crypt-300/10 bg-transparent text-gray-600 cursor-pointer hover:border-crypt-300/20"
+                        )}
+                      >
+                        <span className="text-lg">{token.icon}</span>
+                        <span className="font-bold">{token.name}</span>
+                        {!token.active && <span className="absolute -top-1.5 right-1 text-[8px] bg-gray-800 text-gray-500 px-1.5 py-0.5 rounded-full">Soon</span>}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Reward amount (only if crypto) */}
             {dropType === "crypto" && (
@@ -318,11 +326,13 @@ export default function CreateDropModal({
             disabled={!message.trim()}
             className={"flex-[2] py-3 rounded-xl border-none text-white font-mono text-sm font-bold cursor-pointer tracking-wider uppercase disabled:opacity-40 disabled:cursor-not-allowed transition-all " + (
               mode === "drop"
-                ? "bg-gradient-to-br from-crypt-300 to-crypt-500 hover:from-crypt-400 hover:to-crypt-600 shadow-[0_4px_15px_rgba(167,139,250,0.25)]"
+                ? (dropType === "memory"
+                    ? "bg-gradient-to-br from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 shadow-[0_4px_15px_rgba(52,211,153,0.25)]"
+                    : "bg-gradient-to-br from-crypt-300 to-crypt-500 hover:from-crypt-400 hover:to-crypt-600 shadow-[0_4px_15px_rgba(167,139,250,0.25)]")
                 : "bg-gradient-to-br from-purple-500 to-purple-700 hover:from-purple-400 hover:to-purple-600 shadow-[0_4px_15px_rgba(139,92,246,0.25)]"
             )}
           >
-            {mode === "drop" ? "🪦 Drop It" : "👻 Haunt It"}
+            {mode === "drop" ? (dropType === "memory" ? "📸 Record Memory" : "🪦 Drop It") : "👻 Haunt It"}
           </button>
         </div>
       </div>
