@@ -26,8 +26,9 @@
     "socialfi": "^0.1.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/leaflet": "^1.9.15",
-    "@types/node": "^22.13.4",
+    "@types/node": "^22.19.11",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",
