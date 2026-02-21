@@ -18,19 +18,26 @@ Locus is a social protocol at its core. Every "drop" is registered as a content 
 - **Social Discovery**: Find other explorers near you via their Tapestry activity.
 
 ### 2. MagicBlock (Gaming) - $5,000 Prize
-The app uses a "Game Engine" approach to the real world:
-- **Quest Trails**: Sequenced waypoints that must be visited in order (using gaming logic).
-- **Ghost Marks**: Ephemeral messages that disappear, creating a "now or never" gaming loop.
-- **Gaming Tiers**: Reputation ranks (Lost Soul -> Spirit -> Wraith -> Lich) displayed on a competitive leaderboard.
+Immersive real-world gaming engine:
+- **XP & Levels**: RPG progression system. Rank up from *Lost Soul* to *Lich Lord*.
+- **Ephemeral State**: Ghost Marks disappear after 24h, creating high-velocity local loops.
+- **Haptic & Sound**: Immersive feedback via Web Audio and Haptic APIs for claims and level-ups.
 
-### 3. Sunrise (Migrations & Onboarding) - $7,000 Prize
-Locus serves as a perfect onboarding tool:
-- **Sunrise Quest Trail**: A dedicated tutorial path that guides new users through setting up a wallet, making their first on-chain interaction, and understanding social graphs.
-- **Educational Lore**: "Lore" drops that explain Solana concepts (CU, PDA, Rent) in an immersive way.
+### 3. OrbitFlare (Blinks) - $1,200 Prize
+Solana Actions & Blinks integration:
+- **Share as Blink**: Every drop can be shared as a `dial.to` action link.
+- **Remote Claiming**: Users on X can claim geo-drops directly from their feed if they were recently at the coordinates.
 
-### 4. Torque (Loyalty) - $1,000 Prize
-- **Loyalty Badges**: NFT-based rewards for consistent explorers.
-- **Streak Mechanics**: (Planned) Daily check-ins at locations to earn Torque-powered rewards.
+### 4. Audius (Music) - $3,000 Prize
+Proximity-based music discovery:
+- **Echo Drops**: Creators can attach Audius track IDs to their drops.
+- **Audio Echoes**: When a user enters the 150m radius of a "Music Drop", the soundtrack automatically begins to play.
+
+### 5. Sunrise (Onboarding) - $7,000 Prize
+- **Tutorial Trail**: A dedicated "Sunrise Onboarding" quest trail guides new users through wallet setup and their first on-chain interaction.
+
+### 6. Torque (Loyalty) - $1,000 Prize
+- **Loyalty Badges**: Streak-based rewards and achievement badges (First Blood, Explorer, etc.).
 
 ---
 
@@ -106,21 +113,16 @@ Creator                                    Finder
 
 | Feature | Description | Stack |
 |---------|-------------|-------|
-| 🗺️ Dark Map | Interactive themed map with custom SVG markers | Leaflet + CARTO + CSS filters |
+| 🗺️ Dark Map | Interactive themed map with manual **Day/Night** toggle | Leaflet + CARTO + CSS filters |
 | 📍 GPS Verification | Must be within 150m to claim (Haversine) | Browser Geolocation API |
 | ⚡ On-chain Claims | Real SOL transactions signed by wallet | Pinocchio program |
-| 🪦 Create Drops | Place drops at your GPS location with SOL reward | Pinocchio + Tapestry |
-| 👻 Ghost Marks | Ephemeral marks on the map — disappear after 24h | Tapestry content nodes |
-| 🗺️ Quest Trails | Multi-waypoint routes with auto check-in + bonus SOL | GPS proximity + localStorage |
-| 🏅 NFT Badges | Mint achievement NFTs for claims, creates, quests | Metaplex Bubblegum (planned) |
-| 👤 Tapestry Profiles | Auto-created on wallet connect | Tapestry REST API |
-| ❤️ Likes & Comments | Social engagement on drops, stored on-chain | Tapestry protocol |
-| 🏆 Leaderboard | Reputation ranking: Claims ×10 + Created ×5 + Likes ×2 | Client + Tapestry |
-| 🏅 Badges & Ranks | 8 NFT badges, reputation system (Lost Soul → Lich) | Client + Tapestry |
-| 🔍 Demo Mode | Toggle GPS bypass for testing/judging | Client-side flag |
-| 💾 Persistent State | Claims, likes, ghosts, trails survive refresh | localStorage |
-| 🛡️ Anti-spam | Max 5 drops/wallet, 60s cooldown, min reward, no self-claim | Client-side guards |
-| 📱 PWA | Add to Home Screen, standalone mode | Web App Manifest |
+| 🔗 Blinks | Share any drop as a Solana Action (Blink) on social media | OrbitFlare API |
+| 🎵 Music Echoes | Drops that play Audius tracks when you get close | Audius API |
+| 🕹️ RPG Levels | Level up (1-6+) with XP for every on-chain action | MagicBlock Logic |
+| 🔊 Sound/Haptic | Synth effects and physical vibration on mobile | Web Audio + Haptic API |
+| 👻 Ghost Marks | Ephemeral social messages registered on Tapestry | Tapestry protocol |
+| 🗺️ Quest Trails | Sequenced waypoints (Sunrise Tutorial included) | Client-side Logic |
+| 📱 Mobile-First | Fully responsive layout with mobile wallet support | Tailwind + Wallet Adapter |
 
 ---
 
@@ -229,17 +231,17 @@ npm run dev
 ```
 
 ### Testing Flow
-1. Open app → Complete 3-step welcome tour
-2. Click **"📍 Enable GPS"** to activate location (or enable Demo Mode)
-3. Click "Connect" → Connect Phantom/Solflare (set to Devnet)
-4. Click a drop marker → See distance → Walk closer or use Demo Mode
-5. Click "⚡ Claim Drop" → Sign transaction in wallet → 🎉 Confetti!
-6. Check Profile → See NFT badge popup → Mint your first badge
-7. Click **+** → Choose "👻 Ghost Mark" → Leave an ephemeral mark
-8. Click **+** → Choose "🪦 Drop" → Create a new drop with SOL reward
-9. Open **🧭 Quests** tab → Start a quest trail → Walk waypoints
-10. Open **🏆 Rank** tab → Check your leaderboard position
-11. Like / Comment on drops via social buttons
+1. Open app → Complete 3-step welcome tour.
+2. Click **"📍 Enable GPS"** to activate location (or enable Demo Mode).
+3. Connect your wallet (Phantom/Solflare) on **Devnet**.
+4. Explore the map. Notice the **Day/Night** toggle in the bottom left.
+5. Walk within 150m of a marker (or use Demo Mode clicking).
+6. **Claim a Drop**: Sign the transaction. Hear the "level up" synth sound and feel the haptic feedback.
+7. **Music Drops**: Find a drop with a 🎵 icon. Walk close to hear its Audius "echo".
+8. **Share as Blink**: Open any drop and click "Share as Blink" to see the Solana Action link.
+9. **Level Up**: Check your profile to see your RPG Rank and XP progress.
+10. **Sunrise Tutorial**: Go to Trails and start the "Sunrise Onboarding" quest.
+11. **Create Social Marks**: Use the **+** button to leave "Memory Drops" (no SOL required) or "Dead Drops" (SOL bounties).
 
 ---
 
