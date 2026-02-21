@@ -4,6 +4,19 @@ import React, { useState } from "react";
 import type { TapestryProfile } from "@/hooks/useTapestry";
 import { BADGE_DEFINITIONS } from "@/utils/mockData";
 import { ADDRESS_URL } from "@/utils/config";
+import {
+  User,
+  Copy,
+  Check,
+  Zap,
+  Ghost,
+  Heart,
+  Map as MapIcon,
+  Award,
+  ExternalLink,
+  X,
+  Share2
+} from "lucide-react";
 
 interface ProfilePanelProps {
   profile: TapestryProfile | null;
@@ -33,11 +46,13 @@ export default function ProfilePanel({
   if (!profile) {
     return (
       <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-        <div onClick={function(e) { e.stopPropagation(); }} className="w-[90%] max-w-[360px] bg-void-100/[0.98] border border-crypt-300/20 rounded-2xl p-6 animate-slide-up text-center">
-          <div className="text-4xl mb-4">🪦</div>
-          <p className="text-crypt-300 font-mono text-sm mb-2">Loading profile...</p>
-          <p className="text-[11px] text-gray-600 font-mono">Connect wallet &amp; enable Tapestry</p>
-          <button onClick={onClose} className="mt-4 px-6 py-2 rounded-xl border border-crypt-300/20 bg-transparent text-gray-500 font-mono text-sm cursor-pointer">Close</button>
+        <div onClick={function(e) { e.stopPropagation(); }} className="w-[90%] max-w-[360px] bg-void-100/[0.98] border border-crypt-300/20 rounded-2xl p-8 animate-slide-up text-center shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <div className="w-16 h-16 rounded-full bg-crypt-300/10 border border-crypt-300/30 flex items-center justify-center mx-auto mb-6">
+            <User className="text-crypt-300 animate-pulse" size={32} />
+          </div>
+          <p className="text-crypt-300 font-mono text-sm mb-2">Summoning profile...</p>
+          <p className="text-[11px] text-gray-600 font-mono">Connect wallet & enable Tapestry</p>
+          <button onClick={onClose} className="mt-6 w-full py-3 rounded-xl border border-crypt-300/20 bg-white/5 text-gray-400 font-mono text-sm cursor-pointer hover:bg-white/10 transition-colors">Close</button>
         </div>
       </div>
     );
@@ -78,21 +93,36 @@ export default function ProfilePanel({
       <div onClick={function(e) { e.stopPropagation(); }} className="w-[92%] max-w-[380px] bg-void-100/[0.98] border border-crypt-300/20 rounded-2xl p-5 animate-slide-up max-h-[85vh] overflow-y-auto">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-crypt-300 font-mono text-lg font-bold">👤 Profile</h3>
-          <button onClick={onClose} className="text-gray-600 hover:text-crypt-300 transition-colors bg-transparent border-none cursor-pointer text-xl">✕</button>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <User size={18} className="text-crypt-300" />
+            <h3 className="text-crypt-300 font-mono text-sm font-bold tracking-widest uppercase">Identity</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-600 hover:text-crypt-300 transition-colors bg-white/5 p-1.5 rounded-lg border-none cursor-pointer">
+            <X size={18} />
+          </button>
         </div>
 
         {/* Avatar + Username + Rank */}
-        <div className="flex items-center gap-6 mb-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(167,139,250,0.4)] border-2 border-white/20">🪦</div>
-          <div>
-            <div className="text-crypt-100 font-mono font-bold text-2xl">@{profile.username}</div>
-            <div className="flex items-center gap-3 mt-1">
-              <button onClick={copyAddress} className="text-sm text-gray-500 font-mono bg-transparent border-none cursor-pointer hover:text-crypt-300 transition-colors p-0">
-                {copied ? "✓ Copied!" : shortAddr}
+        <div className="flex items-center gap-5 mb-6">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center shadow-[0_0_30px_rgba(167,139,250,0.3)] border border-white/20 transform rotate-3">
+              <div className="transform -rotate-3 text-white">
+                <User size={40} />
+              </div>
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-2 border-void flex items-center justify-center" title="Online">
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-crypt-100 font-mono font-bold text-xl truncate">@{profile.username}</div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <button onClick={copyAddress} className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 text-[10px] text-gray-500 font-mono border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                {copied ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
+                {copied ? "Copied" : shortAddr}
               </button>
-              <span className="text-xs font-mono font-extrabold px-3 py-1 rounded-full uppercase tracking-tighter" style={{ color: rank.color, background: rank.color + "15", border: "1px solid " + rank.color + "33" }}>
+              <span className="text-[9px] font-mono font-black px-2 py-1 rounded-md uppercase tracking-tighter" style={{ color: rank.color, background: rank.color + "15", border: "1px solid " + rank.color + "33" }}>
                 {rank.name}
               </span>
             </div>
@@ -119,19 +149,19 @@ export default function ProfilePanel({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-5 gap-2.5 mb-6">
+        <div className="grid grid-cols-5 gap-2 mb-6">
           {[
-            { label: "Claims", value: stats.claimed, color: "text-emerald-400", icon: "⚡" },
-            { label: "Drops", value: stats.created, color: "text-blue-400", icon: "🪦" },
-            { label: "Ghosts", value: stats.ghosts, color: "text-purple-400", icon: "👻" },
-            { label: "Likes", value: stats.likes, color: "text-pink-400", icon: "❤️" },
-            { label: "Quests", value: stats.trails, color: "text-yellow-400", icon: "🗺️" },
+            { label: "Claims", value: stats.claimed, color: "text-emerald-400", icon: <Zap size={16} /> },
+            { label: "Drops", value: stats.created, color: "text-blue-400", icon: <MapIcon size={16} /> },
+            { label: "Ghosts", value: stats.ghosts, color: "text-purple-400", icon: <Ghost size={16} /> },
+            { label: "Likes", value: stats.likes, color: "text-pink-400", icon: <Heart size={16} /> },
+            { label: "Quests", value: stats.trails, color: "text-yellow-400", icon: <Award size={16} /> },
           ].map(function(s) {
             return (
-              <div key={s.label} className="bg-void/50 border border-crypt-300/15 rounded-2xl p-3 text-center shadow-inner hover:bg-crypt-300/5 transition-colors">
-                <div className="text-xl mb-1">{s.icon}</div>
-                <div className={"text-lg font-extrabold font-mono " + s.color}>{s.value}</div>
-                <div className="text-[8px] text-gray-500 uppercase tracking-tighter font-bold mt-1">{s.label}</div>
+              <div key={s.label} className="bg-white/[0.03] border border-white/[0.08] rounded-xl py-3 px-1 text-center hover:bg-white/[0.06] transition-all hover:scale-[1.02]">
+                <div className={"flex justify-center mb-1.5 " + s.color}>{s.icon}</div>
+                <div className={"text-base font-black font-mono " + s.color}>{s.value}</div>
+                <div className="text-[7px] text-gray-600 uppercase tracking-tighter font-black mt-1 leading-none">{s.label}</div>
               </div>
             );
           })}
@@ -150,9 +180,15 @@ export default function ProfilePanel({
 
         {/* NFT Badges */}
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-gray-600 font-mono uppercase tracking-widest">
-              NFT Badges ({mintedCount} minted / {earnedCount} earned)
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <Award size={14} className="text-gray-500" />
+              <span className="text-[10px] text-gray-500 font-mono uppercase tracking-widest font-bold">
+                Relics & Achievements
+              </span>
+            </div>
+            <span className="text-[9px] font-mono text-crypt-300 bg-crypt-300/10 px-2 py-0.5 rounded-md border border-crypt-300/20">
+              {mintedCount}/{earnedCount}
             </span>
           </div>
           <div className="space-y-2">
@@ -160,13 +196,15 @@ export default function ProfilePanel({
               return (
                 <div
                   key={badge.id}
-                  className={"flex items-center gap-3 p-2.5 rounded-xl border transition-all " + (
-                    badge.minted ? "bg-crypt-300/8 border-crypt-300/20"
-                      : badge.earned ? "bg-gradient-to-r from-crypt-300/5 to-transparent border-crypt-300/15"
-                      : "bg-gray-900/20 border-gray-800/20 opacity-50"
+                  className={"flex items-center gap-4 p-3 rounded-xl border transition-all " + (
+                    badge.minted ? "bg-crypt-300/5 border-crypt-300/20 shadow-[inset_0_0_12px_rgba(167,139,250,0.05)]"
+                      : badge.earned ? "bg-white/[0.02] border-white/10"
+                      : "bg-transparent border-white/5 opacity-40"
                   )}
                 >
-                  <div className="text-2xl">{badge.icon}</div>
+                  <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-xl border border-white/5">
+                    {badge.icon}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className={"text-[11px] font-mono font-bold " + (badge.earned ? "text-crypt-200" : "text-gray-600")}>
@@ -209,7 +247,9 @@ export default function ProfilePanel({
             <div className={"w-2 h-2 rounded-full " + (tapestryConfigured ? "bg-emerald-400" : "bg-yellow-400")} />
             <span className="text-[10px] text-gray-600 font-mono">Tapestry {tapestryConfigured ? "Connected" : "Demo"}</span>
           </div>
-          <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] text-crypt-300/60 font-mono hover:text-crypt-300 transition-colors">Explorer →</a>
+          <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] text-crypt-300/60 font-mono hover:text-crypt-300 transition-colors">
+            Explorer <ExternalLink size={10} />
+          </a>
         </div>
       </div>
     </div>

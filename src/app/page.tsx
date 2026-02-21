@@ -12,7 +12,7 @@ import QuestTrails from "@/components/QuestTrails";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
-import { Map as MapIcon, ScrollText, Compass, Trophy, User } from "lucide-react";
+import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -561,18 +561,23 @@ export default function HomePage() {
 
             {/* Active trail banner */}
             {activeTrail && (
-              <div className="absolute top-3 right-3 z-[1000] w-48">
-                <div className="px-3 py-2 rounded-xl bg-void/90 backdrop-blur border border-crypt-300/15 text-center">
-                  <div className="text-[10px] font-mono text-gray-500">{activeTrail.icon} Active Quest</div>
-                  <div className="text-[12px] font-mono font-bold text-crypt-200 truncate">{activeTrail.name}</div>
-                  <div className="flex items-center gap-1 mt-1 justify-center">
-                    <div className="flex-1 h-1 rounded-full bg-gray-800/50 overflow-hidden">
-                      <div className="h-full rounded-full" style={{
+              <div className="absolute top-4 right-4 z-[1000] w-52">
+                <div className="px-4 py-3 rounded-2xl bg-void/80 backdrop-blur-xl border border-white/10 text-center shadow-2xl glass-border-gradient">
+                  <div className="flex items-center justify-center gap-2 mb-1.5">
+                    <Compass size={12} className="text-gray-500" />
+                    <span className="text-[9px] font-mono font-black text-gray-500 uppercase tracking-widest">Active Quest</span>
+                  </div>
+                  <div className="text-[13px] font-mono font-black text-crypt-100 truncate mb-2">{activeTrail.name}</div>
+                  <div className="flex items-center gap-2 justify-center bg-white/5 p-1.5 rounded-lg">
+                    <div className="flex-1 h-1 rounded-full bg-gray-800 overflow-hidden">
+                      <div className="h-full rounded-full shadow-[0_0_8px_var(--trail-glow)]" style={{
                         width: Math.round((activeTrailProgress.size / activeTrail.waypoints.length) * 100) + "%",
                         background: activeTrail.color,
-                      }} />
+                        //@ts-ignore
+                        "--trail-glow": activeTrail.color
+                      } as any} />
                     </div>
-                    <span className="text-[9px] font-mono" style={{ color: activeTrail.color }}>
+                    <span className="text-[10px] font-mono font-black" style={{ color: activeTrail.color }}>
                       {activeTrailProgress.size}/{activeTrail.waypoints.length}
                     </span>
                   </div>
@@ -591,16 +596,18 @@ export default function HomePage() {
               }).sort(function(a, b) { return a - b; });
               var nearest = distances[0];
               return (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] w-72">
-                  <div className="px-4 py-3 rounded-2xl bg-void/90 backdrop-blur-xl border border-crypt-300/15 shadow-[0_8px_32px_rgba(0,0,0,0.4)] text-center">
-                    <div className="text-2xl mb-1">🧭</div>
-                    <div className="text-[11px] font-mono text-crypt-200 font-bold">No drops in range</div>
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-72 pointer-events-none">
+                  <div className="px-5 py-4 rounded-3xl bg-void/80 backdrop-blur-2xl border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-center glass-border-gradient">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                      <Compass size={20} className="text-crypt-300 animate-spin-slow" />
+                    </div>
+                    <div className="text-[11px] font-mono text-crypt-100 font-black uppercase tracking-widest mb-1">Scanning Perimeter</div>
                     {nearest && nearest < Infinity ? (
-                      <div className="text-[10px] font-mono text-gray-500 mt-1">
-                        Nearest drop is {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"} away
+                      <div className="text-[10px] font-mono text-gray-500">
+                        Nearest signature detected at {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"}
                       </div>
                     ) : (
-                      <div className="text-[10px] font-mono text-gray-500 mt-1">Be the first to drop a secret here</div>
+                      <div className="text-[10px] font-mono text-gray-500">The area is silent...</div>
                     )}
                   </div>
                 </div>
@@ -621,11 +628,15 @@ export default function HomePage() {
             )}
 
             {/* Info overlay */}
-            <div className="absolute top-3 left-3 z-[1000] flex flex-col gap-1.5">
-              <div className="px-3 py-1.5 rounded-lg bg-void/80 backdrop-blur border border-crypt-300/10 font-mono text-[10px] text-gray-600 tracking-wider">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{drops.filter(function(d) { return !d.isClaimed; }).length} drops • {ghostMarks.length} ghosts</span>
+            <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
+              <div className="px-3 py-2 rounded-xl bg-void/80 backdrop-blur-xl border border-white/5 font-mono text-[9px] text-gray-500 tracking-wider shadow-xl glass-border-gradient">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                  <span className="font-black text-gray-400 uppercase tracking-widest">Spectral Density</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span>{drops.filter(function(d) { return !d.isClaimed; }).length} Drops</span>
+                  <span>{ghostMarks.length} Marks</span>
                 </div>
                 {userPosition && (function() {
                   var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
@@ -657,18 +668,19 @@ export default function HomePage() {
                   if (geoStatus === "active") setFlyTrigger(Date.now());
                   else if (geoStatus === "idle" || geoStatus === "error") requestLocation();
                 }}
-                className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
+                className={"flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl border transition-all cursor-pointer shadow-lg " + (
                   geoStatus === "active" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                     : geoStatus === "requesting" ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
                     : geoStatus === "denied" ? "bg-red-500/10 border-red-500/30 text-red-400"
-                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                    : "bg-white/5 border-white/10 text-gray-400"
                 )}
               >
-                <span className="text-[10px] font-mono font-bold">
-                  {geoStatus === "active" ? (userPosition && userPosition.source === "ip" ? "📍 ~IP loc" : "📍 GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
-                    : geoStatus === "requesting" ? "📍 Locating..."
-                    : geoStatus === "denied" ? "📍 GPS Denied"
-                    : "📍 Enable GPS"}
+                <MapPin size={12} />
+                <span className="text-[9px] font-mono font-black uppercase tracking-widest">
+                  {geoStatus === "active" ? (userPosition && userPosition.source === "ip" ? "~IP" : "GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
+                    : geoStatus === "requesting" ? "Searching..."
+                    : geoStatus === "denied" ? "Denied"
+                    : "Enable"}
                 </span>
               </button>
 
@@ -723,7 +735,7 @@ export default function HomePage() {
       </div>
 
       {/* Bottom nav */}
-      <nav className="flex justify-around items-end py-2 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl shrink-0" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
+      <nav className="flex justify-around items-end py-2 bg-void/80 border-t border-white/5 z-50 relative backdrop-blur-2xl shrink-0 glass-border-gradient" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
         {/* Left Side: Map & Drops & Quests */}
         <div className="flex flex-1 justify-around items-center h-12">
           {([

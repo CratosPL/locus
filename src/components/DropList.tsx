@@ -15,7 +15,8 @@ import {
   Activity,
   Twitter,
   Link as LinkIcon,
-  Ghost
+  Ghost,
+  ScrollText
 } from "lucide-react";
 
 interface DropListProps {
@@ -40,11 +41,14 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
   var activeCount = drops.filter(function(d) { return !d.isClaimed; }).length;
 
   return (
-    <div className="p-4 overflow-y-auto h-full">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-crypt-300 font-mono text-sm tracking-[0.2em] uppercase">
-          Drops ({activeCount} active)
-        </h3>
+    <div className="p-5 overflow-y-auto h-full bg-void">
+      <div className="flex items-center justify-between mb-5 px-1">
+        <div className="flex items-center gap-2">
+          <ScrollText size={16} className="text-crypt-300" />
+          <h3 className="text-crypt-300 font-mono text-xs font-black tracking-[0.2em] uppercase">
+            Spectral Vault
+          </h3>
+        </div>
         <div className="flex gap-1.5">
           {(["reward", "date"] as const).map(function(s) {
             return (
@@ -113,10 +117,10 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
             <button
               key={drop.id}
               onClick={function() { onSelectDrop(drop); }}
-              className={"w-full text-left p-3.5 rounded-2xl transition-all cursor-pointer bg-transparent " + (
+              className={"w-full text-left p-4 rounded-2xl transition-all cursor-pointer bg-transparent shadow-sm " + (
                 drop.isClaimed
-                  ? "bg-gray-900/40 border border-gray-800/30"
-                  : "bg-void-100/80 border border-crypt-300/5 hover:border-crypt-300/20"
+                  ? "bg-white/[0.02] border border-white/[0.05] opacity-60"
+                  : "bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] hover:translate-x-1"
               )}
             >
               <div className="flex justify-between items-start">

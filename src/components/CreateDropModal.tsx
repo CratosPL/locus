@@ -4,7 +4,23 @@ import React, { useState } from "react";
 import { DropCategory, GhostEmoji } from "@/types";
 import { CATEGORY_CONFIG, GHOST_EMOJIS } from "@/utils/mockData";
 import type { GeoPosition } from "@/hooks/useGeolocation";
-import { Twitter, Link as LinkIcon, Info, Heart, Gift, Camera } from "lucide-react";
+import {
+  Twitter,
+  Link as LinkIcon,
+  Info,
+  Heart,
+  Gift,
+  Camera,
+  Ghost,
+  MapPin,
+  History,
+  Navigation,
+  Lock,
+  Coins,
+  Sparkles,
+  X,
+  Plus
+} from "lucide-react";
 
 type CreateMode = "drop" | "ghost";
 
@@ -71,39 +87,44 @@ export default function CreateDropModal({
         onClick={function(e) { e.stopPropagation(); }}
         className="w-[92%] max-w-[420px] bg-void-100/[0.98] border border-crypt-300/20 rounded-2xl p-5 animate-slide-up max-h-[90vh] overflow-y-auto"
       >
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-crypt-300 font-mono text-lg font-bold">
-            {mode === "drop" ? (dropType === "memory" ? "📸 Memory Drop" : "🪦 New Drop") : "👻 Ghost Mark"}
-          </h3>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <Plus size={18} className="text-crypt-300" />
+            <h3 className="text-crypt-300 font-mono text-sm font-black tracking-widest uppercase">
+              {mode === "drop" ? (dropType === "memory" ? "Record Memory" : "Create Drop") : "Leave Mark"}
+            </h3>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-600 hover:text-crypt-300 transition-colors bg-transparent border-none cursor-pointer text-xl"
+            className="text-gray-600 hover:text-crypt-300 transition-colors bg-white/5 p-1.5 rounded-lg border-none cursor-pointer"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
         {/* Mode toggle */}
-        <div className="flex gap-1 mb-4 p-1 rounded-xl bg-void/60 border border-crypt-300/10">
+        <div className="flex gap-1 mb-6 p-1.5 rounded-2xl bg-void/60 border border-white/5">
           <button
             onClick={function() { setMode("drop"); }}
-            className={"flex-1 py-2 rounded-lg font-mono text-[11px] font-bold transition-all cursor-pointer border-none " + (
+            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-mono text-[10px] font-black tracking-widest uppercase transition-all cursor-pointer border-none " + (
               mode === "drop"
-                ? "bg-crypt-300/15 text-crypt-300"
+                ? "bg-crypt-300/10 text-crypt-300 shadow-[inset_0_0_12px_rgba(167,139,250,0.1)] border border-crypt-300/20"
                 : "bg-transparent text-gray-600 hover:text-gray-400"
             )}
           >
-            🪦 Drop (SOL)
+            <Plus size={12} />
+            Drop
           </button>
           <button
             onClick={function() { setMode("ghost"); }}
-            className={"flex-1 py-2 rounded-lg font-mono text-[11px] font-bold transition-all cursor-pointer border-none " + (
+            className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-mono text-[10px] font-black tracking-widest uppercase transition-all cursor-pointer border-none " + (
               mode === "ghost"
-                ? "bg-purple-500/15 text-purple-400"
+                ? "bg-purple-500/10 text-purple-400 shadow-[inset_0_0_12px_rgba(168,85,247,0.1)] border border-purple-500/20"
                 : "bg-transparent text-gray-600 hover:text-gray-400"
             )}
           >
-            👻 Ghost Mark
+            <Ghost size={12} />
+            Mark
           </button>
         </div>
 
@@ -151,22 +172,23 @@ export default function CreateDropModal({
             )}
 
             {/* Category selector */}
-            <div className="mb-3">
-              <label className="block text-[10px] text-gray-600 font-mono mb-2 uppercase tracking-widest">Category</label>
-              <div className="flex gap-1.5 flex-wrap">
+            <div className="mb-6">
+              <label className="block text-[9px] text-gray-600 font-mono font-black mb-3 uppercase tracking-[0.2em]">Select Archetype</label>
+              <div className="grid grid-cols-3 gap-2">
                 {Object.entries(CATEGORY_CONFIG).map(function([key, val]) {
                   var isActive = category === key;
+                  const CategoryIcon = key === 'lore' ? History : key === 'quest' ? Navigation : key === 'secret' ? Lock : key === 'ritual' ? MapPin : Coins;
                   return (
                     <button
                       key={key}
                       onClick={function() { setCategory(key as DropCategory); }}
-                      className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-[11px] border transition-all cursor-pointer " + (
-                        isActive ? "border-opacity-50 bg-opacity-20" : "border-crypt-300/10 bg-transparent text-gray-600 hover:border-crypt-300/20"
+                      className={"flex flex-col items-center gap-2 p-3 rounded-2xl font-mono text-[10px] border transition-all cursor-pointer " + (
+                        isActive ? "" : "border-white/5 bg-white/[0.02] text-gray-600 hover:border-white/10"
                       )}
-                      style={isActive ? { borderColor: val.color + "77", background: val.color + "15", color: val.color } : undefined}
+                      style={isActive ? { borderColor: val.color + "66", background: val.color + "10", color: val.color } : undefined}
                     >
-                      <span>{val.icon}</span>
-                      {val.label}
+                      <CategoryIcon size={18} />
+                      <span className="font-bold">{val.label}</span>
                     </button>
                   );
                 })}

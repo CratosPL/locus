@@ -265,19 +265,14 @@ export default function MapView({
             setIsAutoTheme(false);
             setIsNight(!isNight);
           }}
-          className={`flex items-center justify-center w-14 h-14 rounded-2xl backdrop-blur-xl border-2 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all active:scale-90 pointer-events-auto ${
+          className={`flex items-center justify-center w-12 h-12 rounded-2xl backdrop-blur-xl border-2 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all active:scale-90 pointer-events-auto ${
             isNight
               ? 'bg-void-100/90 border-crypt-300/30 text-crypt-300 hover:border-crypt-300'
-              : 'bg-white/90 border-blue-500/30 text-blue-600 hover:border-blue-500'
+              : 'bg-white/90 border-blue-600/30 text-blue-600 hover:border-blue-600'
           }`}
           title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
         >
-          <div className="flex flex-col items-center gap-1">
-            {isNight ? <Moon size={24} /> : <Sun size={24} />}
-            <span className="text-[8px] font-black uppercase tracking-tighter">
-              {isNight ? 'Night' : 'Day'}
-            </span>
-          </div>
+          {isNight ? <Moon size={22} /> : <Sun size={22} />}
         </button>
       </div>
 
@@ -355,7 +350,10 @@ export default function MapView({
                   {/* Header band */}
                   <div className="drop-popup-header" style={{ borderColor: cat.color + "44", background: cat.color + "11" }}>
                     <div className="drop-popup-badge" style={{ background: cat.color + "22", color: cat.color, borderColor: cat.color + "55" }}>
-                      {cat.icon} {cat.label}
+                      <div className="flex items-center gap-1.5">
+                        <div dangerouslySetInnerHTML={{ __html: SVG_ICONS[drop.category] || SVG_ICONS.lore }} className="w-3.5 h-3.5" />
+                        <span>{cat.label}</span>
+                      </div>
                     </div>
                     <div className={"drop-popup-distance " + (nearby ? "nearby" : "far")}>
                       {nearby ? "✓ In range" : distance}

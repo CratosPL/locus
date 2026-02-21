@@ -33,13 +33,6 @@ var MOCK_LEADERBOARD: LeaderboardEntry[] = [
   { rank: 10, username: "nightshift.sol", claimed: 5, created: 1, likes: 8, reputation: 71 },
 ];
 
-function getRankIcon(rank: number): string {
-  if (rank === 1) return "👑";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return "#" + rank;
-}
-
 function getRankStyle(rank: number): string {
   if (rank === 1) return "from-yellow-500/20 to-yellow-600/10 border-yellow-500/30";
   if (rank === 2) return "from-gray-400/15 to-gray-500/10 border-gray-400/25";
@@ -162,11 +155,11 @@ export default function Leaderboard({ currentUser, currentStats, onFollow }: Lea
 
             {/* Reputation & Follow */}
             <div className="flex flex-col items-end gap-2 shrink-0">
-              <div className="text-right bg-void/30 px-3 py-1.5 rounded-xl border border-white/5">
-                <div className={"text-lg font-black font-mono " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
+              <div className="text-right bg-white/[0.04] px-4 py-2 rounded-2xl border border-white/[0.06] shadow-inner">
+                <div className={"text-xl font-black font-mono leading-none mb-1 " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
                   {entry.reputation}
                 </div>
-                <div className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">Reputation</div>
+                <div className="text-[8px] text-gray-600 font-black uppercase tracking-widest leading-none">RP</div>
               </div>
               {!isMe && onFollow && (
                 <button

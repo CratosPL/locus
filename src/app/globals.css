@@ -194,7 +194,7 @@ body {
 }
 
 .map-tiles-night {
-  filter: brightness(0.9) contrast(1.1) saturate(0.7) hue-rotate(15deg) opacity(0.95);
+  filter: brightness(1.15) contrast(1.05) saturate(0.85) hue-rotate(5deg) opacity(0.92);
 }
 
 .map-tiles-day {
@@ -361,6 +361,34 @@ body {
 @keyframes user-ring {
   0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
   100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GLASS MORPHISM REFINEMENTS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.glass-panel {
+  background: rgba(10, 6, 18, 0.8) !important;
+  backdrop-filter: blur(16px) saturate(1.8) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.glass-border-gradient {
+  position: relative;
+}
+.glass-border-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.05));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
