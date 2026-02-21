@@ -16,8 +16,11 @@ import {
   Twitter,
   Link as LinkIcon,
   Ghost,
-  ScrollText
+  ScrollText,
+  Music,
+  Share2
 } from "lucide-react";
+import { useSound } from "@/hooks/useSound";
 
 interface DropListProps {
   drops: Drop[];
@@ -28,6 +31,7 @@ interface DropListProps {
 export default function DropList({ drops, onSelectDrop, formatDistance }: DropListProps) {
   const [filter, setFilter] = useState<DropCategory | "all">("all");
   const [sortBy, setSortBy] = useState<"reward" | "date">("reward");
+  const { playSound } = useSound();
 
   var filtered = drops.filter(function(d) {
     return filter === "all" || d.category === filter;
@@ -38,7 +42,19 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
     return b.createdAt.localeCompare(a.createdAt);
   });
 
-  var activeCount = drops.filter(function(d) { return !d.isClaimed; }).length;
+  const handleSelect = (drop: Drop) => {
+    playSound("click");
+    onSelectDrop(drop);
+  };
+
+  const handleShareBlink = (e: React.MouseEvent, dropId: string) => {
+    e.stopPropagation();
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const blinkUrl = `https://dial.to/?action=solana-action:${origin}/api/actions/drop?id=${dropId}`;
+    navigator.clipboard.writeText(blinkUrl);
+    playSound("click");
+    alert("Blink URL copied to clipboard!\n\nShare this on X as an interactive Solana Blink.");
+  };
 
   return (
     <div className="p-5 overflow-y-auto h-full bg-void">
@@ -116,7 +132,7 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
           return (
             <button
               key={drop.id}
-              onClick={function() { onSelectDrop(drop); }}
+              onClick={function() { handleSelect(drop); }}
               className={"w-full text-left p-4 rounded-2xl transition-all cursor-pointer bg-transparent shadow-sm " + (
                 drop.isClaimed
                   ? "bg-white/[0.02] border border-white/[0.05] opacity-60"
@@ -149,12 +165,17 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
                           · {dist}
                         </span>
                       )}
-                      {(drop.twitterHandle || drop.externalLink) && (
-                        <span className="flex gap-1.5 ml-1">
-                          {drop.twitterHandle && <Twitter size={10} className="text-gray-700" />}
-                          {drop.externalLink && <LinkIcon size={10} className="text-gray-700" />}
-                        </span>
-                      )}
+                      <span className="flex gap-2 ml-1 items-center">
+                        {drop.twitterHandle && <Twitter size={10} className="text-gray-700" />}
+                        {drop.externalLink && <LinkIcon size={10} className="text-gray-700" />}
+                        {drop.audiusTrackId && <Music size={10} className="text-pink-500/60" />}
+                        <button
+                          onClick={(e) => handleShareBlink(e, drop.id)}
+                          className="p-0 border-none bg-transparent cursor-pointer text-gray-700 hover:text-blue-400"
+                        >
+                          <Share2 size={10} />
+                        </button>
+                      </span>
                     </div>
                   </div>
                 </div>

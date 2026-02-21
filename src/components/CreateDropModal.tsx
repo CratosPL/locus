@@ -19,8 +19,10 @@ import {
   Coins,
   Sparkles,
   X,
-  Plus
+  Plus,
+  Music
 } from "lucide-react";
+import { useSound } from "@/hooks/useSound";
 
 type CreateMode = "drop" | "ghost";
 
@@ -33,6 +35,7 @@ interface CreateDropModalProps {
     twitterHandle?: string;
     externalLink?: string;
     dropType: "crypto" | "memory";
+    audiusTrackId?: string;
   }) => void;
   onCreateGhost: (data: {
     message: string;
@@ -60,6 +63,9 @@ export default function CreateDropModal({
   var [twitter, setTwitter] = useState("");
   var [link, setLink] = useState("");
   var [dropType, setDropType] = useState<"crypto" | "memory">("crypto");
+  var [audiusTrackId, setAudiusTrackId] = useState("");
+
+  const { playSound } = useSound();
 
   var handleSubmit = function() {
     if (!message.trim()) return;
@@ -71,9 +77,12 @@ export default function CreateDropModal({
         twitterHandle: twitter.trim() || undefined,
         externalLink: link.trim() || undefined,
         dropType: dropType,
+        audiusTrackId: audiusTrackId.trim() || undefined,
       });
+      playSound("success");
     } else {
       onCreateGhost({ message: message.trim(), emoji: ghostEmoji });
+      playSound("ghost");
     }
     onClose();
   };
@@ -105,7 +114,7 @@ export default function CreateDropModal({
         {/* Mode toggle */}
         <div className="flex gap-1 mb-6 p-1.5 rounded-2xl bg-void/60 border border-white/5">
           <button
-            onClick={function() { setMode("drop"); }}
+            onClick={function() { setMode("drop"); playSound("click"); }}
             className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-mono text-[10px] font-black tracking-widest uppercase transition-all cursor-pointer border-none " + (
               mode === "drop"
                 ? "bg-crypt-300/10 text-crypt-300 shadow-[inset_0_0_12px_rgba(167,139,250,0.1)] border border-crypt-300/20"
@@ -116,7 +125,7 @@ export default function CreateDropModal({
             Drop
           </button>
           <button
-            onClick={function() { setMode("ghost"); }}
+            onClick={function() { setMode("ghost"); playSound("click"); }}
             className={"flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-mono text-[10px] font-black tracking-widest uppercase transition-all cursor-pointer border-none " + (
               mode === "ghost"
                 ? "bg-purple-500/10 text-purple-400 shadow-[inset_0_0_12px_rgba(168,85,247,0.1)] border border-purple-500/20"
@@ -265,9 +274,9 @@ export default function CreateDropModal({
               </div>
             )}
 
-            {/* Social Links */}
+            {/* Social & Music Links */}
             <div className="mb-4 space-y-3">
-              <label className="block text-[10px] text-gray-600 font-mono mb-1.5 uppercase tracking-widest">Creator Contact (Optional)</label>
+              <label className="block text-[10px] text-gray-600 font-mono mb-1.5 uppercase tracking-widest">Metadata (Optional)</label>
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
                   <Twitter size={14} />
@@ -287,6 +296,17 @@ export default function CreateDropModal({
                   type="text" value={link}
                   onChange={(e) => setLink(e.target.value)}
                   placeholder="External link / Portfolio"
+                  className="w-full pl-9 p-2.5 rounded-xl border border-crypt-300/10 bg-crypt-300/5 text-crypt-200 font-mono text-xs outline-none focus:border-crypt-300/30 transition-colors"
+                />
+              </div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-pink-400">
+                  <Music size={14} />
+                </div>
+                <input
+                  type="text" value={audiusTrackId}
+                  onChange={(e) => setAudiusTrackId(e.target.value)}
+                  placeholder="Audius Track ID (Soundtrack)"
                   className="w-full pl-9 p-2.5 rounded-xl border border-crypt-300/10 bg-crypt-300/5 text-crypt-200 font-mono text-xs outline-none focus:border-crypt-300/30 transition-colors"
                 />
               </div>

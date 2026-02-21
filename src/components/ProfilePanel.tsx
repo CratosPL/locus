@@ -15,7 +15,8 @@ import {
   Award,
   ExternalLink,
   X,
-  Share2
+  Share2,
+  Sparkles
 } from "lucide-react";
 
 interface ProfilePanelProps {
@@ -28,11 +29,28 @@ interface ProfilePanelProps {
   tapestryConfigured: boolean;
 }
 
-function getRank(rep: number): { name: string; color: string } {
-  if (rep >= 100) return { name: "Lich", color: "#fbbf24" };
-  if (rep >= 50) return { name: "Wraith", color: "#a78bfa" };
-  if (rep >= 20) return { name: "Phantom", color: "#60a5fa" };
-  if (rep >= 5) return { name: "Spirit", color: "#34d399" };
+const LEVEL_THRESHOLDS = [0, 20, 50, 100, 200, 500, 1000];
+
+function getLevelInfo(xp: number) {
+  let level = 1;
+  for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
+    if (xp >= LEVEL_THRESHOLDS[i]) level = i + 1;
+    else break;
+  }
+
+  const currentThreshold = LEVEL_THRESHOLDS[level - 1];
+  const nextThreshold = LEVEL_THRESHOLDS[level] || currentThreshold * 2;
+  const progress = ((xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100;
+
+  return { level, progress, nextThreshold };
+}
+
+function getRank(level: number): { name: string; color: string } {
+  if (level >= 6) return { name: "Lich Lord", color: "#fbbf24" };
+  if (level >= 5) return { name: "Wraith", color: "#a78bfa" };
+  if (level >= 4) return { name: "Phantom", color: "#60a5fa" };
+  if (level >= 3) return { name: "Spirit", color: "#34d399" };
+  if (level >= 2) return { name: "Ghoul", color: "#9ca3af" };
   return { name: "Lost Soul", color: "#666" };
 }
 
@@ -59,7 +77,8 @@ export default function ProfilePanel({
   }
 
   var reputation = stats.claimed * 10 + stats.created * 5 + stats.likes * 2;
-  var rank = getRank(reputation);
+  var { level, progress: levelProgress, nextThreshold } = getLevelInfo(reputation);
+  var rank = getRank(level);
   var shortAddr = profile.walletAddress.slice(0, 4) + "..." + profile.walletAddress.slice(-4);
   var explorerUrl = ADDRESS_URL(profile.walletAddress);
 
@@ -123,7 +142,7 @@ export default function ProfilePanel({
                 {copied ? "Copied" : shortAddr}
               </button>
               <span className="text-[9px] font-mono font-black px-2 py-1 rounded-md uppercase tracking-tighter" style={{ color: rank.color, background: rank.color + "15", border: "1px solid " + rank.color + "33" }}>
-                {rank.name}
+                LVL {level} · {rank.name}
               </span>
             </div>
           </div>
@@ -167,14 +186,30 @@ export default function ProfilePanel({
           })}
         </div>
 
-        {/* Reputation bar */}
-        <div className="bg-crypt-300/5 border border-crypt-300/10 rounded-xl p-3 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] text-gray-600 font-mono uppercase tracking-widest">Reputation</span>
-            <span className="font-bold font-mono text-sm" style={{ color: rank.color }}>⚡ {reputation}</span>
+        {/* Level / XP Progress Bar */}
+        <div className="bg-crypt-300/5 border border-crypt-300/10 rounded-2xl p-4 mb-4 shadow-[inset_0_0_20px_rgba(167,139,250,0.05)]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-yellow-400 animate-pulse" />
+              <span className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em] font-black">Experience</span>
+            </div>
+            <div className="text-right">
+               <span className="font-black font-mono text-sm text-crypt-100">{reputation}</span>
+               <span className="text-[10px] text-gray-600 font-mono ml-1">/ {nextThreshold} XP</span>
+            </div>
           </div>
-          <div className="h-1.5 rounded-full bg-gray-800/50 overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: Math.min(reputation, 200) / 2 + "%", background: "linear-gradient(90deg, " + rank.color + "88, " + rank.color + ")" }} />
+          <div className="h-2.5 rounded-full bg-black/40 border border-white/5 overflow-hidden p-0.5">
+            <div
+              className="h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(167,139,250,0.4)]"
+              style={{
+                width: levelProgress + "%",
+                background: "linear-gradient(90deg, " + rank.color + "66, " + rank.color + ")"
+              }}
+            />
+          </div>
+          <div className="flex justify-between mt-2">
+            <span className="text-[9px] text-gray-600 font-mono font-bold">Level {level}</span>
+            <span className="text-[9px] text-gray-600 font-mono font-bold">Level {level + 1}</span>
           </div>
         </div>
 

@@ -21,6 +21,7 @@ export interface Drop {
   twitterHandle?: string;
   externalLink?: string;
   dropType?: "crypto" | "memory";
+  audiusTrackId?: string;
 }
 
 export interface CategoryConfig {

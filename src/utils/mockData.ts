@@ -18,6 +18,7 @@ export var MOCK_DROPS: Drop[] = [
     category: "lore",
     createdBy: "phantom.sol",
     createdAt: "2026-02-12",
+    audiusTrackId: "777353110", // Example track ID
   },
   {
     id: "drop-2",
@@ -244,8 +245,8 @@ export var MOCK_TRAILS: QuestTrail[] = [
   },
   {
     id: "trail-sunrise",
-    name: "Sunrise: Web3 Onboarding",
-    description: "New to Solana? This trail will guide you through creating a wallet, using Tapestry, and discovering on-chain social. (Sunrise Track)",
+    name: "Tutorial: Sunrise Onboarding",
+    description: "New to Solana? This trail will guide you through creating a wallet, using Tapestry, and discovering on-chain social. Highly recommended for new explorers!",
     icon: "☀️",
     color: "#f59e0b",
     reward: 0.3,

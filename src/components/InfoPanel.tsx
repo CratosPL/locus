@@ -61,6 +61,16 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
                 <span className="shrink-0 w-16 text-blue-500 font-bold uppercase tracking-tighter bg-blue-500/10 px-2 py-1 rounded text-center h-fit">Blinks</span>
                 <p><span className="text-white font-bold">Solana Blinks (Actions):</span> Share any drop as an interactive link on X. Users can claim bounties directly from their social feed.</p>
               </div>
+
+              <div className="flex gap-3">
+                <span className="shrink-0 w-16 text-red-500 font-bold uppercase tracking-tighter bg-red-500/10 px-2 py-1 rounded text-center h-fit">Audius</span>
+                <p><span className="text-white font-bold">Audius (Music):</span> Drops can contain on-chain music tracks. Listen to the "echoes of the past" when near a Music Drop.</p>
+              </div>
+
+              <div className="flex gap-3">
+                <span className="shrink-0 w-16 text-green-500 font-bold uppercase tracking-tighter bg-green-500/10 px-2 py-1 rounded text-center h-fit">Torque</span>
+                <p><span className="text-white font-bold">Torque Loyalty:</span> Active explorers earn Torque badges and maintain streaks, boosting their drop discovery radius.</p>
+              </div>
             </div>
           </section>
 

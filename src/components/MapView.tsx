@@ -7,7 +7,6 @@ import type { GeoPosition } from "@/hooks/useGeolocation";
 import {
   Twitter,
   ExternalLink,
-  Share2,
   Heart,
   MessageSquare,
   Navigation,
@@ -19,9 +18,12 @@ import {
   Coins,
   History,
   Sun,
-  Moon
+  Moon,
+  Music,
+  Share2
 } from "lucide-react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { useSound } from "@/hooks/useSound";
 
 let L: typeof import("leaflet") | null = null;
 let MapContainer: any = null;
@@ -101,6 +103,9 @@ export default function MapView({
   const [commentingDropId, setCommentingDropId] = useState<string | null>(null);
   const [isNight, setIsNight] = useState(true);
   const [isAutoTheme, setIsAutoTheme] = useState(true);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+
+  const { playSound, vibrate } = useSound();
 
   useEffect(() => {
     if (!isAutoTheme) return;
@@ -244,7 +249,21 @@ export default function MapView({
       onComment(dropId, commentText.trim());
       setCommentText("");
       setCommentingDropId(null);
+      playSound("click");
     }
+  };
+
+  const handleShareBlink = (dropId: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const blinkUrl = `https://dial.to/?action=solana-action:${origin}/api/actions/drop?id=${dropId}`;
+    navigator.clipboard.writeText(blinkUrl);
+    playSound("click");
+    alert("Blink URL copied to clipboard!\n\nShare this on X as an interactive Solana Blink.");
+  };
+
+  const handleClaimWithSound = (dropId: string) => {
+    playSound("claim");
+    onClaim(dropId);
   };
 
   return (
@@ -407,14 +426,25 @@ export default function MapView({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            const blinkUrl = `${window.location.origin}/api/actions/drop?id=${drop.id}`;
-                            navigator.clipboard.writeText(blinkUrl);
-                            alert("Blink URL copied to clipboard!\n\nShare this on X as an interactive Solana Blink.");
+                            handleShareBlink(drop.id);
                           }}
+                          title="Share as Solana Blink"
                           className="text-gray-500 hover:text-blue-400 transition-colors bg-transparent border-none p-0 cursor-pointer"
                         >
                           <Share2 size={14} />
                         </button>
+                        {drop.audiusTrackId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPlayingTrackId(playingTrackId === drop.audiusTrackId ? null : (drop.audiusTrackId || null));
+                              playSound("click");
+                            }}
+                            className={`${playingTrackId === drop.audiusTrackId ? 'text-pink-500 animate-pulse' : 'text-gray-500'} hover:text-pink-400 transition-colors bg-transparent border-none p-0 cursor-pointer`}
+                          >
+                            <Music size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                     <span className="drop-popup-reward" style={{ color: cat.color }}>
@@ -454,7 +484,7 @@ export default function MapView({
                     </div>
                   ) : (
                     <button
-                      onClick={() => onClaim(drop.id)}
+                      onClick={() => handleClaimWithSound(drop.id)}
                       disabled={isProcessing}
                       style={{
                         width: "100%", padding: "10px", borderRadius: "8px",
@@ -597,6 +627,19 @@ export default function MapView({
         })}
 
         {/* ─── Active Trail Polyline + Waypoints ─────────────────────── */}
+        {/* Audius Hidden Player */}
+        {playingTrackId && (
+          <div className="hidden">
+            <iframe
+              width="100%"
+              height="120"
+              scrolling="no"
+              frameBorder="no"
+              src={`https://audius.co/embed/track/${playingTrackId}?autoPlay=true&hidePlaylist=true`}
+            />
+          </div>
+        )}
+
         {activeTrail && Polyline && (
           <>
             <Polyline
