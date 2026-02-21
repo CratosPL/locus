@@ -122,7 +122,8 @@ Creator                                    Finder
 | 🔊 Sound/Haptic | Synth effects and physical vibration on mobile | Web Audio + Haptic API |
 | 👻 Ghost Marks | Ephemeral social messages registered on Tapestry | Tapestry protocol |
 | 🗺️ Quest Trails | Sequenced waypoints (Sunrise Tutorial included) | Client-side Logic |
-| 📱 Mobile-First | Fully responsive layout with mobile wallet support | Tailwind + Wallet Adapter |
+| 🌌 Ambient Vibe | Toggleable graveyard soundscape & radar sweep effect | Audius + CSS Animations |
+| 📱 Mobile-First | Pixel-perfect PWA layout for iOS/Android | Tailwind + Wallet Adapter |
 
 ---
 
@@ -268,8 +269,8 @@ npm run dev
 1. Open app → Complete 3-step welcome tour.
 2. Click **"📍 Enable GPS"** to activate location (or enable Demo Mode).
 3. Connect your wallet (Phantom/Solflare) on **Devnet**.
-4. Explore the map. Notice the **Day/Night** toggle in the bottom left.
-5. Walk within 150m of a marker (or use Demo Mode clicking).
+4. Explore the map. Notice the **Day/Night** toggle and **Spectral Ambient** (Ghost icon) toggle in the bottom left.
+5. Walk within 150m of a marker. Notice the **Radar Sweep** and pulsing range circle around you.
 6. **Claim a Drop**: Sign the transaction. Hear the "level up" synth sound and feel the haptic feedback.
 7. **Music Drops**: Find a drop with a 🎵 icon. Walk close to hear its Audius "echo".
 8. **Share as Blink**: Open any drop and click "Share as Blink" to see the Solana Action link.

@@ -21,6 +21,7 @@ import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { MOCK_DROPS, MOCK_GHOSTS, MOCK_TRAILS, CATEGORY_CONFIG, BADGE_DEFINITIONS } from "@/utils/mockData";
 import type { Drop, DropCategory, GhostMark, GhostEmoji, QuestTrail, Activity } from "@/types";
 import { SOLANA_CLUSTER } from "@/utils/config";
+import confetti from "canvas-confetti";
 
 var MapView = dynamic(function() { return import("@/components/MapView"); }, {
   ssr: false,
@@ -68,7 +69,6 @@ export default function HomePage() {
   var [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
   var [activeTab, setActiveTab] = useState<TabId>("map");
   var [flyTrigger, setFlyTrigger] = useState(0);
-  var [showConfetti, setShowConfetti] = useState(false);
   var [showCreateModal, setShowCreateModal] = useState(false);
   var [showProfile, setShowProfile] = useState(false);
   var [showWelcome, setShowWelcome] = useState(true);
@@ -202,8 +202,12 @@ export default function HomePage() {
 
       if (currentProgress.size >= totalWaypoints) {
         showToast("🏆 Trail Complete! " + trailName + " — +" + trailReward + " SOL bonus!", "success");
-        setShowConfetti(true);
-        setTimeout(function() { setShowConfetti(false); }, 2500);
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: [trailColor, '#ffffff', '#a78bfa']
+        });
         setCompletedTrails(function(c) { return c + 1; });
       }
     }
@@ -254,8 +258,12 @@ export default function HomePage() {
       setPendingBadge(null);
 
       showToast("🎉 NFT Badge Minted! " + badge!.icon + " " + badge!.name, "success", "MOCK_" + Date.now().toString(36));
-      setShowConfetti(true);
-      setTimeout(function() { setShowConfetti(false); }, 2000);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: [badge!.color, '#ffffff', '#fbbf24']
+      });
     }, 1000);
   }, [mintedBadges, showToast, isConnected, claimDropOnChain]);
 
@@ -282,8 +290,12 @@ export default function HomePage() {
         saveSet("locus_claimed", newClaimed);
 
         showToast("Drop claimed! +" + drop.finderReward + " SOL", "success", result.value);
-        setShowConfetti(true);
-        setTimeout(function() { setShowConfetti(false); }, 2000);
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#a78bfa', '#34d399', '#ffffff']
+        });
 
         setActivities(function(prev) {
           return [{ icon: "⚡", text: "Claimed " + drop!.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
@@ -850,35 +862,6 @@ export default function HomePage() {
       <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider capitalize">
         ⛓ Solana {SOLANA_CLUSTER} • Graveyard 2026
       </div>
-
-      {/* Claim celebration */}
-      {showConfetti && (
-        <>
-          <div className="claim-flash" />
-          <div className="confetti-container">
-            {Array.from({ length: 40 }).map(function(_, i) {
-              var colors = ["#a78bfa", "#34d399", "#f472b6", "#fbbf24", "#60a5fa", "#fff"];
-              var color = colors[i % colors.length];
-              var left = 20 + Math.random() * 60;
-              var delay = Math.random() * 0.4;
-              var size = 4 + Math.random() * 8;
-              var dx = (Math.random() - 0.5) * 60;
-              return (
-                <div
-                  key={"conf-" + i}
-                  className="confetti-particle"
-                  style={{
-                    left: left + "%", width: size + "px", height: size + "px",
-                    background: color, borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-                    animationDelay: delay + "s", animationDuration: (1 + Math.random()) + "s",
-                    transform: "translateX(" + dx + "vw)",
-                  }}
-                />
-              );
-            })}
-          </div>
-        </>
-      )}
     </div>
   );
 }

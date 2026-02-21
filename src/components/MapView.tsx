@@ -104,6 +104,7 @@ export default function MapView({
   const [isNight, setIsNight] = useState(true);
   const [isAutoTheme, setIsAutoTheme] = useState(true);
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [ambientActive, setAmbientActive] = useState(false);
 
   const { playSound, vibrate } = useSound();
 
@@ -177,12 +178,13 @@ export default function MapView({
   };
 
   // ─── Icons ──────────────────────────────────────────────────────────────
-  const createDropIcon = (category: DropCategory, isClaimed: boolean) => {
-    const config = CATEGORY_CONFIG[category];
+  const createDropIcon = (drop: Drop) => {
+    const config = CATEGORY_CONFIG[drop.category];
+    const isClaimed = drop.isClaimed;
     const bgColor = isClaimed ? "#444" : config.color;
     const glowColor = isClaimed ? "transparent" : config.color;
     const claimedClass = isClaimed ? "drop-marker-claimed" : "marker-pulse";
-    const svgIcon = SVG_ICONS[category] || SVG_ICONS.lore;
+    const svgIcon = SVG_ICONS[drop.category] || SVG_ICONS.lore;
 
     return L!.divIcon({
       className: "custom-marker",
@@ -193,8 +195,8 @@ export default function MapView({
         '</div>' +
         '<div class="drop-marker-pointer"></div>' +
         (isClaimed ? '' : '<div class="drop-marker-ring"></div>') +
-        '<div class="drop-marker-reward" style="color:' + bgColor + '">' +
-          (isClaimed ? '✓' : config.icon) +
+        '<div class="drop-marker-reward" style="color:' + (isClaimed ? '#444' : '#fff') + '; background:' + (isClaimed ? 'transparent' : 'rgba(0,0,0,0.6)') + '; padding: 1px 6px; border-radius: 10px; font-weight: 800; font-size: 9px; white-space: nowrap; border: 1px solid ' + (isClaimed ? 'transparent' : bgColor + '44') + ';">' +
+          (isClaimed ? 'CLAIMED' : (drop.dropType === 'memory' ? 'MEMORY' : drop.finderReward + ' ◎')) +
         '</div>' +
       '</div>',
       iconSize: [48, 58],
@@ -293,6 +295,21 @@ export default function MapView({
         >
           {isNight ? <Moon size={22} /> : <Sun size={22} />}
         </button>
+
+        <button
+          onClick={() => {
+            setAmbientActive(!ambientActive);
+            playSound("click");
+          }}
+          className={`flex items-center justify-center w-12 h-12 rounded-2xl backdrop-blur-xl border-2 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all active:scale-90 pointer-events-auto ${
+            ambientActive
+              ? 'bg-pink-500/20 border-pink-500/40 text-pink-400'
+              : 'bg-void-100/90 border-white/10 text-gray-600'
+          }`}
+          title="Toggle Ambient Atmosphere"
+        >
+          <Ghost size={22} className={ambientActive ? 'animate-pulse' : ''} />
+        </button>
       </div>
 
       <MapContainer
@@ -339,12 +356,25 @@ export default function MapView({
             <Circle
               center={[userPosition.lat, userPosition.lng]}
               radius={150}
+              className="claim-radius-pulse"
               pathOptions={{
                 color: isNight ? "#818cf8" : "#4f46e5",
+                fillColor: isNight ? "#818cf8" : "#4f46e5",
+                fillOpacity: 0.05,
+                weight: 2,
+                dashArray: "8 4",
+              }}
+            />
+            {/* Radar sweep */}
+            <Circle
+              center={[userPosition.lat, userPosition.lng]}
+              radius={300}
+              className="radar-sweep"
+              pathOptions={{
+                color: "#a78bfa",
                 fillColor: "transparent",
-                fillOpacity: 0,
-                weight: 1.5,
-                dashArray: "6 4",
+                weight: 1,
+                opacity: 0.5
               }}
             />
           </>
@@ -361,7 +391,7 @@ export default function MapView({
             <Marker
               key={drop.id}
               position={[drop.location.lat, drop.location.lng]}
-              icon={createDropIcon(drop.category, drop.isClaimed)}
+              icon={createDropIcon(drop)}
               eventHandlers={{ click: () => onSelectDrop(drop) }}
             >
               <Popup maxWidth={290} minWidth={250} className="locus-popup">
@@ -627,6 +657,18 @@ export default function MapView({
         })}
 
         {/* ─── Active Trail Polyline + Waypoints ─────────────────────── */}
+        {/* Ambient Spooky Player */}
+        {ambientActive && (
+          <div className="hidden">
+            <iframe
+              width="100%"
+              height="120"
+              scrolling="no"
+              frameBorder="no"
+              src="https://audius.co/embed/track/2013859664?autoPlay=true&hidePlaylist=true"
+            />
+          </div>
+        )}
         {/* Audius Hidden Player */}
         {playingTrackId && (
           <div className="hidden">
@@ -689,6 +731,22 @@ export default function MapView({
 
       {/* Custom styles */}
       <style jsx global>{`
+        @keyframes radar-sweep {
+          0% { transform: scale(0.1); opacity: 0.8; }
+          80% { opacity: 0.3; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+        .radar-sweep {
+          animation: radar-sweep 4s infinite linear;
+          transform-origin: center;
+        }
+        @keyframes claim-pulse {
+          0%, 100% { stroke-opacity: 0.3; fill-opacity: 0.02; }
+          50% { stroke-opacity: 0.8; fill-opacity: 0.08; }
+        }
+        .claim-radius-pulse {
+          animation: claim-pulse 2s infinite ease-in-out;
+        }
         .leaflet-popup-content-wrapper {
           background: transparent !important;
           box-shadow: none !important;
