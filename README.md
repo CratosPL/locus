@@ -126,6 +126,40 @@ Creator                                    Finder
 
 ---
 
+## 📘 Deep Dive: How to Use Features
+
+### ⚡ Claiming a Drop
+1. **Find a marker:** Blue/Purple icons represent rewards.
+2. **Proximity:** Walk within **150m** of the location.
+3. **Claim:** Click the marker and hit "Claim". Sign the transaction.
+4. **Result:** SOL is transferred from the vault PDA to your wallet. You earn **50 XP**.
+
+### 🔗 Solana Blinks (OrbitFlare)
+1. **Share:** Click any drop on the map.
+2. **Action:** Click "Share as Blink".
+3. **Blink Link:** You get a `dial.to` link. When posted on X, it renders as an interactive button.
+4. **Remote Interaction:** Users can claim or interact with the drop directly from their social feed.
+
+### 🎵 Audius Music Echoes
+1. **Spot the Icon:** Look for 🎵 markers on the map.
+2. **Walk & Listen:** As you enter the radius, Locus triggers a hidden Audius player.
+3. **Atmosphere:** Each coordinate can have a unique "audio lore" or soundtrack attached.
+
+### 🕹️ MagicBlock Progression (XP)
+Every action in Locus is gamified:
+- **Claim a Drop:** +50 XP
+- **Create a Ghost Mark:** +10 XP
+- **Follow on Tapestry:** +5 XP
+- **Complete a Trail:** +100 XP
+*Your Rank (Ghost -> Lich Lord) is visible in the Profile panel.*
+
+### 👤 Tapestry Social Graph
+- **Profile:** Automatically created when you connect your wallet.
+- **Interactions:** Likes and comments are registered as on-chain content nodes.
+- **Follows:** Building a decentralized social graph of fellow explorers.
+
+---
+
 ### 👻 Ghost Marks — Ephemeral Social Layer
 
 Ghost Marks are short-lived messages on the map that **disappear after 24 hours**. Unlike Drops (which hold SOL), Ghost Marks are lightweight social signals — tips, warnings, photos, vibes.

@@ -8,7 +8,7 @@ interface InfoPanelProps {
   onClose: () => void;
 }
 
-type Tab = "intro" | "users" | "jury";
+type Tab = "intro" | "users" | "faq" | "jury";
 
 export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("intro");
@@ -29,24 +29,30 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 bg-white/5 p-1 rounded-xl shrink-0">
+        <div className="flex gap-2 mb-6 bg-white/5 p-1 rounded-xl shrink-0 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab("intro")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "intro" ? "bg-crypt-300 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+            className={`min-w-fit flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[10px] md:text-xs font-bold transition-all ${activeTab === "intro" ? "bg-crypt-300 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
           >
             <Info size={14} /> OVERVIEW
           </button>
           <button
             onClick={() => setActiveTab("users")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "users" ? "bg-crypt-300 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+            className={`min-w-fit flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[10px] md:text-xs font-bold transition-all ${activeTab === "users" ? "bg-crypt-300 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
           >
-            <BookOpen size={14} /> USER GUIDE
+            <BookOpen size={14} /> USERS
+          </button>
+          <button
+            onClick={() => setActiveTab("faq")}
+            className={`min-w-fit flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[10px] md:text-xs font-bold transition-all ${activeTab === "faq" ? "bg-crypt-300 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+          >
+            <Zap size={14} /> DEEP DIVE
           </button>
           <button
             onClick={() => setActiveTab("jury")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "jury" ? "bg-crypt-300 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+            className={`min-w-fit flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[10px] md:text-xs font-bold transition-all ${activeTab === "jury" ? "bg-crypt-300 text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
           >
-            <Terminal size={14} /> JURY SPECS
+            <Terminal size={14} /> JURY
           </button>
         </div>
 
@@ -91,25 +97,105 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
                 <h3 className="text-crypt-300 font-bold mb-4 flex items-center gap-2 uppercase">Getting Started</h3>
                 <div className="space-y-4">
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold">1</div>
-                    <p>Connect your <b className="text-white">Solana Wallet</b> (Phantom/Solflare). Ensure you are on <b className="text-emerald-400">Devnet</b>.</p>
+                    <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold text-xs">1</div>
+                    <p className="text-xs">Connect your <b className="text-white">Solana Wallet</b> (Phantom/Solflare). Ensure you are on <b className="text-emerald-400">Devnet</b>.</p>
                   </div>
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold">2</div>
-                    <p>Grant <b className="text-white">GPS Access</b>. In Demo Mode, you can click the "map" to simulate walking if you aren't in Warsaw.</p>
+                    <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold text-xs">2</div>
+                    <p className="text-xs">Grant <b className="text-white">GPS Access</b>. In Demo Mode, you can click the "map" to simulate walking if you aren't in Warsaw.</p>
                   </div>
                   <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold">3</div>
-                    <p>Locate markers. Blue/Purple are <b className="text-white">Loot Drops</b> (SOL rewards). Green circles are <b className="text-white">Ghost Marks</b>.</p>
+                    <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold text-xs">3</div>
+                    <p className="text-xs">Locate markers. Blue/Purple are <b className="text-white">Loot Drops</b> (SOL rewards). Green circles are <b className="text-white">Ghost Marks</b>.</p>
                   </div>
                 </div>
               </section>
+
+              <button
+                onClick={() => setActiveTab("faq")}
+                className="w-full p-4 rounded-xl bg-crypt-300/10 border border-crypt-300/30 flex items-center justify-between group hover:bg-crypt-300/20 transition-all"
+              >
+                <div className="text-left">
+                  <span className="text-xs font-bold text-white block">Need detailed instructions?</span>
+                  <span className="text-[10px] text-gray-500">Read our Feature Deep Dive & FAQ</span>
+                </div>
+                <Zap size={20} className="text-crypt-300 group-hover:scale-125 transition-transform" />
+              </button>
 
               <section className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
                 <h4 className="text-amber-500 font-bold text-xs mb-2 flex items-center gap-2">
                   <Zap size={14} /> PRO TIP: SUNRISE TUTORIAL
                 </h4>
                 <p className="text-xs">Open the <b className="text-white">Trails</b> menu and start the "Sunrise Onboarding" quest to learn the ropes and earn your first XP!</p>
+              </section>
+            </div>
+          )}
+
+          {activeTab === "faq" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-4">
+              <section className="space-y-4">
+                <h3 className="text-crypt-300 font-bold uppercase tracking-widest text-xs border-l-2 border-crypt-300 pl-3">FEATURE DEEP DIVE</h3>
+
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
+                      <Zap size={14} className="text-yellow-500" /> 1. HOW TO CLAIM A DROP?
+                    </h4>
+                    <p className="text-[11px] text-gray-400 pl-6 border-l border-white/10">
+                      When you are within <b className="text-white">150 meters</b> of a marker, click it and select "Claim". This triggers a Solana transaction. Once confirmed, the bounty SOL is transferred from the vault PDA directly to your wallet.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
+                      <Share2 size={14} className="text-blue-400" /> 2. SOLANA BLINKS (SHARING)
+                    </h4>
+                    <p className="text-[11px] text-gray-400 pl-6 border-l border-white/10">
+                      Found a cool drop? Click <b className="text-white">"Share as Blink"</b>. It generates a link that turns into an interactive action on X (Twitter). Anyone with the link can claim the drop if they are physically near it!
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
+                      <Users size={14} className="text-purple-400" /> 3. TAPESTRY SOCIAL
+                    </h4>
+                    <p className="text-[11px] text-gray-400 pl-6 border-l border-white/10">
+                      Your identity is your wallet. Every claim, like, and comment is a node on the <b className="text-white">Tapestry Social Graph</b>. Follow creators to see their new drops first.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
+                      <Award size={14} className="text-emerald-400" /> 4. XP & LEVELS (MAGICBLOCK)
+                    </h4>
+                    <p className="text-[11px] text-gray-400 pl-6 border-l border-white/10">
+                      Every interaction grants XP. <b className="text-white">Claims = 50 XP</b>, <b className="text-white">Ghosts = 10 XP</b>, <b className="text-white">Follows = 5 XP</b>. Level up to unlock higher titles and larger discovery radiuses!
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
+                      <Gamepad2 size={14} className="text-red-400" /> 5. AUDIUS ECHOES
+                    </h4>
+                    <p className="text-[11px] text-gray-400 pl-6 border-l border-white/10">
+                      Look for drops with the <b className="text-white">🎵 icon</b>. These are "Music Echoes". When you walk close to them, the specific Audius track attached to that coordinate will begin to play automatically.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4 pt-4 border-t border-white/5">
+                <h3 className="text-crypt-300 font-bold uppercase tracking-widest text-xs border-l-2 border-crypt-300 pl-3">TROUBLESHOOTING FAQ</h3>
+                <div className="space-y-4">
+                  <div className="bg-white/5 p-3 rounded-xl">
+                    <p className="text-[11px] font-bold text-white mb-1">GPS isn't working?</p>
+                    <p className="text-[10px] text-gray-500 italic">Make sure you allow location permissions in your browser. If you're not in Warsaw, enable "Demo Mode" in the bottom right to bypass GPS checks.</p>
+                  </div>
+                  <div className="bg-white/5 p-3 rounded-xl">
+                    <p className="text-[11px] font-bold text-white mb-1">Transaction failed?</p>
+                    <p className="text-[10px] text-gray-500 italic">Ensure your wallet is set to **Devnet** and you have some devnet SOL (visit solana.com/faucet). Locus runs on Devnet for the hackathon.</p>
+                  </div>
+                </div>
               </section>
             </div>
           )}
