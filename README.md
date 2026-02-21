@@ -65,8 +65,10 @@ Creator                                    Finder
 
 ### On-chain Architecture
 
-```
-Program: HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn (Devnet)
+- **Program ID**: `HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn` (deployed on devnet)
+- **Framework**: Pinocchio (zero-dependency, ultra-low CU)
+- **Source Code**: [program/src/](./program/src/)
+- **IDL**: [idl/locus.json](./idl/locus.json)
 
 ┌─────────────────────────────────────────────────┐
 │  Locus Program (Pinocchio — zero dependencies)  │
