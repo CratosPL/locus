@@ -124,9 +124,9 @@ export default function MapView({
   }, [isAutoTheme]);
 
   // Clean up markers to reduce map clutter
-  // In a real app we'd use clustering, for now we limit visibility or density
-  const visibleDrops = drops.slice(0, 15); 
-  const visibleGhosts = ghosts.slice(0, 10);
+  // In a real app we'd use clustering, for now we increase limit to show global expansion
+  const visibleDrops = drops.slice(0, 100);
+  const visibleGhosts = ghosts.slice(0, 50);
 
   useEffect(() => {
     setMounted(true);
