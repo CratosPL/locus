@@ -15,6 +15,7 @@ interface LeaderboardEntry {
 interface LeaderboardProps {
   currentUser?: string;
   currentStats: { claimed: number; created: number; likes: number };
+  onFollow?: (username: string) => void;
 }
 
 // Mock leaderboard — in production this would come from Tapestry API
@@ -45,7 +46,7 @@ function getRankStyle(rank: number): string {
   return "from-void/40 to-void/20 border-crypt-300/8";
 }
 
-export default function Leaderboard({ currentUser, currentStats }: LeaderboardProps) {
+export default function Leaderboard({ currentUser, currentStats, onFollow }: LeaderboardProps) {
   var myRep = currentStats.claimed * 10 + currentStats.created * 5 + currentStats.likes * 2;
 
   // Insert current user into leaderboard if they have activity
@@ -155,12 +156,22 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
               </div>
             </div>
 
-            {/* Reputation */}
-            <div className="text-right shrink-0 bg-void/30 px-3 py-1.5 rounded-xl border border-white/5">
-              <div className={"text-lg font-black font-mono " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
-                {entry.reputation}
+            {/* Reputation & Follow */}
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <div className="text-right bg-void/30 px-3 py-1.5 rounded-xl border border-white/5">
+                <div className={"text-lg font-black font-mono " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
+                  {entry.reputation}
+                </div>
+                <div className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">Reputation</div>
               </div>
-              <div className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">Reputation</div>
+              {!isMe && onFollow && (
+                <button
+                  onClick={() => onFollow(entry.username.replace('@', ''))}
+                  className="px-2 py-0.5 rounded-lg border border-crypt-300/30 bg-crypt-300/10 text-[9px] text-crypt-300 font-mono font-bold hover:bg-crypt-300/20 transition-all cursor-pointer"
+                >
+                  + Follow
+                </button>
+              )}
             </div>
           </div>
         );

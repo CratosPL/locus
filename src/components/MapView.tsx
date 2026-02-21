@@ -26,6 +26,7 @@ interface MapProps {
   onClaim: (dropId: string) => void;
   onLike: (dropId: string) => void;
   onComment: (dropId: string, text: string) => void;
+  onFollow?: (targetProfileId: string) => Promise<boolean>;
   onConnectWallet: () => void;
   onReactGhost?: (ghostId: string) => void;
   likedIds: Set<string>;
@@ -66,6 +67,7 @@ export default function MapView({
   onClaim,
   onLike,
   onComment,
+  onFollow,
   onConnectWallet,
   onReactGhost,
   likedIds,
@@ -230,23 +232,7 @@ export default function MapView({
   return (
     <div className="w-full h-full relative">
       {/* Time mode indicator & manual toggle */}
-      <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-wider shadow-lg pointer-events-none ${isNight ? 'bg-void-100/40 text-crypt-300' : 'bg-white/40 text-gray-800'}`}>
-          {isNight ? '🌙 Night Mode' : '☀️ Day Mode'}
-          {isAutoTheme && <span className="ml-1 opacity-50 font-normal normal-case italic">(Auto)</span>}
-        </div>
-        
-        <button
-          onClick={() => {
-            setIsAutoTheme(false);
-            setIsNight(!isNight);
-          }}
-          className={`flex items-center justify-center w-12 h-12 rounded-full backdrop-blur-md border-2 border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all active:scale-90 pointer-events-auto ${isNight ? 'bg-void-100/80 text-crypt-300 hover:bg-void-100' : 'bg-white/80 text-gray-800 hover:bg-white'}`}
-          title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
-        >
-          <span className="text-xl">{isNight ? '☀️' : '🌙'}</span>
-        </button>
-        
+      <div className="absolute bottom-6 left-6 z-[2000] flex flex-col gap-2">
         {!isAutoTheme && (
           <button
             onClick={() => setIsAutoTheme(true)}
@@ -255,6 +241,26 @@ export default function MapView({
             Reset Auto
           </button>
         )}
+        
+        <button
+          onClick={() => {
+            setIsAutoTheme(false);
+            setIsNight(!isNight);
+          }}
+          className={`flex items-center justify-center w-14 h-14 rounded-2xl backdrop-blur-xl border-2 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all active:scale-90 pointer-events-auto ${
+            isNight
+              ? 'bg-void-100/90 border-crypt-300/30 text-crypt-300 hover:border-crypt-300'
+              : 'bg-white/90 border-blue-500/30 text-blue-600 hover:border-blue-500'
+          }`}
+          title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
+        >
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-2xl">{isNight ? '🌙' : '☀️'}</span>
+            <span className="text-[8px] font-black uppercase tracking-tighter">
+              {isNight ? 'Night' : 'Day'}
+            </span>
+          </div>
+        </button>
       </div>
 
       <MapContainer
@@ -343,7 +349,31 @@ export default function MapView({
 
                   {/* Creator + Reward row */}
                   <div className="drop-popup-meta">
-                    <span className="drop-popup-creator">by {drop.createdBy}</span>
+                    <div className="flex flex-col">
+                      <span className="drop-popup-creator">by {drop.createdBy}</span>
+                      {onFollow && drop.createdBy.startsWith('@') && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onFollow(drop.createdBy.substring(1));
+                          }}
+                          className="text-[9px] text-crypt-300 hover:text-crypt-100 transition-colors bg-transparent border-none p-0 text-left font-mono font-bold cursor-pointer"
+                        >
+                          + Follow
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const blinkUrl = `${window.location.origin}/api/actions/drop?id=${drop.id}`;
+                          navigator.clipboard.writeText(blinkUrl);
+                          alert("Blink URL copied to clipboard!\n\nShare this on X to let others claim the drop via a social post.");
+                        }}
+                        className="text-[9px] text-blue-400 hover:text-blue-200 transition-colors bg-transparent border-none p-0 text-left font-mono font-bold mt-1 cursor-pointer"
+                      >
+                        🔗 Share as Blink
+                      </button>
+                    </div>
                     <span className="drop-popup-reward" style={{ color: cat.color }}>
                       {drop.finderReward} <span className="sol-symbol">◎</span>
                     </span>

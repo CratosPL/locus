@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import type { TapestryProfile } from "@/hooks/useTapestry";
 import { BADGE_DEFINITIONS } from "@/utils/mockData";
+import { ADDRESS_URL } from "@/utils/config";
 
 interface ProfilePanelProps {
   profile: TapestryProfile | null;
@@ -45,7 +46,7 @@ export default function ProfilePanel({
   var reputation = stats.claimed * 10 + stats.created * 5 + stats.likes * 2;
   var rank = getRank(reputation);
   var shortAddr = profile.walletAddress.slice(0, 4) + "..." + profile.walletAddress.slice(-4);
-  var explorerUrl = "https://explorer.solana.com/address/" + profile.walletAddress + "?cluster=devnet";
+  var explorerUrl = ADDRESS_URL(profile.walletAddress);
 
   var copyAddress = function() {
     navigator.clipboard.writeText(profile.walletAddress);

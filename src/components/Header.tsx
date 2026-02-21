@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { SOLANA_CLUSTER, ADDRESS_URL } from "@/utils/config";
 
 export default function Header() {
   const { publicKey, connected, disconnect, wallet } = useWallet();
@@ -70,11 +71,11 @@ export default function Header() {
 
       {/* Right side: Network badge + Wallet */}
       <div className="flex items-center gap-1.5">
-        {/* Devnet badge */}
+        {/* Network badge */}
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-void/60 border border-crypt-300/10">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">
-            Devnet
+            {SOLANA_CLUSTER}
           </span>
         </div>
 
@@ -153,7 +154,7 @@ export default function Header() {
 
                 {/* Explorer link */}
                 <a
-                  href={`https://explorer.solana.com/address/${publicKey?.toBase58()}?cluster=devnet`}
+                  href={ADDRESS_URL(publicKey?.toBase58() || "")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-crypt-300/5 transition-colors no-underline"

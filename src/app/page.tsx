@@ -18,6 +18,7 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { MOCK_DROPS, MOCK_GHOSTS, MOCK_TRAILS, CATEGORY_CONFIG, BADGE_DEFINITIONS } from "@/utils/mockData";
 import type { Drop, DropCategory, GhostMark, GhostEmoji, QuestTrail, Activity } from "@/types";
+import { SOLANA_CLUSTER } from "@/utils/config";
 
 var MapView = dynamic(function() { return import("@/components/MapView"); }, {
   ssr: false,
@@ -139,7 +140,7 @@ export default function HomePage() {
 
   // ─── Hooks ──────────────────────────────────────────────────────────────
   var { claimDrop: claimDropOnChain, createDrop: createDropOnChain, isProcessing, isConnected, walletAddress } = useProgram();
-  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop } = useTapestry();
+  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop, followUser } = useTapestry();
   var { position: userPosition, demoMode, setDemoMode, isNearby, distanceTo, formatDistance, requestLocation, status: geoStatus } = useGeolocation();
   var { setVisible: setWalletModalVisible } = useWalletModal();
 
@@ -407,6 +408,23 @@ export default function HomePage() {
     [isConnected, likeDrop, likedIds]
   );
 
+  // ─── Follow Handler ────────────────────────────────────────────────────
+  var handleFollow = useCallback(
+    async function(username: string) {
+      if (!isConnected) { handleConnectWallet(); return; }
+      var success = await followUser(username);
+      if (success) {
+        showToast("Following @" + username, "success");
+        setActivities(function(prev) {
+          return [{ icon: "👤", text: "Followed @" + username, color: "#a78bfa", timestamp: Date.now() }].concat(prev);
+        });
+      } else {
+        showToast("Follow failed", "error");
+      }
+    },
+    [isConnected, followUser, handleConnectWallet, showToast]
+  );
+
   // ─── Comment Handler ───────────────────────────────────────────────────
   var handleComment = useCallback(
     async function(dropId: string, text: string) {
@@ -504,6 +522,7 @@ export default function HomePage() {
               onClaim={handleClaim}
               onLike={handleLike}
               onComment={handleComment}
+              onFollow={handleFollow}
               onConnectWallet={handleConnectWallet}
               onReactGhost={handleReactGhost}
               likedIds={likedIds}
@@ -671,6 +690,7 @@ export default function HomePage() {
         <Leaderboard
           currentUser={profile ? profile.username : undefined}
           currentStats={{ claimed: claimedCount, created: createdCount, likes: likesCount }}
+          onFollow={handleFollow}
         />
       </div>
         )}
@@ -750,8 +770,8 @@ export default function HomePage() {
         onClose={function() { setShowInfo(false); }}
       />
 
-      <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider">
-        ⛓ Solana Devnet • Graveyard 2026
+      <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider capitalize">
+        ⛓ Solana {SOLANA_CLUSTER} • Graveyard 2026
       </div>
 
       {/* Claim celebration */}

@@ -28,7 +28,7 @@ export default function TxToast({ message, signature, type, onDismiss }: TxToast
 
   const c = colors[type];
   const solscanUrl = signature && !signature.startsWith("demo_")
-    ? "https://solscan.io/tx/" + signature + "?cluster=devnet"
+    ? "https://explorer.solana.com/tx/" + signature + "?cluster=" + (process.env.NEXT_PUBLIC_SOLANA_CLUSTER || "testnet")
     : null;
 
   return (
