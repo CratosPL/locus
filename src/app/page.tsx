@@ -74,6 +74,7 @@ export default function HomePage() {
   var [showWelcome, setShowWelcome] = useState(true);
   var [forceWelcome, setForceWelcome] = useState(false);
   var [showInfo, setShowInfo] = useState(false);
+  var [soundEnabled, setSoundEnabled] = useState(true);
   var [createdCount, setCreatedCount] = useState(0);
   var [ghostCount, setGhostCount] = useState(0);
   var [toasts, setToasts] = useState<ToastData[]>([]);
@@ -149,14 +150,15 @@ export default function HomePage() {
   var { playSound } = useSound();
 
   var handleConnectWallet = useCallback(function() {
-    playSound("click");
+    if (soundEnabled) playSound("click");
     setWalletModalVisible(true);
-  }, [setWalletModalVisible, playSound]);
+  }, [setWalletModalVisible, playSound, soundEnabled]);
 
   var showToast = useCallback(function(message: string, type: "success" | "error" | "info", signature?: string) {
     var id = Date.now();
+    if (soundEnabled) playSound("notification");
     setToasts(function(prev) { return prev.concat([{ id: id, message: message, type: type, signature: signature }]); });
-  }, []);
+  }, [playSound, soundEnabled]);
 
   var removeToast = useCallback(function(id: number) {
     setToasts(function(prev) { return prev.filter(function(t) { return t.id !== id; }); });
@@ -225,7 +227,7 @@ export default function HomePage() {
       else if (badge.thresholdType === "reputation") value = stats.rep;
 
       if (value >= badge.threshold) {
-        playSound("level-up");
+        if (soundEnabled) playSound("level-up");
         setPendingBadge(badge.id);
       }
     });
@@ -283,7 +285,7 @@ export default function HomePage() {
 
       var result = await claimDropOnChain(dropId);
       if (result.ok) {
-        playSound("claim");
+        if (soundEnabled) playSound("claim");
         var newClaimed = new Set(claimedIds);
         newClaimed.add(dropId);
         setClaimedIds(newClaimed);
@@ -375,7 +377,7 @@ export default function HomePage() {
         });
         var cat = CATEGORY_CONFIG[data.category];
         var rewardText = data.dropType === "memory" ? "Memory recorded" : data.reward + " SOL";
-        playSound("success");
+        if (soundEnabled) playSound("success");
         showToast("Drop created! " + cat.icon + " " + rewardText, "success", result.value);
 
         setActivities(function(prev) {
@@ -413,7 +415,7 @@ export default function HomePage() {
       });
       setGhostCount(function(c) { return c + 1; });
 
-      playSound("ghost");
+      if (soundEnabled) playSound("ghost");
       showToast("👻 Ghost mark left!", "success");
       setActivities(function(prev) {
         return [{ icon: "👻", text: "Left a ghost mark " + data.emoji, color: "#8b5cf6", timestamp: Date.now() }].concat(prev);
@@ -429,7 +431,7 @@ export default function HomePage() {
 
   // Ghost reaction
   var handleReactGhost = useCallback(function(ghostId: string) {
-    playSound("click");
+    if (soundEnabled) playSound("click");
     setGhostMarks(function(prev) {
       return prev.map(function(g) {
         return g.id === ghostId ? { ...g, reactions: g.reactions + 1 } : g;
@@ -518,7 +520,10 @@ export default function HomePage() {
       {(showWelcome || forceWelcome) && (
         <WelcomeOverlay
           forceShow={forceWelcome}
-          onDismiss={function() { setShowWelcome(false); setForceWelcome(false); }}
+          onDismiss={function() {
+            if (soundEnabled) playSound("popup-close");
+            setShowWelcome(false); setForceWelcome(false);
+          }}
         />
       )}
 
@@ -558,7 +563,10 @@ export default function HomePage() {
         );
       })()}
 
-      <Header />
+      <Header soundEnabled={soundEnabled} onToggleSound={function() {
+        setSoundEnabled(!soundEnabled);
+        if (!soundEnabled) playSound("click");
+      }} />
       <StatsBar drops={drops} claimedCount={claimedCount} />
 
       <div className="flex-1 relative overflow-hidden text-lg">
@@ -774,7 +782,7 @@ export default function HomePage() {
             return (
               <button
                 key={tab.id}
-                onClick={function() { playSound("click"); setActiveTab(tab.id); }}
+                onClick={function() { if (soundEnabled) playSound("click"); setActiveTab(tab.id); }}
                 className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
                   activeTab === tab.id ? "text-crypt-300 scale-110" : "text-gray-500"
                 )}
@@ -790,8 +798,9 @@ export default function HomePage() {
         <div className="flex flex-col items-center px-2 -translate-y-2">
           <button
             onClick={function() {
-              playSound("click");
+              if (soundEnabled) playSound("click");
               if (isConnected) {
+                if (soundEnabled) playSound("popup-open");
                 setShowCreateModal(true);
               } else {
                 handleConnectWallet();
@@ -816,9 +825,13 @@ export default function HomePage() {
           </button>
           <button
             onClick={function() {
-              playSound("click");
-              if (isConnected) setShowProfile(true);
-              else handleConnectWallet();
+              if (soundEnabled) playSound("click");
+              if (isConnected) {
+                if (soundEnabled) playSound("popup-open");
+                setShowProfile(true);
+              } else {
+                handleConnectWallet();
+              }
             }}
             className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
               showProfile ? "text-crypt-300 scale-110" : "text-gray-500"
@@ -832,7 +845,10 @@ export default function HomePage() {
 
       {showCreateModal && (
         <CreateDropModal
-          onClose={function() { setShowCreateModal(false); }}
+          onClose={function() {
+            if (soundEnabled) playSound("popup-close");
+            setShowCreateModal(false);
+          }}
           onCreate={handleCreateDrop}
           onCreateGhost={handleCreateGhost}
           userPosition={userPosition}
@@ -846,14 +862,21 @@ export default function HomePage() {
         mintedBadges={mintedBadges}
         onMintBadge={handleMintBadge}
         isOpen={showProfile}
-        onClose={function() { setShowProfile(false); }}
+        onClose={function() {
+          if (soundEnabled) playSound("popup-close");
+          setShowProfile(false);
+        }}
         tapestryConfigured={tapestryConfigured}
       />
 
       <InfoPanel
         isOpen={showInfo}
-        onClose={function() { setShowInfo(false); }}
+        onClose={function() {
+          if (soundEnabled) playSound("popup-close");
+          setShowInfo(false);
+        }}
         onRetakeTutorial={function() {
+          if (soundEnabled) playSound("popup-open");
           setShowInfo(false);
           setForceWelcome(true);
         }}

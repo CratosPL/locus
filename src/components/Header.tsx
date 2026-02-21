@@ -4,9 +4,14 @@ import React, { useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SOLANA_CLUSTER, ADDRESS_URL } from "@/utils/config";
-import { Wallet, Copy, Search, LogOut, ChevronDown, Activity } from "lucide-react";
+import { Wallet, Copy, Search, LogOut, ChevronDown, Activity, Volume2, VolumeX } from "lucide-react";
 
-export default function Header() {
+interface HeaderProps {
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
+}
+
+export default function Header({ soundEnabled, onToggleSound }: HeaderProps) {
   const { publicKey, connected, disconnect, wallet } = useWallet();
   const { setVisible } = useWalletModal();
   const [showMenu, setShowMenu] = useState(false);
@@ -72,6 +77,15 @@ export default function Header() {
 
       {/* Right side: Network badge + Wallet */}
       <div className="flex items-center gap-1.5">
+        {/* Sound Toggle */}
+        <button
+          onClick={onToggleSound}
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-void/60 border border-crypt-300/10 text-gray-500 hover:text-crypt-300 transition-colors cursor-pointer"
+          title={soundEnabled ? "Mute Sounds" : "Unmute Sounds"}
+        >
+          {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+        </button>
+
         {/* Network badge */}
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-void/60 border border-crypt-300/10">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
