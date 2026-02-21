@@ -614,9 +614,9 @@ export default function HomePage() {
               );
             })()}
 
-            {/* Activity feed */}
+            {/* Activity feed - Hidden on Mobile */}
             {activities.length > 0 && !activeTrail && (
-              <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5 pointer-events-none">
+              <div className="hidden md:flex absolute top-14 right-3 z-[1000] w-52 flex-col gap-1.5 pointer-events-none">
                 {activities.slice(0, 3).map(function(a, i) {
                   return (
                     <div key={a.timestamp + "-" + i} className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur">
@@ -628,7 +628,7 @@ export default function HomePage() {
             )}
 
             {/* Info overlay */}
-            <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
+            <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2 max-w-[150px] md:max-w-none">
               <div className="px-3 py-2 rounded-xl bg-void/80 backdrop-blur-xl border border-white/5 font-mono text-[9px] text-gray-500 tracking-wider shadow-xl glass-border-gradient">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
@@ -761,7 +761,13 @@ export default function HomePage() {
         {/* Center: Action Button (Plus) */}
         <div className="flex flex-col items-center pb-2">
           <button
-            onClick={function() { setShowCreateModal(true); }}
+            onClick={function() {
+              if (isConnected) {
+                setShowCreateModal(true);
+              } else {
+                handleConnectWallet();
+              }
+            }}
             className="w-14 h-14 rounded-full border-2 border-void-100 bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-3xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90"
           >
             +
