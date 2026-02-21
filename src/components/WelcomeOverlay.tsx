@@ -5,21 +5,26 @@ import { Activity, MapPin, Zap, Navigation } from "lucide-react";
 
 interface WelcomeOverlayProps {
   onDismiss: () => void;
+  forceShow?: boolean;
 }
 
-export default function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
+export default function WelcomeOverlay({ onDismiss, forceShow }: WelcomeOverlayProps) {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(true);
 
   // Check if already seen
   useEffect(() => {
+    if (forceShow) {
+      setVisible(true);
+      return;
+    }
     try {
       if (localStorage.getItem("locus_welcomed")) {
         setVisible(false);
         onDismiss();
       }
     } catch {}
-  }, [onDismiss]);
+  }, [onDismiss, forceShow]);
 
   if (!visible) return null;
 

@@ -12,9 +12,10 @@ import QuestTrails from "@/components/QuestTrails";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
-import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin } from "lucide-react";
+import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
+import { useSound } from "@/hooks/useSound";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { MOCK_DROPS, MOCK_GHOSTS, MOCK_TRAILS, CATEGORY_CONFIG, BADGE_DEFINITIONS } from "@/utils/mockData";
@@ -71,6 +72,7 @@ export default function HomePage() {
   var [showCreateModal, setShowCreateModal] = useState(false);
   var [showProfile, setShowProfile] = useState(false);
   var [showWelcome, setShowWelcome] = useState(true);
+  var [forceWelcome, setForceWelcome] = useState(false);
   var [showInfo, setShowInfo] = useState(false);
   var [createdCount, setCreatedCount] = useState(0);
   var [ghostCount, setGhostCount] = useState(0);
@@ -144,8 +146,12 @@ export default function HomePage() {
   var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop, followUser } = useTapestry();
   var { position: userPosition, demoMode, setDemoMode, isNearby, distanceTo, formatDistance, requestLocation, status: geoStatus } = useGeolocation();
   var { setVisible: setWalletModalVisible } = useWalletModal();
+  var { playSound } = useSound();
 
-  var handleConnectWallet = useCallback(function() { setWalletModalVisible(true); }, [setWalletModalVisible]);
+  var handleConnectWallet = useCallback(function() {
+    playSound("click");
+    setWalletModalVisible(true);
+  }, [setWalletModalVisible, playSound]);
 
   var showToast = useCallback(function(message: string, type: "success" | "error" | "info", signature?: string) {
     var id = Date.now();
@@ -215,6 +221,7 @@ export default function HomePage() {
       else if (badge.thresholdType === "reputation") value = stats.rep;
 
       if (value >= badge.threshold) {
+        playSound("level-up");
         setPendingBadge(badge.id);
       }
     });
@@ -268,6 +275,7 @@ export default function HomePage() {
 
       var result = await claimDropOnChain(dropId);
       if (result.ok) {
+        playSound("claim");
         var newClaimed = new Set(claimedIds);
         newClaimed.add(dropId);
         setClaimedIds(newClaimed);
@@ -355,6 +363,7 @@ export default function HomePage() {
         });
         var cat = CATEGORY_CONFIG[data.category];
         var rewardText = data.dropType === "memory" ? "Memory recorded" : data.reward + " SOL";
+        playSound("success");
         showToast("Drop created! " + cat.icon + " " + rewardText, "success", result.value);
 
         setActivities(function(prev) {
@@ -392,6 +401,7 @@ export default function HomePage() {
       });
       setGhostCount(function(c) { return c + 1; });
 
+      playSound("ghost");
       showToast("👻 Ghost mark left!", "success");
       setActivities(function(prev) {
         return [{ icon: "👻", text: "Left a ghost mark " + data.emoji, color: "#8b5cf6", timestamp: Date.now() }].concat(prev);
@@ -407,12 +417,13 @@ export default function HomePage() {
 
   // Ghost reaction
   var handleReactGhost = useCallback(function(ghostId: string) {
+    playSound("click");
     setGhostMarks(function(prev) {
       return prev.map(function(g) {
         return g.id === ghostId ? { ...g, reactions: g.reactions + 1 } : g;
       });
     });
-  }, []);
+  }, [playSound]);
 
   // ─── Like Handler ──────────────────────────────────────────────────────
   var handleLike = useCallback(
@@ -492,7 +503,12 @@ export default function HomePage() {
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="app-container flex flex-col h-[100dvh] bg-void overflow-hidden">
-      {showWelcome && <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />}
+      {(showWelcome || forceWelcome) && (
+        <WelcomeOverlay
+          forceShow={forceWelcome}
+          onDismiss={function() { setShowWelcome(false); setForceWelcome(false); }}
+        />
+      )}
 
       {toasts.map(function(toast) {
         return <TxToast key={toast.id} message={toast.message} signature={toast.signature} type={toast.type} onDismiss={function() { removeToast(toast.id); }} />;
@@ -735,9 +751,9 @@ export default function HomePage() {
       </div>
 
       {/* Bottom nav */}
-      <nav className="flex justify-around items-end py-2 bg-void/80 border-t border-white/5 z-50 relative backdrop-blur-2xl shrink-0 glass-border-gradient" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
+      <nav className="flex items-center bg-void/80 border-t border-white/5 z-50 relative backdrop-blur-2xl shrink-0 glass-border-gradient" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))", paddingTop: "8px" }}>
         {/* Left Side: Map & Drops & Quests */}
-        <div className="flex flex-1 justify-around items-center h-12">
+        <div className="flex flex-1 justify-evenly items-center">
           {([
             { id: "map" as TabId, icon: <MapIcon size={20} />, label: "Map" },
             { id: "list" as TabId, icon: <ScrollText size={20} />, label: "Drops" },
@@ -746,53 +762,58 @@ export default function HomePage() {
             return (
               <button
                 key={tab.id}
-                onClick={function() { setActiveTab(tab.id); }}
-                className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] tracking-tight transition-colors " + (
-                  activeTab === tab.id ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
+                onClick={function() { playSound("click"); setActiveTab(tab.id); }}
+                className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
+                  activeTab === tab.id ? "text-crypt-300 scale-110" : "text-gray-500"
                 )}
               >
                 {tab.icon}
-                {tab.label}
+                <span className="opacity-80">{tab.label}</span>
               </button>
             );
           })}
         </div>
 
         {/* Center: Action Button (Plus) */}
-        <div className="flex flex-col items-center pb-2">
+        <div className="flex flex-col items-center px-2 -translate-y-2">
           <button
             onClick={function() {
+              playSound("click");
               if (isConnected) {
                 setShowCreateModal(true);
               } else {
                 handleConnectWallet();
               }
             }}
-            className="w-14 h-14 rounded-full border-2 border-void-100 bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-3xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90"
+            className="w-14 h-14 rounded-full border-4 border-void bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-3xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90 z-10"
           >
             +
           </button>
         </div>
 
         {/* Right Side: Rank & Profile */}
-        <div className="flex flex-1 justify-around items-center h-12">
+        <div className="flex flex-1 justify-evenly items-center">
           <button
-            onClick={function() { setActiveTab("leaderboard"); }}
-            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] tracking-tight transition-colors " + (
-              activeTab === "leaderboard" ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
+            onClick={function() { playSound("click"); setActiveTab("leaderboard"); }}
+            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
+              activeTab === "leaderboard" ? "text-crypt-300 scale-110" : "text-gray-500"
             )}
           >
             <Trophy size={20} />
-            Rank
+            <span className="opacity-80">Rank</span>
           </button>
           <button
-            onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}
-            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] tracking-tight transition-colors " + (
-              showProfile ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
+            onClick={function() {
+              playSound("click");
+              if (isConnected) setShowProfile(true);
+              else handleConnectWallet();
+            }}
+            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
+              showProfile ? "text-crypt-300 scale-110" : "text-gray-500"
             )}
           >
             <User size={20} />
-            {isConnected ? "Profile" : "Login"}
+            <span className="opacity-80">{isConnected ? "Profile" : "Login"}</span>
           </button>
         </div>
       </nav>
@@ -820,6 +841,10 @@ export default function HomePage() {
       <InfoPanel
         isOpen={showInfo}
         onClose={function() { setShowInfo(false); }}
+        onRetakeTutorial={function() {
+          setShowInfo(false);
+          setForceWelcome(true);
+        }}
       />
 
       <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider capitalize">

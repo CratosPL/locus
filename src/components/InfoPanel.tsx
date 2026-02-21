@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { Info, Award, Settings, Zap, Users, Gamepad2, Sun, Share2, BookOpen, Terminal, CheckCircle2 } from "lucide-react";
+import { Info, Award, Settings, Zap, Users, Gamepad2, Sun, Share2, BookOpen, Terminal, CheckCircle2, Navigation } from "lucide-react";
 
 interface InfoPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onRetakeTutorial: () => void;
 }
 
 type Tab = "intro" | "users" | "faq" | "jury";
 
-export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
+export default function InfoPanel({ isOpen, onClose, onRetakeTutorial }: InfoPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("intro");
 
   if (!isOpen) return null;
@@ -128,6 +129,13 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
                 </h4>
                 <p className="text-xs">Open the <b className="text-white">Trails</b> menu and start the "Sunrise Onboarding" quest to learn the ropes and earn your first XP!</p>
               </section>
+
+              <button
+                onClick={onRetakeTutorial}
+                className="w-full mt-4 p-4 rounded-xl border border-white/10 flex items-center justify-center gap-2 hover:bg-white/5 transition-all text-[10px] font-bold uppercase tracking-widest text-gray-400"
+              >
+                <Navigation size={14} /> Retake Guided Tour
+              </button>
             </div>
           )}
 
