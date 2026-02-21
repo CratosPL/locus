@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SOLANA_CLUSTER, ADDRESS_URL } from "@/utils/config";
+import { Wallet, Copy, Search, LogOut, ChevronDown, Activity } from "lucide-react";
 
 export default function Header() {
   const { publicKey, connected, disconnect, wallet } = useWallet();
@@ -56,8 +57,8 @@ export default function Header() {
     <header className="flex items-center justify-between px-3 py-2 bg-void-100/95 backdrop-blur-xl border-b border-crypt-300/10 z-[1100] relative shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center text-base">
-          🪦
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center shadow-lg shadow-crypt-300/20">
+          <Activity size={18} className="text-white" />
         </div>
         <div>
           <h1 className="text-sm font-extrabold text-crypt-100 tracking-[0.2em] font-mono leading-none">
@@ -141,7 +142,7 @@ export default function Header() {
                   onClick={copyAddress}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-crypt-300/5 transition-colors cursor-pointer bg-transparent border-none text-left"
                 >
-                  <span className="text-sm">📋</span>
+                  <Copy size={16} className="text-crypt-300" />
                   <div>
                     <div className="text-[11px] text-crypt-200 font-mono">
                       {copied ? "Copied!" : shortAddress}
@@ -160,7 +161,7 @@ export default function Header() {
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-crypt-300/5 transition-colors no-underline"
                   onClick={() => setShowMenu(false)}
                 >
-                  <span className="text-sm">🔍</span>
+                  <Search size={16} className="text-crypt-300" />
                   <div>
                     <div className="text-[11px] text-crypt-200 font-mono">
                       Explorer
@@ -179,7 +180,7 @@ export default function Header() {
                   onClick={handleDisconnect}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 transition-colors cursor-pointer bg-transparent border-none text-left"
                 >
-                  <span className="text-sm">🚪</span>
+                  <LogOut size={16} className="text-red-400" />
                   <div>
                     <div className="text-[11px] text-red-400 font-mono font-bold">
                       Disconnect

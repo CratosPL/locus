@@ -13,11 +13,7 @@ import {
   Connection,
   clusterApiUrl,
 } from "@solana/web3.js";
-import { SOLANA_CLUSTER } from "@/utils/config";
-
-const PROGRAM_ID = new PublicKey(
-  "HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn"
-);
+import { SOLANA_CLUSTER, PROGRAM_ID } from "@/utils/config";
 
 export const GET = async (req: Request) => {
   const url = new URL(req.url);

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { DropCategory, GhostEmoji } from "@/types";
 import { CATEGORY_CONFIG, GHOST_EMOJIS } from "@/utils/mockData";
 import type { GeoPosition } from "@/hooks/useGeolocation";
+import { Twitter, Link as LinkIcon, Info, Heart, Gift, Camera } from "lucide-react";
 
 type CreateMode = "drop" | "ghost";
 
@@ -13,6 +14,9 @@ interface CreateDropModalProps {
     message: string;
     reward: number;
     category: DropCategory;
+    twitterHandle?: string;
+    externalLink?: string;
+    dropType: "crypto" | "memory";
   }) => void;
   onCreateGhost: (data: {
     message: string;
@@ -37,11 +41,21 @@ export default function CreateDropModal({
   var [category, setCategory] = useState<DropCategory>("lore");
   var [selectedToken, setSelectedToken] = useState("SOL");
   var [ghostEmoji, setGhostEmoji] = useState<GhostEmoji>("👻");
+  var [twitter, setTwitter] = useState("");
+  var [link, setLink] = useState("");
+  var [dropType, setDropType] = useState<"crypto" | "memory">("crypto");
 
   var handleSubmit = function() {
     if (!message.trim()) return;
     if (mode === "drop") {
-      onCreate({ message: message.trim(), reward: parseFloat(reward), category: category });
+      onCreate({
+        message: message.trim(),
+        reward: dropType === "crypto" ? parseFloat(reward) : 0,
+        category: category,
+        twitterHandle: twitter.trim() || undefined,
+        externalLink: link.trim() || undefined,
+        dropType: dropType,
+      });
     } else {
       onCreateGhost({ message: message.trim(), emoji: ghostEmoji });
     }
@@ -112,6 +126,24 @@ export default function CreateDropModal({
 
         {mode === "drop" ? (
           <>
+            {/* Drop Type Toggle */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => setDropType("crypto")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border transition-all ${dropType === "crypto" ? "bg-crypt-300/10 border-crypt-300/40 text-crypt-300" : "bg-transparent border-crypt-300/10 text-gray-600"}`}
+              >
+                <Gift size={14} />
+                <span className="text-[10px] font-mono font-bold uppercase">Crypto Bounty</span>
+              </button>
+              <button
+                onClick={() => setDropType("memory")}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border transition-all ${dropType === "memory" ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400" : "bg-transparent border-crypt-300/10 text-gray-600"}`}
+              >
+                <Camera size={14} />
+                <span className="text-[10px] font-mono font-bold uppercase">Memory Drop</span>
+              </button>
+            </div>
+
             {/* Category selector */}
             <div className="mb-3">
               <label className="block text-[10px] text-gray-600 font-mono mb-2 uppercase tracking-widest">Category</label>
@@ -172,32 +204,61 @@ export default function CreateDropModal({
               </div>
             </div>
 
-            {/* Reward amount */}
-            <div className="mb-4">
-              <label className="block text-[10px] text-gray-600 font-mono mb-1.5 uppercase tracking-widest">Reward Amount</label>
-              <div className="relative">
-                <input
-                  type="number" value={reward}
-                  onChange={function(e) { setReward(e.target.value); }}
-                  step="0.01" min="0.01"
-                  className="w-full p-3 pr-14 rounded-xl border border-crypt-300/20 bg-crypt-300/5 text-emerald-400 font-mono text-lg font-bold outline-none focus:border-crypt-300/40 transition-colors"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 font-mono text-sm">{selectedToken}</span>
+            {/* Reward amount (only if crypto) */}
+            {dropType === "crypto" && (
+              <div className="mb-4">
+                <label className="block text-[10px] text-gray-600 font-mono mb-1.5 uppercase tracking-widest">Reward Amount</label>
+                <div className="relative">
+                  <input
+                    type="number" value={reward}
+                    onChange={function(e) { setReward(e.target.value); }}
+                    step="0.01" min="0.01"
+                    className="w-full p-3 pr-14 rounded-xl border border-crypt-300/20 bg-crypt-300/5 text-emerald-400 font-mono text-lg font-bold outline-none focus:border-crypt-300/40 transition-colors"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 font-mono text-sm">{selectedToken}</span>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  {["0.01", "0.05", "0.1", "0.25"].map(function(val) {
+                    return (
+                      <button
+                        key={val}
+                        onClick={function() { setReward(val); }}
+                        className={"flex-1 py-1.5 rounded-lg border font-mono text-[11px] transition-all cursor-pointer " + (
+                          reward === val ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-400" : "border-crypt-300/10 bg-transparent text-gray-600 hover:border-crypt-300/20"
+                        )}
+                      >
+                        {val} ◎
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex gap-2 mt-2">
-                {["0.01", "0.05", "0.1", "0.25"].map(function(val) {
-                  return (
-                    <button
-                      key={val}
-                      onClick={function() { setReward(val); }}
-                      className={"flex-1 py-1.5 rounded-lg border font-mono text-[11px] transition-all cursor-pointer " + (
-                        reward === val ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-400" : "border-crypt-300/10 bg-transparent text-gray-600 hover:border-crypt-300/20"
-                      )}
-                    >
-                      {val} ◎
-                    </button>
-                  );
-                })}
+            )}
+
+            {/* Social Links */}
+            <div className="mb-4 space-y-3">
+              <label className="block text-[10px] text-gray-600 font-mono mb-1.5 uppercase tracking-widest">Creator Contact (Optional)</label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
+                  <Twitter size={14} />
+                </div>
+                <input
+                  type="text" value={twitter}
+                  onChange={(e) => setTwitter(e.target.value)}
+                  placeholder="X (Twitter) handle"
+                  className="w-full pl-9 p-2.5 rounded-xl border border-crypt-300/10 bg-crypt-300/5 text-crypt-200 font-mono text-xs outline-none focus:border-crypt-300/30 transition-colors"
+                />
+              </div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
+                  <LinkIcon size={14} />
+                </div>
+                <input
+                  type="text" value={link}
+                  onChange={(e) => setLink(e.target.value)}
+                  placeholder="External link / Portfolio"
+                  className="w-full pl-9 p-2.5 rounded-xl border border-crypt-300/10 bg-crypt-300/5 text-crypt-200 font-mono text-xs outline-none focus:border-crypt-300/30 transition-colors"
+                />
               </div>
             </div>
           </>

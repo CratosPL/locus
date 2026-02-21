@@ -26,6 +26,48 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+/* ─── Desktop Layout ──────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  body {
+    background: radial-gradient(circle at 50% 50%, #1a1025 0%, #050208 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-container {
+    width: 450px;
+    height: 90vh;
+    max-height: 900px;
+    border-radius: 32px;
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.8), 0 0 40px rgba(167, 139, 250, 0.1);
+    position: relative;
+    overflow: hidden;
+    background: var(--color-void);
+  }
+
+  /* Decorative elements for desktop */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -10%; left: -10%;
+    width: 40%; height: 40%;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.1), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -10%; right: -10%;
+    width: 50%; height: 50%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.08), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 4px;

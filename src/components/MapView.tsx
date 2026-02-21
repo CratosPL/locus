@@ -4,6 +4,24 @@ import React, { useEffect, useState } from "react";
 import { Drop, DropCategory, GhostMark, QuestTrail } from "@/types";
 import { CATEGORY_CONFIG, WARSAW_CENTER, DEFAULT_ZOOM } from "@/utils/mockData";
 import type { GeoPosition } from "@/hooks/useGeolocation";
+import {
+  Twitter,
+  ExternalLink,
+  Share2,
+  Heart,
+  MessageSquare,
+  Navigation,
+  MapPin,
+  UserPlus,
+  CheckCircle2,
+  Lock,
+  Ghost,
+  Coins,
+  History,
+  Sun,
+  Moon
+} from "lucide-react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 let L: typeof import("leaflet") | null = null;
 let MapContainer: any = null;
@@ -146,11 +164,11 @@ export default function MapView({
 
   // ─── SVG Icons per category ─────────────────────────────────────────────
   const SVG_ICONS: Record<string, string> = {
-    lore: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6.48 2 2 6 2 10.5c0 3 1.5 5.5 4 7L12 22l6-4.5c2.5-1.5 4-4 4-7C22 6 17.52 2 12 2z"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>',
-    quest: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>',
-    secret: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>',
-    ritual: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>',
-    treasure: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h4l3-9 6 18 3-9h4"/></svg>',
+    lore: renderToStaticMarkup(<History size={18} />),
+    quest: renderToStaticMarkup(<Navigation size={18} />),
+    secret: renderToStaticMarkup(<Lock size={18} />),
+    ritual: renderToStaticMarkup(<MapPin size={18} />),
+    treasure: renderToStaticMarkup(<Coins size={18} />),
   };
 
   // ─── Icons ──────────────────────────────────────────────────────────────
@@ -255,7 +273,7 @@ export default function MapView({
           title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
         >
           <div className="flex flex-col items-center gap-1">
-            <span className="text-2xl">{isNight ? '🌙' : '☀️'}</span>
+            {isNight ? <Moon size={24} /> : <Sun size={24} />}
             <span className="text-[8px] font-black uppercase tracking-tighter">
               {isNight ? 'Night' : 'Day'}
             </span>
@@ -349,30 +367,57 @@ export default function MapView({
 
                   {/* Creator + Reward row */}
                   <div className="drop-popup-meta">
-                    <div className="flex flex-col">
-                      <span className="drop-popup-creator">by {drop.createdBy}</span>
-                      {onFollow && drop.createdBy.startsWith('@') && (
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="drop-popup-creator">by {drop.createdBy}</span>
+                        {onFollow && drop.createdBy.startsWith('@') && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onFollow(drop.createdBy.substring(1));
+                            }}
+                            className="flex items-center gap-1 text-[9px] text-crypt-300 hover:text-crypt-100 transition-colors bg-transparent border-none p-0 font-mono font-bold cursor-pointer"
+                          >
+                            <UserPlus size={10} />
+                            Follow
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Social contacts */}
+                      <div className="flex gap-3 mt-1.5">
+                        {drop.twitterHandle && (
+                          <a
+                            href={`https://x.com/${drop.twitterHandle.replace('@', '')}`}
+                            target="_blank" rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-gray-500 hover:text-blue-400 transition-colors"
+                          >
+                            <Twitter size={14} />
+                          </a>
+                        )}
+                        {drop.externalLink && (
+                          <a
+                            href={drop.externalLink.startsWith('http') ? drop.externalLink : `https://${drop.externalLink}`}
+                            target="_blank" rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-gray-500 hover:text-emerald-400 transition-colors"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onFollow(drop.createdBy.substring(1));
+                            const blinkUrl = `${window.location.origin}/api/actions/drop?id=${drop.id}`;
+                            navigator.clipboard.writeText(blinkUrl);
+                            alert("Blink URL copied to clipboard!\n\nShare this on X as an interactive Solana Blink.");
                           }}
-                          className="text-[9px] text-crypt-300 hover:text-crypt-100 transition-colors bg-transparent border-none p-0 text-left font-mono font-bold cursor-pointer"
+                          className="text-gray-500 hover:text-blue-400 transition-colors bg-transparent border-none p-0 cursor-pointer"
                         >
-                          + Follow
+                          <Share2 size={14} />
                         </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const blinkUrl = `${window.location.origin}/api/actions/drop?id=${drop.id}`;
-                          navigator.clipboard.writeText(blinkUrl);
-                          alert("Blink URL copied to clipboard!\n\nShare this on X to let others claim the drop via a social post.");
-                        }}
-                        className="text-[9px] text-blue-400 hover:text-blue-200 transition-colors bg-transparent border-none p-0 text-left font-mono font-bold mt-1 cursor-pointer"
-                      >
-                        🔗 Share as Blink
-                      </button>
+                      </div>
                     </div>
                     <span className="drop-popup-reward" style={{ color: cat.color }}>
                       {drop.finderReward} <span className="sol-symbol">◎</span>
@@ -439,16 +484,14 @@ export default function MapView({
                             onLike(drop.id);
                           }}
                           disabled={isLiked}
-                          style={{
-                            flex: 1, padding: "6px", borderRadius: "8px",
-                            border: `1px solid ${isLiked ? "#f472b6" : "rgba(167,139,250,0.15)"}`,
-                            background: isLiked ? "rgba(244,114,182,0.1)" : "rgba(167,139,250,0.05)",
-                            color: isLiked ? "#f472b6" : "#888",
-                            fontSize: "11px", cursor: isLiked ? "default" : "pointer",
-                            fontFamily: "monospace",
-                          }}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border transition-all font-mono text-[11px] ${
+                            isLiked
+                              ? "bg-pink-500/10 border-pink-500/40 text-pink-500"
+                              : "bg-void-100/50 border-crypt-300/10 text-gray-500 hover:border-crypt-300/30"
+                          }`}
                         >
-                          {isLiked ? "❤️ Liked" : "🤍 Like"}
+                          <Heart size={14} fill={isLiked ? "currentColor" : "none"} />
+                          {isLiked ? "Liked" : "Like"}
                         </button>
 
                         {/* Comment toggle */}
@@ -459,18 +502,14 @@ export default function MapView({
                               commentingDropId === drop.id ? null : drop.id
                             );
                           }}
-                          style={{
-                            flex: 1, padding: "6px", borderRadius: "8px",
-                            border: "1px solid rgba(167,139,250,0.15)",
-                            background: commentingDropId === drop.id
-                              ? "rgba(96,165,250,0.1)"
-                              : "rgba(167,139,250,0.05)",
-                            color: commentingDropId === drop.id ? "#60a5fa" : "#888",
-                            fontSize: "11px", cursor: "pointer",
-                            fontFamily: "monospace",
-                          }}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border transition-all font-mono text-[11px] ${
+                            commentingDropId === drop.id
+                              ? "bg-blue-500/10 border-blue-500/40 text-blue-400"
+                              : "bg-void-100/50 border-crypt-300/10 text-gray-500 hover:border-crypt-300/30"
+                          }`}
                         >
-                          💬 Comment
+                          <MessageSquare size={14} />
+                          Comment
                         </button>
                       </div>
 

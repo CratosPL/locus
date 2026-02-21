@@ -12,6 +12,7 @@ import QuestTrails from "@/components/QuestTrails";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
+import { Map as MapIcon, ScrollText, Compass, Trophy, User } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useGeolocation } from "@/hooks/useGeolocation";
@@ -294,7 +295,14 @@ export default function HomePage() {
 
   // ─── Create Drop Handler ──────────────────────────────────────────────
   var handleCreateDrop = useCallback(
-    async function(data: { message: string; reward: number; category: DropCategory }) {
+    async function(data: {
+      message: string;
+      reward: number;
+      category: DropCategory;
+      twitterHandle?: string;
+      externalLink?: string;
+      dropType: "crypto" | "memory";
+    }) {
       var myDrops = extraDrops.filter(function(d) { return !d.isClaimed; });
       if (myDrops.length >= 5) { showToast("Max 5 active drops per wallet", "error"); return; }
 
@@ -315,9 +323,17 @@ export default function HomePage() {
       if (result.ok) {
         var creatorName = profile?.username ? "@" + profile.username : walletAddress ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4) : "anon.sol";
         var newDrop: Drop = {
-          id: "drop-" + Date.now(), location: { lat: lat, lng: lng },
-          message: data.message, isClaimed: false, finderReward: data.reward,
-          category: data.category, createdBy: creatorName, createdAt: new Date().toISOString().split("T")[0],
+          id: "drop-" + Date.now(),
+          location: { lat: lat, lng: lng },
+          message: data.message,
+          isClaimed: false,
+          finderReward: data.reward,
+          category: data.category,
+          createdBy: creatorName,
+          createdAt: new Date().toISOString().split("T")[0],
+          twitterHandle: data.twitterHandle,
+          externalLink: data.externalLink,
+          dropType: data.dropType,
         };
 
         try { localStorage.setItem("locus_last_drop_time", String(Date.now())); } catch {}
@@ -329,7 +345,11 @@ export default function HomePage() {
         });
         setCreatedCount(function(c) { return c + 1; });
 
-        await registerDropAsContent(newDrop.id, data.message);
+        await registerDropAsContent(newDrop.id, data.message, {
+          twitter: data.twitterHandle,
+          link: data.externalLink,
+          type: data.dropType === "memory" ? "memory-drop" : "geo-drop"
+        });
         var cat = CATEGORY_CONFIG[data.category];
         showToast("Drop created! " + cat.icon + " " + data.reward + " SOL", "success", result.value);
 
@@ -467,7 +487,7 @@ export default function HomePage() {
 
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[100dvh] bg-void overflow-hidden">
+    <div className="app-container flex flex-col h-[100dvh] bg-void overflow-hidden">
       {showWelcome && <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />}
 
       {toasts.map(function(toast) {
@@ -701,20 +721,20 @@ export default function HomePage() {
       {/* Bottom nav */}
       <nav className="flex justify-around items-center py-2.5 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl shrink-0" style={{ paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}>
         {([
-          { id: "map" as TabId, icon: "🗺️", label: "Map" },
-          { id: "list" as TabId, icon: "📜", label: "Drops" },
-          { id: "trails" as TabId, icon: "🧭", label: "Quests" },
-          { id: "leaderboard" as TabId, icon: "🏆", label: "Rank" },
+          { id: "map" as TabId, icon: <MapIcon size={20} />, label: "Map" },
+          { id: "list" as TabId, icon: <ScrollText size={20} />, label: "Drops" },
+          { id: "trails" as TabId, icon: <Compass size={20} />, label: "Quests" },
+          { id: "leaderboard" as TabId, icon: <Trophy size={20} />, label: "Rank" },
         ]).map(function(tab) {
           return (
             <button
               key={tab.id}
               onClick={function() { setActiveTab(tab.id); }}
-              className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-3 py-1 " + (
-                activeTab === tab.id ? "text-crypt-300" : "text-gray-600"
+              className={"flex flex-col items-center gap-1.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-3 py-1 " + (
+                activeTab === tab.id ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
               )}
             >
-              <span className="text-lg">{tab.icon}</span>
+              {tab.icon}
               {tab.label}
             </button>
           );
@@ -738,11 +758,11 @@ export default function HomePage() {
 
         <button
           onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}
-          className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-3 py-1 transition-colors " + (
-            isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-600"
+          className={"flex flex-col items-center gap-1.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-3 py-1 transition-colors " + (
+            isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-600 hover:text-gray-400"
           )}
         >
-          <span className="text-lg">👤</span>
+          <User size={20} />
           {isConnected ? "Profile" : "Login"}
         </button>
       </nav>

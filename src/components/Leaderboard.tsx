@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Trophy, Award, UserPlus, Gamepad2 } from "lucide-react";
 
 interface LeaderboardEntry {
   rank: number;
@@ -85,9 +86,12 @@ export default function Leaderboard({ currentUser, currentStats, onFollow }: Lea
   return (
     <div className="h-full overflow-y-auto px-3 py-3 space-y-2">
       {/* Header */}
-      <div className="text-center mb-4">
+      <div className="text-center mb-4 flex flex-col items-center">
+        <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center mb-2">
+          <Trophy className="text-yellow-500" size={24} />
+        </div>
         <h2 className="text-lg font-extrabold text-crypt-100 font-mono tracking-wider">
-          🏆 Leaderboard
+          Leaderboard
         </h2>
         <p className="text-[10px] text-gray-600 font-mono mt-1">
           Top explorers by reputation • Claims ×10 + Created ×5 + Likes ×2
@@ -140,9 +144,9 @@ export default function Leaderboard({ currentUser, currentStats, onFollow }: Lea
             {/* Rank */}
             <div className="w-8 text-center shrink-0">
               {entry.rank <= 3 ? (
-                <span className="text-lg">{getRankIcon(entry.rank)}</span>
+                <Award className={entry.rank === 1 ? "text-yellow-500" : entry.rank === 2 ? "text-gray-400" : "text-amber-600"} size={24} />
               ) : (
-                <span className="text-[11px] font-bold text-gray-500 font-mono">{getRankIcon(entry.rank)}</span>
+                <span className="text-[11px] font-bold text-gray-500 font-mono">#{entry.rank}</span>
               )}
             </div>
 
@@ -167,9 +171,10 @@ export default function Leaderboard({ currentUser, currentStats, onFollow }: Lea
               {!isMe && onFollow && (
                 <button
                   onClick={() => onFollow(entry.username.replace('@', ''))}
-                  className="px-2 py-0.5 rounded-lg border border-crypt-300/30 bg-crypt-300/10 text-[9px] text-crypt-300 font-mono font-bold hover:bg-crypt-300/20 transition-all cursor-pointer"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-crypt-300/30 bg-crypt-300/10 text-[9px] text-crypt-300 font-mono font-bold hover:bg-crypt-300/20 transition-all cursor-pointer"
                 >
-                  + Follow
+                  <UserPlus size={10} />
+                  Follow
                 </button>
               )}
             </div>

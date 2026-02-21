@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Info, Award, Settings, Zap, Users, Gamepad2, Sun, Share2 } from "lucide-react";
 
 interface InfoPanelProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
           
           <section>
             <h3 className="text-crypt-300 font-bold mb-3 flex items-center gap-2">
-              <span className="text-xl">🗺️</span> WHAT IS LOCUS?
+              <Info size={18} /> WHAT IS LOCUS?
             </h3>
             <p>
               Locus is a geolocation social dApp that turns the world into an interactive "crypto graveyard". Users leave "Dead Drops" (locked SOL bounties) and "Ghost Marks" (ephemeral messages) pinned to physical GPS coordinates.
@@ -37,7 +38,7 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
 
           <section className="bg-crypt-300/5 border border-crypt-300/20 rounded-2xl p-5 space-y-4">
             <h3 className="text-white font-bold flex items-center gap-2">
-              <span className="text-xl">🏆</span> FOR JURY (HACKATHON TRACKS)
+              <Award size={18} /> FOR JURY (HACKATHON TRACKS)
             </h3>
             
             <div className="space-y-3 text-xs">
@@ -55,12 +56,17 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
                 <span className="shrink-0 w-16 text-amber-500 font-bold uppercase tracking-tighter bg-amber-500/10 px-2 py-1 rounded text-center h-fit">Sunrise</span>
                 <p><span className="text-white font-bold">Sunrise Onboarding:</span> A dedicated "Sunrise Web3 Tutorial" trail guides new users through wallet setup and on-chain interactions.</p>
               </div>
+
+              <div className="flex gap-3">
+                <span className="shrink-0 w-16 text-blue-500 font-bold uppercase tracking-tighter bg-blue-500/10 px-2 py-1 rounded text-center h-fit">Blinks</span>
+                <p><span className="text-white font-bold">Solana Blinks (Actions):</span> Share any drop as an interactive link on X. Users can claim bounties directly from their social feed.</p>
+              </div>
             </div>
           </section>
 
           <section>
             <h3 className="text-crypt-300 font-bold mb-3 flex items-center gap-2">
-              <span className="text-xl">⚙️</span> HOW TO PLAY?
+              <Settings size={18} /> HOW TO PLAY?
             </h3>
             <ul className="space-y-3 list-none pl-1">
               <li className="flex gap-2"><span className="text-crypt-400">01.</span> Enable GPS or use Demo mode.</li>

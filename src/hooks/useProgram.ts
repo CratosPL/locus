@@ -4,14 +4,7 @@ import { useState, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { Result } from '../types';
-import { SOLANA_CLUSTER } from '@/utils/config';
-
-// ─── REAL DEPLOYED PROGRAM ID ───────────────────────────────────────────────
-// Deployed via Solana Playground: https://beta.solpg.io/
-// Tx: 3pNuAnMRJLsYodqzcaVAX6DDJscjL1ermzuqNAtAtSQV6gR3Snbn79Q6BEG6X6ecSr3fdhfL8ZcJr1H9MxgHu3iq
-const PROGRAM_ID = new PublicKey(
-  'HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn'
-);
+import { SOLANA_CLUSTER, PROGRAM_ID } from '@/utils/config';
 
 /**
  * useProgram Hook — Interacts with the deployed Locus on-chain program.

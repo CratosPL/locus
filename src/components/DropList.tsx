@@ -3,6 +3,20 @@
 import React, { useState } from "react";
 import { Drop, DropCategory } from "@/types";
 import { CATEGORY_CONFIG } from "@/utils/mockData";
+import {
+  Filter,
+  ArrowUpDown,
+  Coins,
+  Clock,
+  History,
+  Navigation,
+  Lock,
+  MapPin,
+  Activity,
+  Twitter,
+  Link as LinkIcon,
+  Ghost
+} from "lucide-react";
 
 interface DropListProps {
   drops: Drop[];
@@ -37,13 +51,14 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
               <button
                 key={s}
                 onClick={function() { setSortBy(s); }}
-                className={"px-2 py-1 rounded-md font-mono text-[9px] border cursor-pointer transition-colors " + (
+                className={"flex items-center gap-1.5 px-2 py-1 rounded-md font-mono text-[9px] border cursor-pointer transition-colors " + (
                   sortBy === s
                     ? "border-crypt-300/30 bg-crypt-300/10 text-crypt-300"
                     : "border-transparent bg-transparent text-gray-700 hover:text-gray-500"
                 )}
               >
-                {s === "reward" ? "💰 Value" : "📅 Recent"}
+                {s === "reward" ? <Coins size={10} /> : <Clock size={10} />}
+                {s === "reward" ? "Value" : "Recent"}
               </button>
             );
           })}
@@ -64,11 +79,12 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
         </button>
         {Object.entries(CATEGORY_CONFIG).map(function([key, val]) {
           var count = drops.filter(function(d) { return d.category === key; }).length;
+          const CategoryIcon = key === 'lore' ? History : key === 'quest' ? Navigation : key === 'secret' ? Lock : key === 'ritual' ? MapPin : Coins;
           return (
             <button
               key={key}
               onClick={function() { setFilter(key as DropCategory); }}
-              className={"flex items-center gap-1 px-3 py-1 rounded-full font-mono text-[10px] border cursor-pointer transition-all flex-shrink-0 " + (
+              className={"flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[10px] border cursor-pointer transition-all flex-shrink-0 " + (
                 filter === key
                   ? "border-opacity-40 bg-opacity-10"
                   : "border-crypt-300/10 bg-transparent text-gray-600 hover:border-crypt-300/20"
@@ -79,7 +95,7 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
                 color: val.color,
               } : undefined}
             >
-              <span>{val.icon}</span>
+              <CategoryIcon size={12} />
               {val.label}
               <span className="opacity-60">({count})</span>
             </button>
@@ -92,42 +108,47 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
         {filtered.map(function(drop) {
           var cat = CATEGORY_CONFIG[drop.category];
           var dist = formatDistance ? formatDistance(drop.location.lat, drop.location.lng) : null;
+          const CategoryIcon = drop.category === 'lore' ? History : drop.category === 'quest' ? Navigation : drop.category === 'secret' ? Lock : drop.category === 'ritual' ? MapPin : Coins;
           return (
             <button
               key={drop.id}
               onClick={function() { onSelectDrop(drop); }}
-              className={"w-full text-left p-3.5 rounded-xl transition-all cursor-pointer bg-transparent " + (
+              className={"w-full text-left p-3.5 rounded-2xl transition-all cursor-pointer bg-transparent " + (
                 drop.isClaimed
                   ? "bg-gray-900/40 border border-gray-800/30"
-                  : "bg-void-100/80 border hover:border-opacity-50"
+                  : "bg-void-100/80 border border-crypt-300/5 hover:border-crypt-300/20"
               )}
-              style={{
-                borderColor: drop.isClaimed ? undefined : cat.color + "22",
-              }}
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-start gap-3 min-w-0 flex-1">
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-lg"
-                    style={{ background: cat.color + "15" }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: cat.color + "15", color: cat.color }}
                   >
-                    {cat.icon}
+                    <CategoryIcon size={20} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p
-                      className={"text-xs font-mono truncate " + (
-                        drop.isClaimed ? "text-gray-600 line-through" : "text-crypt-200"
+                      className={"text-[13px] font-mono truncate " + (
+                        drop.isClaimed ? "text-gray-600 line-through" : "text-crypt-100 font-bold"
                       )}
                     >
                       {drop.message}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-gray-700 font-mono">
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[10px] text-gray-600 font-mono flex items-center gap-1">
+                        <Activity size={10} />
                         {drop.createdBy}
                       </span>
                       {dist && (
-                        <span className="text-[10px] text-gray-700 font-mono">
+                        <span className="text-[10px] text-gray-600 font-mono">
                           · {dist}
+                        </span>
+                      )}
+                      {(drop.twitterHandle || drop.externalLink) && (
+                        <span className="flex gap-1.5 ml-1">
+                          {drop.twitterHandle && <Twitter size={10} className="text-gray-700" />}
+                          {drop.externalLink && <LinkIcon size={10} className="text-gray-700" />}
                         </span>
                       )}
                     </div>
@@ -155,8 +176,8 @@ export default function DropList({ drops, onSelectDrop, formatDistance }: DropLi
 
         {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-            <div className="text-5xl mb-4 opacity-40">
-              {filter === "all" ? "🪦" : CATEGORY_CONFIG[filter as DropCategory].icon}
+            <div className="w-16 h-16 rounded-full bg-crypt-300/5 flex items-center justify-center mb-4 text-crypt-300/20">
+              <Ghost size={40} />
             </div>
             <h4 className="text-crypt-200 font-mono text-sm font-bold mb-2">
               {filter === "all" ? "No drops yet" : "No " + CATEGORY_CONFIG[filter as DropCategory].label.toLowerCase() + " drops"}

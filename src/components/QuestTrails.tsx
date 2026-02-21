@@ -2,6 +2,7 @@
 
 import React from "react";
 import { QuestTrail } from "@/types";
+import { Compass, CheckCircle2 } from "lucide-react";
 
 interface QuestTrailsProps {
   trails: QuestTrail[];
@@ -21,9 +22,12 @@ export default function QuestTrails({ trails, trailProgress, activeTrailId, onSe
   return (
     <div className="h-full overflow-y-auto px-3 py-3 space-y-2">
       {/* Header */}
-      <div className="text-center mb-4">
+      <div className="text-center mb-4 flex flex-col items-center">
+        <div className="w-10 h-10 rounded-full bg-crypt-300/10 flex items-center justify-center mb-2">
+          <Compass className="text-crypt-300" size={24} />
+        </div>
         <h2 className="text-lg font-extrabold text-crypt-100 font-mono tracking-wider">
-          🗺️ Quest Trails
+          Quest Trails
         </h2>
         <p className="text-[10px] text-gray-600 font-mono mt-1">
           Follow waypoints, complete quests, earn bonus SOL

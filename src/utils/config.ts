@@ -1,6 +1,21 @@
-import { Cluster } from "@solana/web3.js";
+import { clusterApiUrl, PublicKey } from "@solana/web3.js";
 
-export const SOLANA_CLUSTER: Cluster = (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as Cluster) || "testnet";
+// Change to 'devnet' or 'mainnet-beta' for production
+export const SOLANA_CLUSTER = (process.env.NEXT_PUBLIC_SOLANA_CLUSTER as any) || "devnet";
 
-export const EXPLORER_URL = (tx: string) => `https://explorer.solana.com/tx/${tx}?cluster=${SOLANA_CLUSTER}`;
-export const ADDRESS_URL = (addr: string) => `https://explorer.solana.com/address/${addr}?cluster=${SOLANA_CLUSTER}`;
+export const SOLANA_ENDPOINT = SOLANA_CLUSTER === "devnet"
+  ? clusterApiUrl("devnet")
+  : SOLANA_CLUSTER === "testnet"
+    ? clusterApiUrl("testnet")
+    : "https://api.mainnet-beta.solana.com";
+
+// REAL DEPLOYED PROGRAM ID on Devnet
+export const PROGRAM_ID = new PublicKey(
+  'HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn'
+);
+
+export const ADDRESS_URL = (address: string) =>
+  `https://explorer.solana.com/address/${address}?cluster=${SOLANA_CLUSTER}`;
+
+export const TX_URL = (signature: string) =>
+  `https://explorer.solana.com/tx/${signature}?cluster=${SOLANA_CLUSTER}`;
