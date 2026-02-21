@@ -192,6 +192,10 @@ export default function InfoPanel({ isOpen, onClose }: InfoPanelProps) {
                     <p className="text-[10px] text-gray-500 italic">Make sure you allow location permissions in your browser. If you're not in Warsaw, enable "Demo Mode" in the bottom right to bypass GPS checks.</p>
                   </div>
                   <div className="bg-white/5 p-3 rounded-xl">
+                    <p className="text-[11px] font-bold text-white mb-1">Is Locus Global?</p>
+                    <p className="text-[10px] text-gray-500 italic">Yes! While we started in Warsaw, there are drops in NYC, London, Tokyo, and more. Try panning the map globally to discover them!</p>
+                  </div>
+                  <div className="bg-white/5 p-3 rounded-xl">
                     <p className="text-[11px] font-bold text-white mb-1">Transaction failed?</p>
                     <p className="text-[10px] text-gray-500 italic">Ensure your wallet is set to **Devnet** and you have some devnet SOL (visit solana.com/faucet). Locus runs on Devnet for the hackathon.</p>
                   </div>
