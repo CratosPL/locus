@@ -8,6 +8,8 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { clusterApiUrl } from "@solana/web3.js";
 import { SOLANA_CLUSTER } from "@/utils/config";
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-phantom";
+import { SolflareWalletAdapter } from "@solana/wallet-adapter-solflare";
 
 // Import default wallet adapter styles
 import "@solana/wallet-adapter-react-ui/styles.css";
@@ -19,9 +21,11 @@ interface Props {
 export default function AppWalletProvider({ children }: Props) {
   const endpoint = useMemo(() => clusterApiUrl(SOLANA_CLUSTER), []);
 
-  // Empty array — wallets auto-register via wallet-standard protocol
-  // Phantom, Solflare, Backpack etc. all register themselves
-  const wallets = useMemo(() => [], []);
+  // Adding explicit adapters helps with mobile discovery and deep-linking from Safari
+  const wallets = useMemo(() => [
+    new PhantomWalletAdapter(),
+    new SolflareWalletAdapter(),
+  ], []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>

@@ -719,52 +719,60 @@ export default function HomePage() {
       </div>
 
       {/* Bottom nav */}
-      <nav className="flex justify-around items-center py-2.5 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl shrink-0" style={{ paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}>
-        {([
-          { id: "map" as TabId, icon: <MapIcon size={20} />, label: "Map" },
-          { id: "list" as TabId, icon: <ScrollText size={20} />, label: "Drops" },
-          { id: "trails" as TabId, icon: <Compass size={20} />, label: "Quests" },
-          { id: "leaderboard" as TabId, icon: <Trophy size={20} />, label: "Rank" },
-        ]).map(function(tab) {
-          return (
-            <button
-              key={tab.id}
-              onClick={function() { setActiveTab(tab.id); }}
-              className={"flex flex-col items-center gap-1.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-3 py-1 " + (
-                activeTab === tab.id ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
-              )}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          );
-        })}
+      <nav className="flex justify-around items-end py-2 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl shrink-0" style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
+        {/* Left Side: Map & Drops & Quests */}
+        <div className="flex flex-1 justify-around items-center h-12">
+          {([
+            { id: "map" as TabId, icon: <MapIcon size={20} />, label: "Map" },
+            { id: "list" as TabId, icon: <ScrollText size={20} />, label: "Drops" },
+            { id: "trails" as TabId, icon: <Compass size={20} />, label: "Quests" },
+          ]).map(function(tab) {
+            return (
+              <button
+                key={tab.id}
+                onClick={function() { setActiveTab(tab.id); }}
+                className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] tracking-tight transition-colors " + (
+                  activeTab === tab.id ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
+                )}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-        {isConnected ? (
+        {/* Center: Action Button (Plus) */}
+        <div className="flex flex-col items-center pb-2">
           <button
-            onClick={function() { setShowCreateModal(true); }}
-            className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
+            onClick={function() { if (isConnected) setShowCreateModal(true); else handleConnectWallet(); }}
+            className="w-14 h-14 rounded-full border-2 border-void-100 bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-3xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90"
           >
             +
           </button>
-        ) : (
-          <button
-            onClick={handleConnectWallet}
-            className="px-4 py-2.5 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-[11px] font-mono font-bold cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-4 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95 tracking-wider"
-          >
-            🔗 Connect
-          </button>
-        )}
+        </div>
 
-        <button
-          onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}
-          className={"flex flex-col items-center gap-1.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-3 py-1 transition-colors " + (
-            isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-600 hover:text-gray-400"
-          )}
-        >
-          <User size={20} />
-          {isConnected ? "Profile" : "Login"}
-        </button>
+        {/* Right Side: Rank & Profile */}
+        <div className="flex flex-1 justify-around items-center h-12">
+          <button
+            onClick={function() { setActiveTab("leaderboard"); }}
+            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] tracking-tight transition-colors " + (
+              activeTab === "leaderboard" ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
+            )}
+          >
+            <Trophy size={20} />
+            Rank
+          </button>
+          <button
+            onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}
+            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] tracking-tight transition-colors " + (
+              showProfile ? "text-crypt-300" : "text-gray-600 hover:text-gray-400"
+            )}
+          >
+            <User size={20} />
+            {isConnected ? "Profile" : "Login"}
+          </button>
+        </div>
       </nav>
 
       {showCreateModal && (
