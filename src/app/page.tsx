@@ -411,15 +411,17 @@ export default function HomePage() {
   // ─── Follow Handler ────────────────────────────────────────────────────
   var handleFollow = useCallback(
     async function(username: string) {
-      if (!isConnected) { handleConnectWallet(); return; }
+      if (!isConnected) { handleConnectWallet(); return false; }
       var success = await followUser(username);
       if (success) {
         showToast("Following @" + username, "success");
         setActivities(function(prev) {
           return [{ icon: "👤", text: "Followed @" + username, color: "#a78bfa", timestamp: Date.now() }].concat(prev);
         });
+        return true;
       } else {
         showToast("Follow failed", "error");
+        return false;
       }
     },
     [isConnected, followUser, handleConnectWallet, showToast]

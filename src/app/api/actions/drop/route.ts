@@ -33,6 +33,7 @@ export const GET = async (req: Request) => {
         {
           label: "Claim Drop",
           href: `/api/actions/drop?id=${dropId}`,
+          type: "transaction",
         },
       ],
     },
@@ -105,6 +106,7 @@ export const POST = async (req: Request) => {
 
     const payload: ActionPostResponse = await createPostResponse({
       fields: {
+        type: "transaction",
         transaction,
         message: `Claiming drop ${dropId}...`,
       },
