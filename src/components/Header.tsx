@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SOLANA_CLUSTER, ADDRESS_URL } from "@/utils/config";
-import { Wallet, Copy, Search, LogOut, ChevronDown, Activity, Volume2, VolumeX } from "lucide-react";
+import { Wallet, Copy, Search, LogOut, ChevronDown, Activity, Volume2, VolumeX, Share2 } from "lucide-react";
 
 interface HeaderProps {
   soundEnabled?: boolean;
@@ -77,6 +77,26 @@ export default function Header({ soundEnabled, onToggleSound }: HeaderProps) {
 
       {/* Right side: Network badge + Wallet */}
       <div className="flex items-center gap-1.5">
+        {/* Share Button */}
+        <button
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: 'Locus — Geo-Social on Solana',
+                text: 'Discover hidden SOL drops and secret messages across the city with Locus!',
+                url: window.location.origin,
+              }).catch(console.error);
+            } else {
+              navigator.clipboard.writeText(window.location.origin);
+              alert("Link copied to clipboard!");
+            }
+          }}
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-void/60 border border-crypt-300/10 text-gray-500 hover:text-crypt-300 transition-colors cursor-pointer"
+          title="Share Locus"
+        >
+          <Share2 size={16} />
+        </button>
+
         {/* Sound Toggle */}
         <button
           onClick={onToggleSound}
