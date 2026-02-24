@@ -4,6 +4,26 @@ import React, { useEffect, useState } from "react";
 import { Drop, DropCategory, GhostMark, QuestTrail } from "@/types";
 import { CATEGORY_CONFIG, WARSAW_CENTER, DEFAULT_ZOOM } from "@/utils/mockData";
 import type { GeoPosition } from "@/hooks/useGeolocation";
+import {
+  Twitter,
+  ExternalLink,
+  Heart,
+  MessageSquare,
+  Navigation,
+  MapPin,
+  UserPlus,
+  CheckCircle2,
+  Lock,
+  Ghost,
+  Coins,
+  History,
+  Sun,
+  Moon,
+  Music,
+  Share2
+} from "lucide-react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { useSound } from "@/hooks/useSound";
 
 let L: typeof import("leaflet") | null = null;
 let MapContainer: any = null;
@@ -26,6 +46,7 @@ interface MapProps {
   onClaim: (dropId: string) => void;
   onLike: (dropId: string) => void;
   onComment: (dropId: string, text: string) => void;
+  onFollow?: (targetProfileId: string) => Promise<boolean>;
   onConnectWallet: () => void;
   onReactGhost?: (ghostId: string) => void;
   likedIds: Set<string>;
@@ -66,6 +87,7 @@ export default function MapView({
   onClaim,
   onLike,
   onComment,
+  onFollow,
   onConnectWallet,
   onReactGhost,
   likedIds,
@@ -81,6 +103,10 @@ export default function MapView({
   const [commentingDropId, setCommentingDropId] = useState<string | null>(null);
   const [isNight, setIsNight] = useState(true);
   const [isAutoTheme, setIsAutoTheme] = useState(true);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [ambientActive, setAmbientActive] = useState(false);
+
+  const { playSound, vibrate } = useSound();
 
   useEffect(() => {
     if (!isAutoTheme) return;
@@ -98,9 +124,9 @@ export default function MapView({
   }, [isAutoTheme]);
 
   // Clean up markers to reduce map clutter
-  // In a real app we'd use clustering, for now we limit visibility or density
-  const visibleDrops = drops.slice(0, 15); 
-  const visibleGhosts = ghosts.slice(0, 10);
+  // In a real app we'd use clustering, for now we increase limit to show global expansion
+  const visibleDrops = drops.slice(0, 100);
+  const visibleGhosts = ghosts.slice(0, 50);
 
   useEffect(() => {
     setMounted(true);
@@ -144,20 +170,21 @@ export default function MapView({
 
   // ─── SVG Icons per category ─────────────────────────────────────────────
   const SVG_ICONS: Record<string, string> = {
-    lore: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2C6.48 2 2 6 2 10.5c0 3 1.5 5.5 4 7L12 22l6-4.5c2.5-1.5 4-4 4-7C22 6 17.52 2 12 2z"/><circle cx="12" cy="10" r="2" fill="currentColor"/></svg>',
-    quest: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12,2 15,9 22,9 16.5,14 18.5,21 12,17 5.5,21 7.5,14 2,9 9,9"/></svg>',
-    secret: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1.5" fill="currentColor"/></svg>',
-    ritual: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/><circle cx="12" cy="12" r="4"/></svg>',
-    treasure: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h4l3-9 6 18 3-9h4"/></svg>',
+    lore: renderToStaticMarkup(<History size={18} />),
+    quest: renderToStaticMarkup(<Navigation size={18} />),
+    secret: renderToStaticMarkup(<Lock size={18} />),
+    ritual: renderToStaticMarkup(<MapPin size={18} />),
+    treasure: renderToStaticMarkup(<Coins size={18} />),
   };
 
   // ─── Icons ──────────────────────────────────────────────────────────────
-  const createDropIcon = (category: DropCategory, isClaimed: boolean) => {
-    const config = CATEGORY_CONFIG[category];
+  const createDropIcon = (drop: Drop) => {
+    const config = CATEGORY_CONFIG[drop.category];
+    const isClaimed = drop.isClaimed;
     const bgColor = isClaimed ? "#444" : config.color;
     const glowColor = isClaimed ? "transparent" : config.color;
     const claimedClass = isClaimed ? "drop-marker-claimed" : "marker-pulse";
-    const svgIcon = SVG_ICONS[category] || SVG_ICONS.lore;
+    const svgIcon = SVG_ICONS[drop.category] || SVG_ICONS.lore;
 
     return L!.divIcon({
       className: "custom-marker",
@@ -168,8 +195,8 @@ export default function MapView({
         '</div>' +
         '<div class="drop-marker-pointer"></div>' +
         (isClaimed ? '' : '<div class="drop-marker-ring"></div>') +
-        '<div class="drop-marker-reward" style="color:' + bgColor + '">' +
-          (isClaimed ? '✓' : config.icon) +
+        '<div class="drop-marker-reward" style="color:' + (isClaimed ? '#444' : '#fff') + '; background:' + (isClaimed ? 'transparent' : 'rgba(0,0,0,0.6)') + '; padding: 1px 6px; border-radius: 10px; font-weight: 800; font-size: 9px; white-space: nowrap; border: 1px solid ' + (isClaimed ? 'transparent' : bgColor + '44') + ';">' +
+          (isClaimed ? 'CLAIMED' : (drop.dropType === 'memory' ? 'MEMORY' : drop.finderReward + ' ◎')) +
         '</div>' +
       '</div>',
       iconSize: [48, 58],
@@ -224,29 +251,27 @@ export default function MapView({
       onComment(dropId, commentText.trim());
       setCommentText("");
       setCommentingDropId(null);
+      playSound("click");
     }
+  };
+
+  const handleShareBlink = (dropId: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const blinkUrl = `https://dial.to/?action=solana-action:${origin}/api/actions/drop?id=${dropId}`;
+    navigator.clipboard.writeText(blinkUrl);
+    playSound("click");
+    alert("Blink URL copied to clipboard!\n\nShare this on X as an interactive Solana Blink.");
+  };
+
+  const handleClaimWithSound = (dropId: string) => {
+    playSound("claim");
+    onClaim(dropId);
   };
 
   return (
     <div className="w-full h-full relative">
       {/* Time mode indicator & manual toggle */}
-      <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-wider shadow-lg pointer-events-none ${isNight ? 'bg-void-100/40 text-crypt-300' : 'bg-white/40 text-gray-800'}`}>
-          {isNight ? '🌙 Night Mode' : '☀️ Day Mode'}
-          {isAutoTheme && <span className="ml-1 opacity-50 font-normal normal-case italic">(Auto)</span>}
-        </div>
-        
-        <button
-          onClick={() => {
-            setIsAutoTheme(false);
-            setIsNight(!isNight);
-          }}
-          className={`flex items-center justify-center w-12 h-12 rounded-full backdrop-blur-md border-2 border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all active:scale-90 pointer-events-auto ${isNight ? 'bg-void-100/80 text-crypt-300 hover:bg-void-100' : 'bg-white/80 text-gray-800 hover:bg-white'}`}
-          title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
-        >
-          <span className="text-xl">{isNight ? '☀️' : '🌙'}</span>
-        </button>
-        
+      <div className="absolute bottom-6 left-6 z-[2000] flex flex-col gap-2">
         {!isAutoTheme && (
           <button
             onClick={() => setIsAutoTheme(true)}
@@ -255,6 +280,36 @@ export default function MapView({
             Reset Auto
           </button>
         )}
+        
+        <button
+          onClick={() => {
+            setIsAutoTheme(false);
+            setIsNight(!isNight);
+          }}
+          className={`flex items-center justify-center w-12 h-12 rounded-2xl backdrop-blur-xl border-2 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all active:scale-90 pointer-events-auto ${
+            isNight
+              ? 'bg-void-100/90 border-crypt-300/30 text-crypt-300 hover:border-crypt-300'
+              : 'bg-white/90 border-blue-600/30 text-blue-600 hover:border-blue-600'
+          }`}
+          title={isNight ? "Switch to Day Mode" : "Switch to Night Mode"}
+        >
+          {isNight ? <Moon size={22} /> : <Sun size={22} />}
+        </button>
+
+        <button
+          onClick={() => {
+            setAmbientActive(!ambientActive);
+            playSound("click");
+          }}
+          className={`flex items-center justify-center w-12 h-12 rounded-2xl backdrop-blur-xl border-2 shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all active:scale-90 pointer-events-auto ${
+            ambientActive
+              ? 'bg-pink-500/20 border-pink-500/40 text-pink-400'
+              : 'bg-void-100/90 border-white/10 text-gray-600'
+          }`}
+          title="Toggle Ambient Atmosphere"
+        >
+          <Ghost size={22} className={ambientActive ? 'animate-pulse' : ''} />
+        </button>
       </div>
 
       <MapContainer
@@ -301,12 +356,25 @@ export default function MapView({
             <Circle
               center={[userPosition.lat, userPosition.lng]}
               radius={150}
+              className="claim-radius-pulse"
               pathOptions={{
                 color: isNight ? "#818cf8" : "#4f46e5",
+                fillColor: isNight ? "#818cf8" : "#4f46e5",
+                fillOpacity: 0.05,
+                weight: 2,
+                dashArray: "8 4",
+              }}
+            />
+            {/* Radar sweep */}
+            <Circle
+              center={[userPosition.lat, userPosition.lng]}
+              radius={300}
+              className="radar-sweep"
+              pathOptions={{
+                color: "#a78bfa",
                 fillColor: "transparent",
-                fillOpacity: 0,
-                weight: 1.5,
-                dashArray: "6 4",
+                weight: 1,
+                opacity: 0.5
               }}
             />
           </>
@@ -323,7 +391,7 @@ export default function MapView({
             <Marker
               key={drop.id}
               position={[drop.location.lat, drop.location.lng]}
-              icon={createDropIcon(drop.category, drop.isClaimed)}
+              icon={createDropIcon(drop)}
               eventHandlers={{ click: () => onSelectDrop(drop) }}
             >
               <Popup maxWidth={290} minWidth={250} className="locus-popup">
@@ -331,7 +399,10 @@ export default function MapView({
                   {/* Header band */}
                   <div className="drop-popup-header" style={{ borderColor: cat.color + "44", background: cat.color + "11" }}>
                     <div className="drop-popup-badge" style={{ background: cat.color + "22", color: cat.color, borderColor: cat.color + "55" }}>
-                      {cat.icon} {cat.label}
+                      <div className="flex items-center gap-1.5">
+                        <div dangerouslySetInnerHTML={{ __html: SVG_ICONS[drop.category] || SVG_ICONS.lore }} className="w-3.5 h-3.5" />
+                        <span>{cat.label}</span>
+                      </div>
                     </div>
                     <div className={"drop-popup-distance " + (nearby ? "nearby" : "far")}>
                       {nearby ? "✓ In range" : distance}
@@ -343,7 +414,69 @@ export default function MapView({
 
                   {/* Creator + Reward row */}
                   <div className="drop-popup-meta">
-                    <span className="drop-popup-creator">by {drop.createdBy}</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="drop-popup-creator">by {drop.createdBy}</span>
+                        {onFollow && drop.createdBy.startsWith('@') && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onFollow(drop.createdBy.substring(1));
+                            }}
+                            className="flex items-center gap-1 text-[9px] text-crypt-300 hover:text-crypt-100 transition-colors bg-transparent border-none p-0 font-mono font-bold cursor-pointer"
+                          >
+                            <UserPlus size={10} />
+                            Follow
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Social contacts */}
+                      <div className="flex gap-3 mt-1.5">
+                        {drop.twitterHandle && (
+                          <a
+                            href={`https://x.com/${drop.twitterHandle.replace('@', '')}`}
+                            target="_blank" rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-gray-500 hover:text-blue-400 transition-colors"
+                          >
+                            <Twitter size={14} />
+                          </a>
+                        )}
+                        {drop.externalLink && (
+                          <a
+                            href={drop.externalLink.startsWith('http') ? drop.externalLink : `https://${drop.externalLink}`}
+                            target="_blank" rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-gray-500 hover:text-emerald-400 transition-colors"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareBlink(drop.id);
+                          }}
+                          title="Share as Solana Blink"
+                          className="text-gray-500 hover:text-blue-400 transition-colors bg-transparent border-none p-0 cursor-pointer"
+                        >
+                          <Share2 size={14} />
+                        </button>
+                        {drop.audiusTrackId && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPlayingTrackId(playingTrackId === drop.audiusTrackId ? null : (drop.audiusTrackId || null));
+                              playSound("click");
+                            }}
+                            className={`${playingTrackId === drop.audiusTrackId ? 'text-pink-500 animate-pulse' : 'text-gray-500'} hover:text-pink-400 transition-colors bg-transparent border-none p-0 cursor-pointer`}
+                          >
+                            <Music size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
                     <span className="drop-popup-reward" style={{ color: cat.color }}>
                       {drop.finderReward} <span className="sol-symbol">◎</span>
                     </span>
@@ -381,7 +514,7 @@ export default function MapView({
                     </div>
                   ) : (
                     <button
-                      onClick={() => onClaim(drop.id)}
+                      onClick={() => handleClaimWithSound(drop.id)}
                       disabled={isProcessing}
                       style={{
                         width: "100%", padding: "10px", borderRadius: "8px",
@@ -409,16 +542,14 @@ export default function MapView({
                             onLike(drop.id);
                           }}
                           disabled={isLiked}
-                          style={{
-                            flex: 1, padding: "6px", borderRadius: "8px",
-                            border: `1px solid ${isLiked ? "#f472b6" : "rgba(167,139,250,0.15)"}`,
-                            background: isLiked ? "rgba(244,114,182,0.1)" : "rgba(167,139,250,0.05)",
-                            color: isLiked ? "#f472b6" : "#888",
-                            fontSize: "11px", cursor: isLiked ? "default" : "pointer",
-                            fontFamily: "monospace",
-                          }}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border transition-all font-mono text-[11px] ${
+                            isLiked
+                              ? "bg-pink-500/10 border-pink-500/40 text-pink-500"
+                              : "bg-void-100/50 border-crypt-300/10 text-gray-500 hover:border-crypt-300/30"
+                          }`}
                         >
-                          {isLiked ? "❤️ Liked" : "🤍 Like"}
+                          <Heart size={14} fill={isLiked ? "currentColor" : "none"} />
+                          {isLiked ? "Liked" : "Like"}
                         </button>
 
                         {/* Comment toggle */}
@@ -429,18 +560,14 @@ export default function MapView({
                               commentingDropId === drop.id ? null : drop.id
                             );
                           }}
-                          style={{
-                            flex: 1, padding: "6px", borderRadius: "8px",
-                            border: "1px solid rgba(167,139,250,0.15)",
-                            background: commentingDropId === drop.id
-                              ? "rgba(96,165,250,0.1)"
-                              : "rgba(167,139,250,0.05)",
-                            color: commentingDropId === drop.id ? "#60a5fa" : "#888",
-                            fontSize: "11px", cursor: "pointer",
-                            fontFamily: "monospace",
-                          }}
+                          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border transition-all font-mono text-[11px] ${
+                            commentingDropId === drop.id
+                              ? "bg-blue-500/10 border-blue-500/40 text-blue-400"
+                              : "bg-void-100/50 border-crypt-300/10 text-gray-500 hover:border-crypt-300/30"
+                          }`}
                         >
-                          💬 Comment
+                          <MessageSquare size={14} />
+                          Comment
                         </button>
                       </div>
 
@@ -530,6 +657,31 @@ export default function MapView({
         })}
 
         {/* ─── Active Trail Polyline + Waypoints ─────────────────────── */}
+        {/* Ambient Spooky Player */}
+        {ambientActive && (
+          <div className="hidden">
+            <iframe
+              width="100%"
+              height="120"
+              scrolling="no"
+              frameBorder="no"
+              src="https://audius.co/embed/track/2013859664?autoPlay=true&hidePlaylist=true"
+            />
+          </div>
+        )}
+        {/* Audius Hidden Player */}
+        {playingTrackId && (
+          <div className="hidden">
+            <iframe
+              width="100%"
+              height="120"
+              scrolling="no"
+              frameBorder="no"
+              src={`https://audius.co/embed/track/${playingTrackId}?autoPlay=true&hidePlaylist=true`}
+            />
+          </div>
+        )}
+
         {activeTrail && Polyline && (
           <>
             <Polyline
@@ -579,6 +731,22 @@ export default function MapView({
 
       {/* Custom styles */}
       <style jsx global>{`
+        @keyframes radar-sweep {
+          0% { transform: scale(0.1); opacity: 0.8; }
+          80% { opacity: 0.3; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+        .radar-sweep {
+          animation: radar-sweep 4s infinite linear;
+          transform-origin: center;
+        }
+        @keyframes claim-pulse {
+          0%, 100% { stroke-opacity: 0.3; fill-opacity: 0.02; }
+          50% { stroke-opacity: 0.8; fill-opacity: 0.08; }
+        }
+        .claim-radius-pulse {
+          animation: claim-pulse 2s infinite ease-in-out;
+        }
         .leaflet-popup-content-wrapper {
           background: transparent !important;
           box-shadow: none !important;

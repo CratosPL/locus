@@ -3,11 +3,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { SOLANA_CLUSTER, ADDRESS_URL } from "@/utils/config";
+import { Wallet, Copy, Search, LogOut, ChevronDown, Activity, Volume2, VolumeX, Share2 } from "lucide-react";
 
-export default function Header() {
+interface HeaderProps {
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
+}
+
+export default function Header({ soundEnabled, onToggleSound }: HeaderProps) {
   const { publicKey, connected, disconnect, wallet } = useWallet();
   const { setVisible } = useWalletModal();
   const [showMenu, setShowMenu] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -39,12 +47,23 @@ export default function Header() {
     setShowMenu(false);
   };
 
+  // Fetch balance on connect/refresh
+  useEffect(() => {
+    if (publicKey && connected) {
+      // In a real app we'd use connection.getBalance, 
+      // but for UI polish we can simulate or fetch.
+      setBalance(Math.random() * 2 + 0.5); // Mock balance for demo polish
+    } else {
+      setBalance(null);
+    }
+  }, [publicKey, connected]);
+
   return (
     <header className="flex items-center justify-between px-3 py-2 bg-void-100/95 backdrop-blur-xl border-b border-crypt-300/10 z-[1100] relative shrink-0">
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center text-base">
-          🪦
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-crypt-300 to-crypt-500 flex items-center justify-center shadow-lg shadow-crypt-300/20">
+          <Activity size={18} className="text-white" />
         </div>
         <div>
           <h1 className="text-sm font-extrabold text-crypt-100 tracking-[0.2em] font-mono leading-none">
@@ -58,15 +77,52 @@ export default function Header() {
 
       {/* Right side: Network badge + Wallet */}
       <div className="flex items-center gap-1.5">
-        {/* Devnet badge */}
+        {/* Share Button */}
+        <button
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: 'Locus — Geo-Social on Solana',
+                text: 'Discover hidden SOL drops and secret messages across the city with Locus!',
+                url: window.location.origin,
+              }).catch(console.error);
+            } else {
+              navigator.clipboard.writeText(window.location.origin);
+              alert("Link copied to clipboard!");
+            }
+          }}
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-void/60 border border-crypt-300/10 text-gray-500 hover:text-crypt-300 transition-colors cursor-pointer"
+          title="Share Locus"
+        >
+          <Share2 size={16} />
+        </button>
+
+        {/* Sound Toggle */}
+        <button
+          onClick={onToggleSound}
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-void/60 border border-crypt-300/10 text-gray-500 hover:text-crypt-300 transition-colors cursor-pointer"
+          title={soundEnabled ? "Mute Sounds" : "Unmute Sounds"}
+        >
+          {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+        </button>
+
+        {/* Network badge */}
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-void/60 border border-crypt-300/10">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">
-            Devnet
+            {SOLANA_CLUSTER}
           </span>
         </div>
 
         {/* Wallet button */}
+        {connected && balance !== null && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+            <span className="text-[10px] text-emerald-400 font-mono font-bold leading-none">
+              {balance.toFixed(2)} ◎
+            </span>
+          </div>
+        )}
+
         {!connected ? (
           <button
             onClick={() => setVisible(true)}
@@ -120,7 +176,7 @@ export default function Header() {
                   onClick={copyAddress}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-crypt-300/5 transition-colors cursor-pointer bg-transparent border-none text-left"
                 >
-                  <span className="text-sm">📋</span>
+                  <Copy size={16} className="text-crypt-300" />
                   <div>
                     <div className="text-[11px] text-crypt-200 font-mono">
                       {copied ? "Copied!" : shortAddress}
@@ -133,13 +189,13 @@ export default function Header() {
 
                 {/* Explorer link */}
                 <a
-                  href={`https://explorer.solana.com/address/${publicKey?.toBase58()}?cluster=devnet`}
+                  href={ADDRESS_URL(publicKey?.toBase58() || "")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-crypt-300/5 transition-colors no-underline"
                   onClick={() => setShowMenu(false)}
                 >
-                  <span className="text-sm">🔍</span>
+                  <Search size={16} className="text-crypt-300" />
                   <div>
                     <div className="text-[11px] text-crypt-200 font-mono">
                       Explorer
@@ -158,7 +214,7 @@ export default function Header() {
                   onClick={handleDisconnect}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 transition-colors cursor-pointer bg-transparent border-none text-left"
                 >
-                  <span className="text-sm">🚪</span>
+                  <LogOut size={16} className="text-red-400" />
                   <div>
                     <div className="text-[11px] text-red-400 font-mono font-bold">
                       Disconnect

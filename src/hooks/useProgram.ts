@@ -4,18 +4,12 @@ import { useState, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { Result } from '../types';
-
-// ─── REAL DEPLOYED PROGRAM ID (devnet) ───────────────────────────────────────
-// Deployed via Solana Playground: https://beta.solpg.io/
-// Tx: 3pNuAnMRJLsYodqzcaVAX6DDJscjL1ermzuqNAtAtSQV6gR3Snbn79Q6BEG6X6ecSr3fdhfL8ZcJr1H9MxgHu3iq
-const PROGRAM_ID = new PublicKey(
-  'HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn'
-);
+import { SOLANA_CLUSTER, PROGRAM_ID } from '@/utils/config';
 
 /**
  * useProgram Hook — Interacts with the deployed Locus on-chain program.
  *
- * Program: HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn (devnet)
+ * Program: HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn
  *
  * Architecture:
  * - Program written in Pinocchio (zero-dep Solana framework)
@@ -130,13 +124,15 @@ export function useProgram() {
       console.error('[Program] ❌ Claim failed:', error);
 
       // If it's a program error (e.g., drop doesn't exist on-chain yet),
-      // fall back to simulated success for demo purposes
-      if (error.message?.includes('custom program error') ||
+      // fall back to simulated success for demo purposes if NOT in production
+      const isDemoAllowed = process.env.NODE_ENV !== 'production';
+
+      if (isDemoAllowed && (
+          error.message?.includes('custom program error') ||
           error.message?.includes('Attempt to debit') ||
           error.message?.includes('insufficient funds') ||
-          error.message?.includes('AccountNotFound')) {
-        console.log('[Program] Program account not initialized — using demo mode');
-        // Simulate success for hackathon demo (program accounts not yet initialized)
+          error.message?.includes('AccountNotFound'))) {
+        console.warn('[Program] On-chain call failed, falling back to demo mode for hackathon presentation');
         await new Promise(resolve => setTimeout(resolve, 1500));
         const demoSig = `demo_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
         return { ok: true, value: demoSig };
@@ -232,10 +228,13 @@ export function useProgram() {
       console.error('[Program] ❌ Create failed:', error);
 
       // Demo fallback for hackathon
-      if (error.message?.includes('custom program error') ||
+      const isDemoAllowed = process.env.NODE_ENV !== 'production';
+
+      if (isDemoAllowed && (
+          error.message?.includes('custom program error') ||
           error.message?.includes('Attempt to debit') ||
-          error.message?.includes('AccountNotFound')) {
-        console.log('[Program] Using demo mode for drop creation');
+          error.message?.includes('AccountNotFound'))) {
+        console.warn('[Program] On-chain create failed, falling back to demo mode');
         await new Promise(resolve => setTimeout(resolve, 1500));
         const demoSig = `demo_create_${Date.now().toString(36)}`;
         return { ok: true, value: demoSig };

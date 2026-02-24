@@ -10,11 +10,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@solana/actions": "^1.6.6",
     "@solana/wallet-adapter-base": "^0.9.23",
+    "@solana/wallet-adapter-phantom": "^0.9.28",
     "@solana/wallet-adapter-react": "^0.15.35",
     "@solana/wallet-adapter-react-ui": "^0.9.35",
+    "@solana/wallet-adapter-solflare": "^0.6.32",
     "@solana/web3.js": "^1.95.8",
+    "@types/canvas-confetti": "^1.9.0",
+    "canvas-confetti": "^1.9.4",
     "leaflet": "^1.9.4",
+    "lucide-react": "^0.575.0",
     "next": "14.2.21",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -22,8 +28,9 @@
     "socialfi": "^0.1.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/leaflet": "^1.9.15",
-    "@types/node": "^22.13.4",
+    "@types/node": "^22.19.11",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "autoprefixer": "^10.4.20",

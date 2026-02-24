@@ -26,6 +26,41 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+/* ─── Desktop Layout ──────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  body {
+    background: radial-gradient(circle at 50% 50%, #1a1025 0%, #050208 100%);
+  }
+
+  .app-container {
+    width: 100%;
+    height: 100dvh;
+    position: relative;
+    overflow: hidden;
+    background: var(--color-void);
+  }
+
+  /* Decorative elements for desktop */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -10%; left: -10%;
+    width: 40%; height: 40%;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.1), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -10%; right: -10%;
+    width: 50%; height: 50%;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.08), transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
 /* ─── Scrollbar ───────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 4px;
@@ -147,6 +182,53 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SUPER POLISH — glow, animations, refine
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.text-crypt-300 {
+  filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.4));
+}
+
+@keyframes action-pulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(167, 139, 250, 0.5); }
+  50% { box-shadow: 0 8px 48px rgba(167, 139, 250, 0.8), 0 0 20px rgba(167, 139, 250, 0.4); }
+}
+
+button.w-14.h-14 {
+  animation: action-pulse 3s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.3);
 }
 
 
@@ -159,7 +241,7 @@ body {
 }
 
 .map-tiles-night {
-  filter: brightness(0.7) contrast(1.2) saturate(0.6) hue-rotate(20deg) opacity(0.9);
+  filter: brightness(1.15) contrast(1.05) saturate(0.85) hue-rotate(5deg) opacity(0.92);
 }
 
 .map-tiles-day {
@@ -243,14 +325,16 @@ body {
   pointer-events: none;
 }
 
-/* Emoji label under marker */
+/* Reward label under marker */
 .drop-marker-reward {
   position: absolute;
-  bottom: -4px; left: 50%;
+  bottom: -12px; left: 50%;
   transform: translateX(-50%);
-  font-size: 12px;
+  font-size: 9px;
   line-height: 1;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  pointer-events: none;
+  z-index: 5;
 }
 
 /* Pulse glow for unclaimed */
@@ -326,6 +410,34 @@ body {
 @keyframes user-ring {
   0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
   100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GLASS MORPHISM REFINEMENTS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.glass-panel {
+  background: rgba(10, 6, 18, 0.8) !important;
+  backdrop-filter: blur(16px) saturate(1.8) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.glass-border-gradient {
+  position: relative;
+}
+.glass-border-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02) 50%, rgba(255,255,255,0.05));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

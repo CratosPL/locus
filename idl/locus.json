@@ -1,0 +1,51 @@
+{
+  "version": "0.1.0",
+  "name": "locus",
+  "instructions": [
+    {
+      "name": "createDrop",
+      "accounts": [
+        { "name": "drop", "isMut": true, "isSigner": false },
+        { "name": "vault", "isMut": true, "isSigner": false },
+        { "name": "creator", "isMut": true, "isSigner": true },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "latitude", "type": "i64" },
+        { "name": "longitude", "type": "i64" },
+        { "name": "rewardAmount", "type": "u64" },
+        { "name": "message", "type": "string" }
+      ]
+    },
+    {
+      "name": "claimDrop",
+      "accounts": [
+        { "name": "drop", "isMut": true, "isSigner": false },
+        { "name": "vault", "isMut": true, "isSigner": false },
+        { "name": "claimer", "isMut": true, "isSigner": true },
+        { "name": "systemProgram", "isMut": false, "isSigner": false }
+      ],
+      "args": [
+        { "name": "dropId", "type": "string" }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Drop",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "creator", "type": "pubkey" },
+          { "name": "latitude", "type": "i64" },
+          { "name": "longitude", "type": "i64" },
+          { "name": "rewardAmount", "type": "u64" },
+          { "name": "isClaimed", "type": "u8" }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "address": "HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn"
+  }
+}

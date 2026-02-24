@@ -1,24 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Activity, MapPin, Zap, Navigation } from "lucide-react";
 
 interface WelcomeOverlayProps {
   onDismiss: () => void;
+  forceShow?: boolean;
 }
 
-export default function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
+export default function WelcomeOverlay({ onDismiss, forceShow }: WelcomeOverlayProps) {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(true);
 
   // Check if already seen
   useEffect(() => {
+    if (forceShow) {
+      setVisible(true);
+      return;
+    }
     try {
       if (localStorage.getItem("locus_welcomed")) {
         setVisible(false);
         onDismiss();
       }
     } catch {}
-  }, [onDismiss]);
+  }, [onDismiss, forceShow]);
 
   if (!visible) return null;
 
@@ -32,17 +38,17 @@ export default function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
 
   const steps = [
     {
-      icon: "🪦",
+      icon: <Activity size={80} />,
       title: "Welcome to Locus",
       desc: "Geo-social dead drops on Solana. Leave hidden messages with SOL rewards at real-world locations.",
     },
     {
-      icon: "📍",
+      icon: <MapPin size={80} />,
       title: "Discover & Claim",
       desc: "Walk within 150m of a drop to claim it. GPS verifies your location. Each claim is a real Solana transaction.",
     },
     {
-      icon: "⚡",
+      icon: <Zap size={80} />,
       title: "Create & Earn",
       desc: "Drop messages at your location with SOL bounties. Others find them, you build reputation on Tapestry.",
     },
@@ -54,7 +60,9 @@ export default function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
     <div className="fixed inset-0 z-[5000] flex items-center justify-center bg-void/95 backdrop-blur-xl">
       <div className="w-[90%] max-w-[380px] text-center">
         {/* Icon */}
-        <div className="text-7xl mb-6 animate-float">{current.icon}</div>
+        <div className="mb-6 animate-float flex justify-center text-crypt-300">
+          {current.icon}
+        </div>
 
         {/* Title */}
         <h2 className="text-crypt-200 font-mono text-2xl font-bold mb-3 tracking-wider">
@@ -103,9 +111,9 @@ export default function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
           ) : (
             <button
               onClick={dismiss}
-              className="px-10 py-3 rounded-xl border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white font-mono text-sm font-bold cursor-pointer tracking-wider hover:from-crypt-400 hover:to-crypt-600 transition-all shadow-[0_4px_20px_rgba(167,139,250,0.3)]"
+              className="flex items-center gap-2 px-10 py-3 rounded-xl border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white font-mono text-sm font-bold cursor-pointer tracking-wider hover:from-crypt-400 hover:to-crypt-600 transition-all shadow-[0_4px_20px_rgba(167,139,250,0.3)]"
             >
-              🗺️ Explore the Map
+              <Navigation size={18} /> Explore the Map
             </button>
           )}
         </div>

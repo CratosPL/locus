@@ -144,18 +144,22 @@ export function useTapestry() {
   // Docs: POST /contents/create
   // Body: profileId, content, contentType, customProperties[]
   var registerDropAsContent = useCallback(
-    async function(dropId: string, message: string) {
+    async function(dropId: string, message: string, extras?: { twitter?: string, link?: string, type?: string }) {
       if (!publicKey || !profile) return null;
       try {
+        var customProperties = [
+          { key: "dropId", value: dropId },
+          { key: "namespace", value: NAMESPACE },
+          { key: "type", value: extras?.type || "geo-drop" },
+        ];
+        if (extras?.twitter) customProperties.push({ key: "twitter", value: extras.twitter });
+        if (extras?.link) customProperties.push({ key: "link", value: extras.link });
+
         var result = await apiCall("/contents/create", "POST", {
           profileId: profile.id,
           content: message,
           contentType: "drop",
-          customProperties: [
-            { key: "dropId", value: dropId },
-            { key: "namespace", value: NAMESPACE },
-            { key: "type", value: "geo-drop" },
-          ],
+          customProperties: customProperties,
           blockchain: "SOLANA",
           execution: "FAST_UNCONFIRMED",
         });

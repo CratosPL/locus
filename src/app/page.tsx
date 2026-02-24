@@ -12,12 +12,16 @@ import QuestTrails from "@/components/QuestTrails";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
+import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
+import { useSound } from "@/hooks/useSound";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { MOCK_DROPS, MOCK_GHOSTS, MOCK_TRAILS, CATEGORY_CONFIG, BADGE_DEFINITIONS } from "@/utils/mockData";
 import type { Drop, DropCategory, GhostMark, GhostEmoji, QuestTrail, Activity } from "@/types";
+import { SOLANA_CLUSTER } from "@/utils/config";
+import confetti from "canvas-confetti";
 
 var MapView = dynamic(function() { return import("@/components/MapView"); }, {
   ssr: false,
@@ -65,11 +69,12 @@ export default function HomePage() {
   var [selectedDrop, setSelectedDrop] = useState<Drop | null>(null);
   var [activeTab, setActiveTab] = useState<TabId>("map");
   var [flyTrigger, setFlyTrigger] = useState(0);
-  var [showConfetti, setShowConfetti] = useState(false);
   var [showCreateModal, setShowCreateModal] = useState(false);
   var [showProfile, setShowProfile] = useState(false);
   var [showWelcome, setShowWelcome] = useState(true);
+  var [forceWelcome, setForceWelcome] = useState(false);
   var [showInfo, setShowInfo] = useState(false);
+  var [soundEnabled, setSoundEnabled] = useState(true);
   var [createdCount, setCreatedCount] = useState(0);
   var [ghostCount, setGhostCount] = useState(0);
   var [toasts, setToasts] = useState<ToastData[]>([]);
@@ -139,16 +144,21 @@ export default function HomePage() {
 
   // ─── Hooks ──────────────────────────────────────────────────────────────
   var { claimDrop: claimDropOnChain, createDrop: createDropOnChain, isProcessing, isConnected, walletAddress } = useProgram();
-  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop } = useTapestry();
+  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop, followUser } = useTapestry();
   var { position: userPosition, demoMode, setDemoMode, isNearby, distanceTo, formatDistance, requestLocation, status: geoStatus } = useGeolocation();
   var { setVisible: setWalletModalVisible } = useWalletModal();
+  var { playSound } = useSound();
 
-  var handleConnectWallet = useCallback(function() { setWalletModalVisible(true); }, [setWalletModalVisible]);
+  var handleConnectWallet = useCallback(function() {
+    if (soundEnabled) playSound("click");
+    setWalletModalVisible(true);
+  }, [setWalletModalVisible, playSound, soundEnabled]);
 
   var showToast = useCallback(function(message: string, type: "success" | "error" | "info", signature?: string) {
     var id = Date.now();
+    if (soundEnabled) playSound("notification");
     setToasts(function(prev) { return prev.concat([{ id: id, message: message, type: type, signature: signature }]); });
-  }, []);
+  }, [playSound, soundEnabled]);
 
   var removeToast = useCallback(function(id: number) {
     setToasts(function(prev) { return prev.filter(function(t) { return t.id !== id; }); });
@@ -194,8 +204,12 @@ export default function HomePage() {
 
       if (currentProgress.size >= totalWaypoints) {
         showToast("🏆 Trail Complete! " + trailName + " — +" + trailReward + " SOL bonus!", "success");
-        setShowConfetti(true);
-        setTimeout(function() { setShowConfetti(false); }, 2500);
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: [trailColor, '#ffffff', '#a78bfa']
+        });
         setCompletedTrails(function(c) { return c + 1; });
       }
     }
@@ -213,6 +227,7 @@ export default function HomePage() {
       else if (badge.thresholdType === "reputation") value = stats.rep;
 
       if (value >= badge.threshold) {
+        if (soundEnabled) playSound("level-up");
         setPendingBadge(badge.id);
       }
     });
@@ -245,8 +260,12 @@ export default function HomePage() {
       setPendingBadge(null);
 
       showToast("🎉 NFT Badge Minted! " + badge!.icon + " " + badge!.name, "success", "MOCK_" + Date.now().toString(36));
-      setShowConfetti(true);
-      setTimeout(function() { setShowConfetti(false); }, 2000);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: [badge!.color, '#ffffff', '#fbbf24']
+      });
     }, 1000);
   }, [mintedBadges, showToast, isConnected, claimDropOnChain]);
 
@@ -266,14 +285,19 @@ export default function HomePage() {
 
       var result = await claimDropOnChain(dropId);
       if (result.ok) {
+        if (soundEnabled) playSound("claim");
         var newClaimed = new Set(claimedIds);
         newClaimed.add(dropId);
         setClaimedIds(newClaimed);
         saveSet("locus_claimed", newClaimed);
 
         showToast("Drop claimed! +" + drop.finderReward + " SOL", "success", result.value);
-        setShowConfetti(true);
-        setTimeout(function() { setShowConfetti(false); }, 2000);
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#a78bfa', '#34d399', '#ffffff']
+        });
 
         setActivities(function(prev) {
           return [{ icon: "⚡", text: "Claimed " + drop!.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
@@ -293,7 +317,14 @@ export default function HomePage() {
 
   // ─── Create Drop Handler ──────────────────────────────────────────────
   var handleCreateDrop = useCallback(
-    async function(data: { message: string; reward: number; category: DropCategory }) {
+    async function(data: {
+      message: string;
+      reward: number;
+      category: DropCategory;
+      twitterHandle?: string;
+      externalLink?: string;
+      dropType: "crypto" | "memory";
+    }) {
       var myDrops = extraDrops.filter(function(d) { return !d.isClaimed; });
       if (myDrops.length >= 5) { showToast("Max 5 active drops per wallet", "error"); return; }
 
@@ -305,7 +336,10 @@ export default function HomePage() {
         }
       } catch {}
 
-      if (data.reward < 0.01) { showToast("Minimum reward: 0.01 SOL", "error"); return; }
+      if (data.dropType === "crypto" && data.reward < 0.01) {
+        showToast("Minimum reward: 0.01 SOL", "error");
+        return;
+      }
 
       var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
       var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
@@ -314,9 +348,17 @@ export default function HomePage() {
       if (result.ok) {
         var creatorName = profile?.username ? "@" + profile.username : walletAddress ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4) : "anon.sol";
         var newDrop: Drop = {
-          id: "drop-" + Date.now(), location: { lat: lat, lng: lng },
-          message: data.message, isClaimed: false, finderReward: data.reward,
-          category: data.category, createdBy: creatorName, createdAt: new Date().toISOString().split("T")[0],
+          id: "drop-" + Date.now(),
+          location: { lat: lat, lng: lng },
+          message: data.message,
+          isClaimed: false,
+          finderReward: data.reward,
+          category: data.category,
+          createdBy: creatorName,
+          createdAt: new Date().toISOString().split("T")[0],
+          twitterHandle: data.twitterHandle,
+          externalLink: data.externalLink,
+          dropType: data.dropType,
         };
 
         try { localStorage.setItem("locus_last_drop_time", String(Date.now())); } catch {}
@@ -328,9 +370,15 @@ export default function HomePage() {
         });
         setCreatedCount(function(c) { return c + 1; });
 
-        await registerDropAsContent(newDrop.id, data.message);
+        await registerDropAsContent(newDrop.id, data.message, {
+          twitter: data.twitterHandle,
+          link: data.externalLink,
+          type: data.dropType === "memory" ? "memory-drop" : "geo-drop"
+        });
         var cat = CATEGORY_CONFIG[data.category];
-        showToast("Drop created! " + cat.icon + " " + data.reward + " SOL", "success", result.value);
+        var rewardText = data.dropType === "memory" ? "Memory recorded" : data.reward + " SOL";
+        if (soundEnabled) playSound("success");
+        showToast("Drop created! " + cat.icon + " " + rewardText, "success", result.value);
 
         setActivities(function(prev) {
           return [{ icon: "🪦", text: "Dropped " + cat.label.toLowerCase() + " at your location", color: cat.color, timestamp: Date.now() }].concat(prev);
@@ -367,6 +415,7 @@ export default function HomePage() {
       });
       setGhostCount(function(c) { return c + 1; });
 
+      if (soundEnabled) playSound("ghost");
       showToast("👻 Ghost mark left!", "success");
       setActivities(function(prev) {
         return [{ icon: "👻", text: "Left a ghost mark " + data.emoji, color: "#8b5cf6", timestamp: Date.now() }].concat(prev);
@@ -382,12 +431,13 @@ export default function HomePage() {
 
   // Ghost reaction
   var handleReactGhost = useCallback(function(ghostId: string) {
+    if (soundEnabled) playSound("click");
     setGhostMarks(function(prev) {
       return prev.map(function(g) {
         return g.id === ghostId ? { ...g, reactions: g.reactions + 1 } : g;
       });
     });
-  }, []);
+  }, [playSound]);
 
   // ─── Like Handler ──────────────────────────────────────────────────────
   var handleLike = useCallback(
@@ -405,6 +455,25 @@ export default function HomePage() {
       }
     },
     [isConnected, likeDrop, likedIds]
+  );
+
+  // ─── Follow Handler ────────────────────────────────────────────────────
+  var handleFollow = useCallback(
+    async function(username: string) {
+      if (!isConnected) { handleConnectWallet(); return false; }
+      var success = await followUser(username);
+      if (success) {
+        showToast("Following @" + username, "success");
+        setActivities(function(prev) {
+          return [{ icon: "👤", text: "Followed @" + username, color: "#a78bfa", timestamp: Date.now() }].concat(prev);
+        });
+        return true;
+      } else {
+        showToast("Follow failed", "error");
+        return false;
+      }
+    },
+    [isConnected, followUser, handleConnectWallet, showToast]
   );
 
   // ─── Comment Handler ───────────────────────────────────────────────────
@@ -447,8 +516,16 @@ export default function HomePage() {
 
   // ─── Render ─────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[100dvh] bg-void overflow-hidden">
-      {showWelcome && <WelcomeOverlay onDismiss={function() { setShowWelcome(false); }} />}
+    <div className="app-container flex flex-col h-[100dvh] bg-void overflow-hidden">
+      {(showWelcome || forceWelcome) && (
+        <WelcomeOverlay
+          forceShow={forceWelcome}
+          onDismiss={function() {
+            if (soundEnabled) playSound("popup-close");
+            setShowWelcome(false); setForceWelcome(false);
+          }}
+        />
+      )}
 
       {toasts.map(function(toast) {
         return <TxToast key={toast.id} message={toast.message} signature={toast.signature} type={toast.type} onDismiss={function() { removeToast(toast.id); }} />;
@@ -486,7 +563,10 @@ export default function HomePage() {
         );
       })()}
 
-      <Header />
+      <Header soundEnabled={soundEnabled} onToggleSound={function() {
+        setSoundEnabled(!soundEnabled);
+        if (!soundEnabled) playSound("click");
+      }} />
       <StatsBar drops={drops} claimedCount={claimedCount} />
 
       <div className="flex-1 relative overflow-hidden text-lg">
@@ -504,6 +584,7 @@ export default function HomePage() {
               onClaim={handleClaim}
               onLike={handleLike}
               onComment={handleComment}
+              onFollow={handleFollow}
               onConnectWallet={handleConnectWallet}
               onReactGhost={handleReactGhost}
               likedIds={likedIds}
@@ -516,18 +597,23 @@ export default function HomePage() {
 
             {/* Active trail banner */}
             {activeTrail && (
-              <div className="absolute top-3 right-3 z-[1000] w-48">
-                <div className="px-3 py-2 rounded-xl bg-void/90 backdrop-blur border border-crypt-300/15 text-center">
-                  <div className="text-[10px] font-mono text-gray-500">{activeTrail.icon} Active Quest</div>
-                  <div className="text-[12px] font-mono font-bold text-crypt-200 truncate">{activeTrail.name}</div>
-                  <div className="flex items-center gap-1 mt-1 justify-center">
-                    <div className="flex-1 h-1 rounded-full bg-gray-800/50 overflow-hidden">
-                      <div className="h-full rounded-full" style={{
+              <div className="absolute top-4 right-4 z-[1000] w-52">
+                <div className="px-4 py-3 rounded-2xl bg-void/80 backdrop-blur-xl border border-white/10 text-center shadow-2xl glass-border-gradient">
+                  <div className="flex items-center justify-center gap-2 mb-1.5">
+                    <Compass size={12} className="text-gray-500" />
+                    <span className="text-[9px] font-mono font-black text-gray-500 uppercase tracking-widest">Active Quest</span>
+                  </div>
+                  <div className="text-[13px] font-mono font-black text-crypt-100 truncate mb-2">{activeTrail.name}</div>
+                  <div className="flex items-center gap-2 justify-center bg-white/5 p-1.5 rounded-lg">
+                    <div className="flex-1 h-1 rounded-full bg-gray-800 overflow-hidden">
+                      <div className="h-full rounded-full shadow-[0_0_8px_var(--trail-glow)]" style={{
                         width: Math.round((activeTrailProgress.size / activeTrail.waypoints.length) * 100) + "%",
                         background: activeTrail.color,
-                      }} />
+                        //@ts-ignore
+                        "--trail-glow": activeTrail.color
+                      } as any} />
                     </div>
-                    <span className="text-[9px] font-mono" style={{ color: activeTrail.color }}>
+                    <span className="text-[10px] font-mono font-black" style={{ color: activeTrail.color }}>
                       {activeTrailProgress.size}/{activeTrail.waypoints.length}
                     </span>
                   </div>
@@ -546,25 +632,27 @@ export default function HomePage() {
               }).sort(function(a, b) { return a - b; });
               var nearest = distances[0];
               return (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] w-72">
-                  <div className="px-4 py-3 rounded-2xl bg-void/90 backdrop-blur-xl border border-crypt-300/15 shadow-[0_8px_32px_rgba(0,0,0,0.4)] text-center">
-                    <div className="text-2xl mb-1">🧭</div>
-                    <div className="text-[11px] font-mono text-crypt-200 font-bold">No drops in range</div>
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-[1000] w-72 pointer-events-none">
+                  <div className="px-5 py-4 rounded-3xl bg-void/80 backdrop-blur-2xl border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-center glass-border-gradient">
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                      <Compass size={20} className="text-crypt-300 animate-spin-slow" />
+                    </div>
+                    <div className="text-[11px] font-mono text-crypt-100 font-black uppercase tracking-widest mb-1">Scanning Perimeter</div>
                     {nearest && nearest < Infinity ? (
-                      <div className="text-[10px] font-mono text-gray-500 mt-1">
-                        Nearest drop is {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"} away
+                      <div className="text-[10px] font-mono text-gray-500">
+                        Nearest signature detected at {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"}
                       </div>
                     ) : (
-                      <div className="text-[10px] font-mono text-gray-500 mt-1">Be the first to drop a secret here</div>
+                      <div className="text-[10px] font-mono text-gray-500">The area is silent...</div>
                     )}
                   </div>
                 </div>
               );
             })()}
 
-            {/* Activity feed */}
+            {/* Activity feed - Hidden on Mobile */}
             {activities.length > 0 && !activeTrail && (
-              <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5 pointer-events-none">
+              <div className="hidden md:flex absolute top-14 right-3 z-[1000] w-52 flex-col gap-1.5 pointer-events-none">
                 {activities.slice(0, 3).map(function(a, i) {
                   return (
                     <div key={a.timestamp + "-" + i} className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur">
@@ -576,11 +664,15 @@ export default function HomePage() {
             )}
 
             {/* Info overlay */}
-            <div className="absolute top-3 left-3 z-[1000] flex flex-col gap-1.5">
-              <div className="px-3 py-1.5 rounded-lg bg-void/80 backdrop-blur border border-crypt-300/10 font-mono text-[10px] text-gray-600 tracking-wider">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>{drops.filter(function(d) { return !d.isClaimed; }).length} drops • {ghostMarks.length} ghosts</span>
+            <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2 max-w-[150px] md:max-w-none">
+              <div className="px-3 py-2 rounded-xl bg-void/80 backdrop-blur-xl border border-white/5 font-mono text-[9px] text-gray-500 tracking-wider shadow-xl glass-border-gradient">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
+                  <span className="font-black text-gray-400 uppercase tracking-widest">Spectral Density</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span>{drops.filter(function(d) { return !d.isClaimed; }).length} Drops</span>
+                  <span>{ghostMarks.length} Marks</span>
                 </div>
                 {userPosition && (function() {
                   var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
@@ -612,18 +704,19 @@ export default function HomePage() {
                   if (geoStatus === "active") setFlyTrigger(Date.now());
                   else if (geoStatus === "idle" || geoStatus === "error") requestLocation();
                 }}
-                className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
+                className={"flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl border transition-all cursor-pointer shadow-lg " + (
                   geoStatus === "active" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
                     : geoStatus === "requesting" ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
                     : geoStatus === "denied" ? "bg-red-500/10 border-red-500/30 text-red-400"
-                    : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                    : "bg-white/5 border-white/10 text-gray-400"
                 )}
               >
-                <span className="text-[10px] font-mono font-bold">
-                  {geoStatus === "active" ? (userPosition && userPosition.source === "ip" ? "📍 ~IP loc" : "📍 GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
-                    : geoStatus === "requesting" ? "📍 Locating..."
-                    : geoStatus === "denied" ? "📍 GPS Denied"
-                    : "📍 Enable GPS"}
+                <MapPin size={12} />
+                <span className="text-[9px] font-mono font-black uppercase tracking-widest">
+                  {geoStatus === "active" ? (userPosition && userPosition.source === "ip" ? "~IP" : "GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
+                    : geoStatus === "requesting" ? "Searching..."
+                    : geoStatus === "denied" ? "Denied"
+                    : "Enable"}
                 </span>
               </button>
 
@@ -671,63 +764,91 @@ export default function HomePage() {
         <Leaderboard
           currentUser={profile ? profile.username : undefined}
           currentStats={{ claimed: claimedCount, created: createdCount, likes: likesCount }}
+          onFollow={handleFollow}
         />
       </div>
         )}
       </div>
 
       {/* Bottom nav */}
-      <nav className="flex justify-around items-center py-2.5 bg-void-100/95 border-t border-crypt-300/10 z-50 relative backdrop-blur-xl shrink-0" style={{ paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}>
-        {([
-          { id: "map" as TabId, icon: "🗺️", label: "Map" },
-          { id: "list" as TabId, icon: "📜", label: "Drops" },
-          { id: "trails" as TabId, icon: "🧭", label: "Quests" },
-          { id: "leaderboard" as TabId, icon: "🏆", label: "Rank" },
-        ]).map(function(tab) {
-          return (
-            <button
-              key={tab.id}
-              onClick={function() { setActiveTab(tab.id); }}
-              className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider transition-colors px-3 py-1 " + (
-                activeTab === tab.id ? "text-crypt-300" : "text-gray-600"
-              )}
-            >
-              <span className="text-lg">{tab.icon}</span>
-              {tab.label}
-            </button>
-          );
-        })}
+      <nav className="flex items-center bg-void/80 border-t border-white/5 z-50 relative backdrop-blur-2xl shrink-0 glass-border-gradient" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))", paddingTop: "8px" }}>
+        {/* Left Side: Map & Drops & Quests */}
+        <div className="flex flex-1 justify-evenly items-center">
+          {([
+            { id: "map" as TabId, icon: <MapIcon size={20} />, label: "Map" },
+            { id: "list" as TabId, icon: <ScrollText size={20} />, label: "Drops" },
+            { id: "trails" as TabId, icon: <Compass size={20} />, label: "Quests" },
+          ]).map(function(tab) {
+            return (
+              <button
+                key={tab.id}
+                onClick={function() { if (soundEnabled) playSound("click"); setActiveTab(tab.id); }}
+                className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
+                  activeTab === tab.id ? "text-crypt-300 scale-110" : "text-gray-500"
+                )}
+              >
+                {tab.icon}
+                <span className="opacity-80">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-        {isConnected ? (
+        {/* Center: Action Button (Plus) */}
+        <div className="flex flex-col items-center px-2 -translate-y-2">
           <button
-            onClick={function() { setShowCreateModal(true); }}
-            className="w-12 h-12 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-6 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95"
+            onClick={function() {
+              if (soundEnabled) playSound("click");
+              if (isConnected) {
+                if (soundEnabled) playSound("popup-open");
+                setShowCreateModal(true);
+              } else {
+                handleConnectWallet();
+              }
+            }}
+            className="w-14 h-14 rounded-full border-4 border-void bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-3xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90 z-10"
           >
             +
           </button>
-        ) : (
-          <button
-            onClick={handleConnectWallet}
-            className="px-4 py-2.5 rounded-full border-none bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-[11px] font-mono font-bold cursor-pointer flex items-center justify-center shadow-[0_4px_20px_rgba(167,139,250,0.4)] -mt-4 hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-95 tracking-wider"
-          >
-            🔗 Connect
-          </button>
-        )}
+        </div>
 
-        <button
-          onClick={function() { if (isConnected) setShowProfile(true); else handleConnectWallet(); }}
-          className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[10px] tracking-wider px-3 py-1 transition-colors " + (
-            isConnected ? "text-gray-600 hover:text-crypt-300" : "text-gray-600"
-          )}
-        >
-          <span className="text-lg">👤</span>
-          {isConnected ? "Profile" : "Login"}
-        </button>
+        {/* Right Side: Rank & Profile */}
+        <div className="flex flex-1 justify-evenly items-center">
+          <button
+            onClick={function() { playSound("click"); setActiveTab("leaderboard"); }}
+            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
+              activeTab === "leaderboard" ? "text-crypt-300 scale-110" : "text-gray-500"
+            )}
+          >
+            <Trophy size={20} />
+            <span className="opacity-80">Rank</span>
+          </button>
+          <button
+            onClick={function() {
+              if (soundEnabled) playSound("click");
+              if (isConnected) {
+                if (soundEnabled) playSound("popup-open");
+                setShowProfile(true);
+              } else {
+                handleConnectWallet();
+              }
+            }}
+            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
+              showProfile ? "text-crypt-300 scale-110" : "text-gray-500"
+            )}
+          >
+            <User size={20} />
+            <span className="opacity-80">{isConnected ? "Profile" : "Login"}</span>
+          </button>
+        </div>
       </nav>
 
       {showCreateModal && (
         <CreateDropModal
-          onClose={function() { setShowCreateModal(false); }}
+          onClose={function() {
+            if (soundEnabled) playSound("popup-close");
+            setShowCreateModal(false);
+          }}
           onCreate={handleCreateDrop}
           onCreateGhost={handleCreateGhost}
           userPosition={userPosition}
@@ -741,47 +862,29 @@ export default function HomePage() {
         mintedBadges={mintedBadges}
         onMintBadge={handleMintBadge}
         isOpen={showProfile}
-        onClose={function() { setShowProfile(false); }}
+        onClose={function() {
+          if (soundEnabled) playSound("popup-close");
+          setShowProfile(false);
+        }}
         tapestryConfigured={tapestryConfigured}
       />
 
       <InfoPanel
         isOpen={showInfo}
-        onClose={function() { setShowInfo(false); }}
+        onClose={function() {
+          if (soundEnabled) playSound("popup-close");
+          setShowInfo(false);
+        }}
+        onRetakeTutorial={function() {
+          if (soundEnabled) playSound("popup-open");
+          setShowInfo(false);
+          setForceWelcome(true);
+        }}
       />
 
-      <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider">
-        ⛓ Solana Devnet • Graveyard 2026
+      <div className="fixed bottom-16 right-3 px-2.5 py-1 rounded-full bg-void-100/90 border border-crypt-300/15 text-[9px] text-gray-600 font-mono z-50 tracking-wider capitalize">
+        ⛓ Solana {SOLANA_CLUSTER} • Graveyard 2026
       </div>
-
-      {/* Claim celebration */}
-      {showConfetti && (
-        <>
-          <div className="claim-flash" />
-          <div className="confetti-container">
-            {Array.from({ length: 40 }).map(function(_, i) {
-              var colors = ["#a78bfa", "#34d399", "#f472b6", "#fbbf24", "#60a5fa", "#fff"];
-              var color = colors[i % colors.length];
-              var left = 20 + Math.random() * 60;
-              var delay = Math.random() * 0.4;
-              var size = 4 + Math.random() * 8;
-              var dx = (Math.random() - 0.5) * 60;
-              return (
-                <div
-                  key={"conf-" + i}
-                  className="confetti-particle"
-                  style={{
-                    left: left + "%", width: size + "px", height: size + "px",
-                    background: color, borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-                    animationDelay: delay + "s", animationDuration: (1 + Math.random()) + "s",
-                    transform: "translateX(" + dx + "vw)",
-                  }}
-                />
-              );
-            })}
-          </div>
-        </>
-      )}
     </div>
   );
 }

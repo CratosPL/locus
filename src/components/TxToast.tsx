@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { Zap, XCircle, Info, ExternalLink } from "lucide-react";
+import { TX_URL } from "@/utils/config";
 
 interface TxToastProps {
   message: string;
@@ -21,14 +23,14 @@ export default function TxToast({ message, signature, type, onDismiss }: TxToast
   }, [onDismiss]);
 
   const colors = {
-    success: { bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.3)", text: "#34d399", icon: "⚡" },
-    error: { bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)", text: "#ef4444", icon: "❌" },
-    info: { bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.3)", text: "#a78bfa", icon: "📍" },
+    success: { bg: "rgba(52,211,153,0.1)", border: "rgba(52,211,153,0.3)", text: "#34d399", icon: <Zap size={16} /> },
+    error: { bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.3)", text: "#ef4444", icon: <XCircle size={16} /> },
+    info: { bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.3)", text: "#a78bfa", icon: <Info size={16} /> },
   };
 
   const c = colors[type];
-  const solscanUrl = signature && !signature.startsWith("demo_")
-    ? "https://solscan.io/tx/" + signature + "?cluster=devnet"
+  const solscanUrl = signature && !signature.startsWith("demo_") && !signature.startsWith("MOCK_")
+    ? TX_URL(signature)
     : null;
 
   return (
@@ -39,7 +41,9 @@ export default function TxToast({ message, signature, type, onDismiss }: TxToast
         style={{ background: c.bg, borderColor: c.border }}
         className="flex items-center gap-3 px-5 py-3 rounded-xl border backdrop-blur-xl shadow-2xl max-w-[90vw]"
       >
-        <span className="text-xl animate-tx-success">{c.icon}</span>
+        <div style={{ color: c.text }} className="animate-tx-success">
+          {c.icon}
+        </div>
         <div>
           <div style={{ color: c.text }} className="text-[12px] font-mono font-bold">
             {message}
@@ -49,9 +53,10 @@ export default function TxToast({ message, signature, type, onDismiss }: TxToast
               href={solscanUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-gray-600 font-mono hover:text-crypt-300 transition-colors"
+              className="flex items-center gap-1 text-[10px] text-gray-600 font-mono hover:text-crypt-300 transition-colors"
             >
-              View on Solscan →
+              <ExternalLink size={10} />
+              View on Solscan
             </a>
           )}
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Trophy, Award, UserPlus, Gamepad2 } from "lucide-react";
 
 interface LeaderboardEntry {
   rank: number;
@@ -15,6 +16,7 @@ interface LeaderboardEntry {
 interface LeaderboardProps {
   currentUser?: string;
   currentStats: { claimed: number; created: number; likes: number };
+  onFollow?: (username: string) => void;
 }
 
 // Mock leaderboard — in production this would come from Tapestry API
@@ -31,13 +33,6 @@ var MOCK_LEADERBOARD: LeaderboardEntry[] = [
   { rank: 10, username: "nightshift.sol", claimed: 5, created: 1, likes: 8, reputation: 71 },
 ];
 
-function getRankIcon(rank: number): string {
-  if (rank === 1) return "👑";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return "#" + rank;
-}
-
 function getRankStyle(rank: number): string {
   if (rank === 1) return "from-yellow-500/20 to-yellow-600/10 border-yellow-500/30";
   if (rank === 2) return "from-gray-400/15 to-gray-500/10 border-gray-400/25";
@@ -45,7 +40,7 @@ function getRankStyle(rank: number): string {
   return "from-void/40 to-void/20 border-crypt-300/8";
 }
 
-export default function Leaderboard({ currentUser, currentStats }: LeaderboardProps) {
+export default function Leaderboard({ currentUser, currentStats, onFollow }: LeaderboardProps) {
   var myRep = currentStats.claimed * 10 + currentStats.created * 5 + currentStats.likes * 2;
 
   // Insert current user into leaderboard if they have activity
@@ -84,9 +79,12 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
   return (
     <div className="h-full overflow-y-auto px-3 py-3 space-y-2">
       {/* Header */}
-      <div className="text-center mb-4">
+      <div className="text-center mb-4 flex flex-col items-center">
+        <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center mb-2">
+          <Trophy className="text-yellow-500" size={24} />
+        </div>
         <h2 className="text-lg font-extrabold text-crypt-100 font-mono tracking-wider">
-          🏆 Leaderboard
+          Leaderboard
         </h2>
         <p className="text-[10px] text-gray-600 font-mono mt-1">
           Top explorers by reputation • Claims ×10 + Created ×5 + Likes ×2
@@ -139,9 +137,9 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
             {/* Rank */}
             <div className="w-8 text-center shrink-0">
               {entry.rank <= 3 ? (
-                <span className="text-lg">{getRankIcon(entry.rank)}</span>
+                <Award className={entry.rank === 1 ? "text-yellow-500" : entry.rank === 2 ? "text-gray-400" : "text-amber-600"} size={24} />
               ) : (
-                <span className="text-[11px] font-bold text-gray-500 font-mono">{getRankIcon(entry.rank)}</span>
+                <span className="text-[11px] font-bold text-gray-500 font-mono">#{entry.rank}</span>
               )}
             </div>
 
@@ -155,12 +153,23 @@ export default function Leaderboard({ currentUser, currentStats }: LeaderboardPr
               </div>
             </div>
 
-            {/* Reputation */}
-            <div className="text-right shrink-0 bg-void/30 px-3 py-1.5 rounded-xl border border-white/5">
-              <div className={"text-lg font-black font-mono " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
-                {entry.reputation}
+            {/* Reputation & Follow */}
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              <div className="text-right bg-white/[0.04] px-4 py-2 rounded-2xl border border-white/[0.06] shadow-inner">
+                <div className={"text-xl font-black font-mono leading-none mb-1 " + (entry.rank <= 3 ? "text-crypt-300" : "text-gray-400")}>
+                  {entry.reputation}
+                </div>
+                <div className="text-[8px] text-gray-600 font-black uppercase tracking-widest leading-none">RP</div>
               </div>
-              <div className="text-[9px] text-gray-600 font-bold uppercase tracking-tighter">Reputation</div>
+              {!isMe && onFollow && (
+                <button
+                  onClick={() => onFollow(entry.username.replace('@', ''))}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-crypt-300/30 bg-crypt-300/10 text-[9px] text-crypt-300 font-mono font-bold hover:bg-crypt-300/20 transition-all cursor-pointer"
+                >
+                  <UserPlus size={10} />
+                  Follow
+                </button>
+              )}
             </div>
           </div>
         );

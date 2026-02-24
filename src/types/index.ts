@@ -18,6 +18,10 @@ export interface Drop {
   createdAt: string;
   claimedBy?: string;
   claimedAt?: string;
+  twitterHandle?: string;
+  externalLink?: string;
+  dropType?: "crypto" | "memory";
+  audiusTrackId?: string;
 }
 
 export interface CategoryConfig {

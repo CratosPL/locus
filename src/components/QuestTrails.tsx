@@ -2,6 +2,7 @@
 
 import React from "react";
 import { QuestTrail } from "@/types";
+import { Compass, CheckCircle2 } from "lucide-react";
 
 interface QuestTrailsProps {
   trails: QuestTrail[];
@@ -19,11 +20,14 @@ function getDifficultyStyle(d: string) {
 
 export default function QuestTrails({ trails, trailProgress, activeTrailId, onSelectTrail, onStartTrail }: QuestTrailsProps) {
   return (
-    <div className="h-full overflow-y-auto px-3 py-3 space-y-2">
+    <div className="h-full overflow-y-auto px-4 py-5 space-y-3 bg-void">
       {/* Header */}
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-extrabold text-crypt-100 font-mono tracking-wider">
-          🗺️ Quest Trails
+      <div className="text-center mb-6 flex flex-col items-center">
+        <div className="w-12 h-12 rounded-2xl bg-crypt-300/10 border border-crypt-300/20 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(167,139,250,0.1)]">
+          <Compass className="text-crypt-300" size={28} />
+        </div>
+        <h2 className="text-lg font-black text-crypt-100 font-mono tracking-[0.2em] uppercase">
+          Quest Trails
         </h2>
         <p className="text-[10px] text-gray-600 font-mono mt-1">
           Follow waypoints, complete quests, earn bonus SOL
@@ -43,12 +47,12 @@ export default function QuestTrails({ trails, trailProgress, activeTrailId, onSe
         return (
           <div
             key={trail.id}
-            className={"p-4 rounded-2xl border transition-all " + (
+            className={"p-5 rounded-3xl border transition-all shadow-sm " + (
               isActive
-                ? "bg-gradient-to-r from-crypt-300/10 to-crypt-500/10 border-crypt-300/30"
+                ? "bg-white/[0.04] border-crypt-300/30 shadow-[0_0_30px_rgba(167,139,250,0.05)]"
                 : isComplete
-                  ? "bg-emerald-500/5 border-emerald-500/20"
-                  : "bg-void-100/60 border-crypt-300/10 hover:border-crypt-300/20"
+                  ? "bg-emerald-500/5 border-emerald-500/20 opacity-80"
+                  : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
             )}
           >
             {/* Trail header */}
