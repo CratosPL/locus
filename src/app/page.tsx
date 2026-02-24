@@ -880,6 +880,7 @@ export default function HomePage() {
 
       <InfoPanel
         isOpen={showInfo}
+        onClose={function() {
           if (soundEnabled) playSound("popup-close");
           setShowInfo(false);
         }}
