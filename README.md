@@ -45,7 +45,7 @@ Creator                                    Finder
 
 **Program ID:** `HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn` (devnet)
 
-PDAs are straightforward — `["drop", drop_id]` for the drop account, `["vault", drop_id]` for the SOL vault. Clean, auditable, no magic.
+PDAs: `["drop", drop_id]` for the drop account, `["vault", drop_id]` for the SOL vault.
 
 ---
 
@@ -56,39 +56,54 @@ PDAs are straightforward — `["drop", drop_id]` for the drop account, `["vault"
 - GPS verification — must be within 150m to claim (Haversine formula)
 - Real on-chain SOL transfers via Pinocchio program
 
-**Ghost Marks** — ephemeral social layer. Short-lived messages (24h) with 8 emoji types. No SOL attached, just vibes, warnings, tips. Other users can react. Creates FOMO because whatever was on the map yesterday is gone.
+**Claim Success Modal** — after every claim a modal shows up with an animated SOL counter going from 0 to the full reward, a visualization of the vault-to-wallet transfer flow, the drop's message, shortened tx signature and a direct link to Solscan. The kind of moment that makes the on-chain part feel real instead of abstract.
+
+**Live Activity Feed** — on the map there's a collapsible feed showing what's happening across the network in real time. Tapestry events like claims, new drops, follows, badge mints, and ghost marks stream in every few seconds. You can watch the social graph being built while you play.
+
+**Ghost Marks** — ephemeral messages (24h) with 8 types. No SOL attached, just vibes, warnings, tips. Other users can react. Creates FOMO because whatever was on the map yesterday is gone.
 
 **Quest Trails** — multi-waypoint walking routes. Three pre-built trails around Warsaw (Old Town Haunting, Vistula Death March, Crypto Graveyard Tour). GPS auto-check-in marks waypoints as you physically visit them. Completing a full trail pays out bonus SOL (0.5–1.0).
 
-**NFT Badges** — achievement tokens that mint as compressed NFTs via Metaplex Bubblegum. Eight badges across rarity tiers:
+**NFT Badges** — 11 achievement badges as compressed NFTs. Custom SVG icons designed to match the app's dark aesthetic — actual vector art that scales and glows, not emoji. Rarity tiers with glow effects on earned badges, greyed out when locked.
 
 | Badge | Requirement | Rarity |
 |-------|------------|--------|
-| 🩸 First Blood | Claim 1 drop | Common |
-| 🧭 Explorer | Claim 5 drops | Rare |
-| 👻 Phantom Hunter | Claim 10 drops | Epic |
-| 👑 Lich Lord | Claim 25 drops | Legendary |
-| ⚰️ Gravedigger | Create 3 drops | Common |
-| 💭 Haunter | Leave 5 ghost marks | Rare |
-| 🗺️ Trail Walker | Complete a quest trail | Rare |
-| ⭐ Legend | Reach 200 reputation | Legendary |
+| First Blood | Claim 1 drop | Common |
+| Explorer | Claim 5 drops | Rare |
+| Phantom Hunter | Claim 10 drops | Epic |
+| Lich Lord | Claim 25 drops | Legendary |
+| Gravedigger | Create 3 drops | Common |
+| Haunter | Leave 5 ghost marks | Rare |
+| Trail Walker | Complete a quest trail | Rare |
+| Social Butterfly | Follow 5 explorers on Tapestry | Rare |
+| Torque Loyalist | 7-day streak | Epic |
+| Magic Hero | Master of quests | Legendary |
+| Legend | Reach 200 reputation | Legendary |
 
-**Reputation & Leaderboard** — score = Claims×10 + Created×5 + Likes×2. Ranks go from Lost Soul → Spirit → Wraith → Lich. Displayed on a live leaderboard.
+**Reputation & Leaderboard** — score = Claims×10 + Created×5 + Likes×2. Ranks: Lost Soul → Spirit → Wraith → Lich.
 
-**Social layer (Tapestry)** — profiles auto-created on wallet connect, likes and comments on drops stored on-chain, follow other explorers, build your social graph.
+**Social layer (Tapestry)** — profiles auto-created on wallet connect, likes and comments on drops stored on-chain, follow other explorers, build your social graph. Every drop and ghost mark registers as a Tapestry content node.
+
+---
+
+## Tapestry integration — what's here and what's next
+
+This is the track I put the most thought into. Right now Tapestry handles profiles, content nodes for every drop and ghost mark, likes, comments, and follows. The live feed pulls from Tapestry events to show the social graph forming in real time.
+
+What I'd build next: "Nearby Explorers" — show avatars of users active in the last 24h directly on the map, click to follow. Dedicated drops visible only to your followers (private dead drops using Tapestry's social graph for access control). Ghost Chain — automatic Tapestry link between two wallets that both haunted the same location. That's the direction this is going: GPS proximity + on-chain social graph as the foundation for IRL connections between people who've never met.
 
 ---
 
 ## Hackathon Tracks
 
 **Tapestry — On-chain Social ($5,000)**
-Every drop and ghost mark registers as a Tapestry content node. Profiles, follows, likes, and comments all go through the Tapestry protocol. No off-chain database for social data.
+Every drop and ghost mark registers as a Tapestry content node. Profiles, follows, likes, and comments all go through the Tapestry protocol. The live activity feed visualizes the social graph being built in real time.
 
 **MagicBlock — Gaming ($5,000)**
 Quest Trails use game engine logic applied to the real world — sequenced waypoints, auto check-in triggers, difficulty levels, bonus rewards. Ghost Marks create a "now or never" loop that keeps people coming back daily.
 
 **Sunrise — Migrations & Onboarding ($7,000)**
-There's a dedicated Sunrise Quest Trail that walks new users through setting up a wallet, making their first on-chain interaction, and understanding what social graphs are. The "Lore" drops scattered around the trail explain Solana concepts (CU, PDA, Rent) in an immersive way rather than pointing people at documentation.
+Dedicated Sunrise Quest Trail walks new users through setting up a wallet, making their first on-chain interaction, and understanding social graphs. "Lore" drops explain Solana concepts (CU, PDA, Rent) in an immersive way rather than pointing people at docs.
 
 **Torque — Loyalty ($1,000)**
 NFT badges for consistent explorers. Planned: daily check-in streaks at physical locations earning Torque-powered rewards.
@@ -97,14 +112,9 @@ NFT badges for consistent explorers. Planned: daily check-in streaks at physical
 
 ## Anti-spam
 
-Client-side right now:
-- Max 5 active drops per wallet
-- 60-second cooldown between creates
-- Minimum 0.01 SOL reward as economic barrier
-- Can't claim your own drops
-- Can't claim the same drop twice
+Client-side right now: max 5 active drops per wallet, 60-second cooldown, minimum 0.01 SOL reward, can't claim your own drops, can't claim the same drop twice.
 
-The roadmap for on-chain enforcement includes PDA counters per wallet, SOL stake requirements, reputation gates via Tapestry score, and eventually ZK proof of location (prove you were within range without revealing your exact coordinates).
+On-chain roadmap: PDA counters per wallet, SOL stake requirements, Tapestry reputation gates, ZK proof of location (prove you were within range without revealing exact coordinates).
 
 ---
 
@@ -146,38 +156,18 @@ npm run dev
 
 ## Testing the App
 
-If you're a judge and don't want to walk around Warsaw, there's a **Demo Mode** button that bypasses GPS. You can test the full flow from your desk.
+If you're a judge and don't want to walk around Warsaw, there's a **Demo Mode** button that bypasses GPS. Full flow from your desk.
 
-1. Open the app — there's a 3-step welcome tour on first visit
+1. Open the app — 3-step welcome tour on first visit
 2. Click **Enable GPS** (or turn on Demo Mode)
 3. Connect Phantom or Solflare set to Devnet
-4. Click a drop marker on the map → check the distance → claim it
-5. Hit **+** to create a ghost mark or a new drop
-6. Open the Quests tab → start a trail → walk (or demo) through waypoints
-7. Check Profile for badge popups → mint your first NFT badge
-8. Open Rank tab for the leaderboard
-
----
-
-## Verified Transactions
-
-All tested on devnet:
-
-```
-Claim:
-3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY
-CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
-
-Create Drop:
-44dEsMYw1abdLaQdF6xh7WZnxXayWbzVLS9i6vh1AoAqTb9FWDLmL1G3PYj3qaUZPuw8kYod9Zfp1DvzQurnwTcS
-CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
-
-Deploy:
-2T2jy6GuBUA3Nidu3wGnawphyxy4zVaraquL5t57RwdfjRopYxnsUJ6fFNYNMoRixRPTtckW69ghEwM2vgxDzBs2
-CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
-```
-
-[View on Solscan](https://solscan.io/tx/3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY?cluster=devnet)
+4. Click a drop marker → check distance → claim it
+5. Watch the Claim Success Modal — SOL counter, vault animation, Solscan link
+6. Check the Live Feed top-right — see Tapestry network activity
+7. Hit **+** to create a ghost mark or new drop
+8. Open Quests tab → start a trail → walk (or demo) through waypoints
+9. Open Profile for badge popups → mint your first NFT badge
+10. Open Rank tab for the leaderboard
 
 ---
 
@@ -186,37 +176,55 @@ CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
 ```
 src/
 ├── app/
-│   ├── api/tapestry/route.ts   # Server proxy (handles CORS)
-│   ├── layout.tsx              # Root layout + wallet provider + PWA
-│   ├── page.tsx                # Main page
-│   └── globals.css             # Dark theme + custom marker CSS
+│   ├── api/tapestry/route.ts      # Server proxy (handles CORS)
+│   ├── layout.tsx
+│   ├── page.tsx                   # Main page + all state
+│   └── globals.css
 ├── components/
-│   ├── AppWalletProvider.tsx
-│   ├── Header.tsx
-│   ├── MapView.tsx             # Leaflet map + all markers + popups
-│   ├── StatsBar.tsx
-│   ├── DropList.tsx
-│   ├── CreateDropModal.tsx     # Drop or Ghost Mark creation (tabbed)
-│   ├── ProfilePanel.tsx        # Profile + badges + reputation
+│   ├── MapView.tsx                # Leaflet map + all markers + popups
+│   ├── ClaimSuccessModal.tsx      # Post-claim modal with SOL animation
+│   ├── ActivityFeed.tsx           # Live Tapestry event feed
+│   ├── ProfilePanel.tsx           # Profile + SVG badges + reputation
+│   ├── CreateDropModal.tsx        # Drop or Ghost Mark creation
 │   ├── Leaderboard.tsx
 │   ├── QuestTrails.tsx
-│   ├── WelcomeOverlay.tsx      # First-time onboarding
+│   ├── WelcomeOverlay.tsx
 │   └── TxToast.tsx
 ├── hooks/
-│   ├── useProgram.ts           # Solana program calls
-│   ├── useTapestry.ts          # Tapestry API
-│   └── useGeolocation.ts       # GPS + IP fallback + proximity calc
+│   ├── useProgram.ts              # Solana program calls
+│   ├── useTapestry.ts             # Tapestry API
+│   └── useGeolocation.ts          # GPS + IP fallback + proximity
 ├── types/index.ts
-└── utils/mockData.ts           # Sample drops, ghosts, trails, badge defs
+└── utils/
+    ├── mockData.ts                # Sample drops, ghosts, trails, badge defs
+    └── badgeIcons.tsx             # Custom SVG badge icons
 ```
+
+---
+
+## Verified Transactions
+
+```
+Claim:
+3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY
+CU: 13,250 | Fee: 0.000025 SOL | Status: Finalized
+
+Create Drop:
+44dEsMYw1abdLaQdF6xh7WZnxXayWbzVLS9i6vh1AoAqTb9FWDLmL1G3PYj3qaUZPuw8kYod9Zfp1DvzQurnwTcS
+CU: 13,250 | Fee: 0.000025 SOL | Status: Finalized
+
+Deploy:
+2T2jy6GuBUA3Nidu3wGnawphyxy4zVaraquL5t57RwdfjRopYxnsUJ6fFNYNMoRixRPTtckW69ghEwM2vgxDzBs2
+CU: 13,250 | Fee: 0.000025 SOL | Status: Finalized
+```
+
+[View on Solscan](https://solscan.io/tx/3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY?cluster=devnet)
 
 ---
 
 ## What's Next
 
-ZK geofencing to prove proximity without revealing coordinates is the big one. After that: multi-token rewards (BONK, USDC), session keys for gas-free onboarding, multi-sig drops that need N finders to unlock, push notifications when drops appear near you, and seasonal events with prize pools.
-
-The long-term vision is community-created drop zones in cities worldwide, with a marketplace for buying and selling quest trail templates.
+ZK geofencing to prove proximity without revealing coordinates. Nearby Explorers on the map using Tapestry social discovery. Dedicated drops for followers only. Ghost Chain (auto-link between wallets that haunted the same spot). Multi-token rewards, session keys for gas-free onboarding, seasonal events with prize pools.
 
 ---
 
