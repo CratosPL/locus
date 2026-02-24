@@ -1,61 +1,34 @@
-# 🪦 LOCUS — Geo-Social Dead Drops on Solana
+# LOCUS — Geo-Social Dead Drops on Solana
 
-> **Leave messages. Hide rewards. Discover secrets. Walk quests. Mint badges.**
-> A location-based social dApp where users drop messages with SOL bounties, leave ephemeral ghost marks, walk quest trails, and mint NFT achievement badges — all on Solana.
+> Leave messages. Hide rewards. Discover secrets. Walk quests. Mint badges.
 
-**🏆 Solana Graveyard Hackathon 2026 (Feb 12-27)**
+**Solana Graveyard Hackathon 2026 (Feb 12–27)**
 
-🔗 **[Live Demo](https://locus-psi-coral.vercel.app)** · 📺 **[Demo Video](https://youtube.com/...)** · ⛓ **[Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)**
-
----
-
-## 🏆 Hackathon Tracks Integration
-
-### 1. Tapestry (On-chain Social) - $5,000 Prize
-Locus is a social protocol at its core. Every "drop" is registered as a content node on **Tapestry**, allowing for:
-- **On-chain Social Graph**: Profiles, followers, and following are managed via Tapestry.
-- **Interactions**: Likes and comments on physical locations are stored on-chain.
-- **Social Discovery**: Find other explorers near you via their Tapestry activity.
-
-### 2. MagicBlock (Gaming) - $5,000 Prize
-Immersive real-world gaming engine:
-- **XP & Levels**: RPG progression system. Rank up from *Lost Soul* to *Lich Lord*.
-- **Ephemeral State**: Ghost Marks disappear after 24h, creating high-velocity local loops.
-- **Haptic & Sound**: Immersive feedback via Web Audio and Haptic APIs for claims and level-ups.
-
-### 3. OrbitFlare (Blinks) - $1,200 Prize
-Solana Actions & Blinks integration:
-- **Share as Blink**: Every drop can be shared as a `dial.to` action link.
-- **Remote Claiming**: Users on X can claim geo-drops directly from their feed if they were recently at the coordinates.
-
-### 4. Audius (Music) - $3,000 Prize
-Proximity-based music discovery:
-- **Echo Drops**: Creators can attach Audius track IDs to their drops.
-- **Audio Echoes**: When a user enters the 150m radius of a "Music Drop", the soundtrack automatically begins to play.
-
-### 5. Sunrise (Onboarding) - $7,000 Prize
-- **Tutorial Trail**: A dedicated "Sunrise Onboarding" quest trail guides new users through wallet setup and their first on-chain interaction.
-
-### 6. Torque (Loyalty) - $1,000 Prize
-- **Loyalty Badges**: Streak-based rewards and achievement badges (First Blood, Explorer, etc.).
+🔗 [Live Demo](https://locus-psi-coral.vercel.app) · 📺 [Demo Video](https://youtu.be/ZfoLEfOfA0g?si=jkgyjuD_nAvcxskI) · ⛓ [Program on Explorer](https://explorer.solana.com/address/HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn?cluster=devnet)
 
 ---
 
-## The Problem
+## What is this?
 
-Geo-social apps died in 2022–2024. High costs, bad UX, and centralized infrastructure killed every attempt at location-based crypto experiences. The category was abandoned.
+Geo-social apps had their moment and then died. High fees, garbage UX, centralized backends — the whole category got written off around 2022–2024. LOCUS is my attempt to fix that.
 
-## The Solution
+The idea is simple: you drop a message at a physical location on the map, lock some SOL into it, and whoever walks within 150 meters of it can claim it. That's a dead drop. You can also leave ephemeral ghost marks that vanish after 24 hours, follow quest trails across the city, and earn NFT badges for your activity.
 
-Locus resurrects geo-social with:
-- **Pinocchio program** — zero-dependency, ~13K CU per transaction (vs ~200K for Anchor)
-- **Tapestry protocol** — on-chain social graph (profiles, likes, comments, follows)
-- **GPS verification** — must be within 150m of a drop to claim it
-- **SOL rewards** — real value locked in PDA vaults, released on claim
+Everything runs on Solana devnet. The social layer (profiles, likes, comments, follows) goes through Tapestry Protocol so it's on-chain too, not just a database pretending to be Web3.
 
 ---
 
-## How It Works
+## Why Pinocchio instead of Anchor?
+
+Honestly, I wanted to see if I could get the CU cost down to something that makes geo-social actually viable at scale. Anchor is great but it's heavy — around 200K compute units per transaction. Pinocchio gets the same thing done in ~13,250 CU with zero dependencies and a ~30KB binary. Every claim costs less than 0.00003 SOL in fees. That matters when you're thinking about hundreds of thousands of micro-transactions happening across a city.
+
+---
+
+## How it works
+
+You connect your wallet, the app reads your GPS, and you see drops on the map around you. Click one, check the distance, walk to it, sign a transaction, get the SOL. That's the core loop.
+
+On the creation side: pick a spot, write a message, lock in a reward (minimum 0.01 SOL to keep spam out), and your drop goes live. The SOL sits in a PDA vault until someone claims it or you pull it back.
 
 ```
 Creator                                    Finder
@@ -70,121 +43,24 @@ Creator                                    Finder
                                              └─ Likes/comments via Tapestry
 ```
 
-### On-chain Architecture
+**Program ID:** `HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn` (devnet)
 
-- **Program ID**: `HCmA7eUzxhZLF8MwM3XWQwdttepiS3BJrnG5JViCWQKn` (deployed on devnet)
-- **Framework**: Pinocchio (zero-dependency, ultra-low CU)
-- **Source Code**: [program/src/](./program/src/)
-- **IDL**: [idl/locus.json](./idl/locus.json)
-
-┌─────────────────────────────────────────────────┐
-│  Locus Program (Pinocchio — zero dependencies)  │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│  CreateDrop (0x00)          ClaimDrop (0x01)     │
-│  ├─ lat, lng, reward        ├─ drop_id          │
-│  ├─ message                 ├─ verify signer    │
-│  ├─ derive Drop PDA         ├─ derive vault     │
-│  └─ fund Vault PDA          └─ transfer SOL     │
-│                                                 │
-│  PDAs:                                          │
-│  Drop  = seeds["drop",  drop_id_bytes]          │
-│  Vault = seeds["vault", drop_id_bytes]          │
-│                                                 │
-│  CU cost: ~13,250 per transaction               │
-└─────────────────────────────────────────────────┘
-         │                          │
-         ▼                          ▼
-┌─────────────────┐    ┌──────────────────────┐
-│  Tapestry API   │    │   Solana Devnet      │
-│  (Social Layer) │    │   (Settlement Layer) │
-│                 │    │                      │
-│  • Profiles     │    │  • SOL transfers     │
-│  • Likes        │    │  • PDA accounts      │
-│  • Comments     │    │  • Tx confirmation   │
-│  • Follows      │    │                      │
-│  • Content      │    │                      │
-└─────────────────┘    └──────────────────────┘
-```
+PDAs are straightforward — `["drop", drop_id]` for the drop account, `["vault", drop_id]` for the SOL vault. Clean, auditable, no magic.
 
 ---
 
 ## Features
 
-| Feature | Description | Stack |
-|---------|-------------|-------|
-| 🗺️ Dark Map | Interactive themed map with manual **Day/Night** toggle | Leaflet + CARTO + CSS filters |
-| 📍 GPS Verification | Must be within 150m to claim (Haversine) | Browser Geolocation API |
-| ⚡ On-chain Claims | Real SOL transactions signed by wallet | Pinocchio program |
-| 🔗 Blinks | Share any drop as a Solana Action (Blink) on social media | OrbitFlare API |
-| 🎵 Music Echoes | Drops that play Audius tracks when you get close | Audius API |
-| 🕹️ RPG Levels | Level up (1-6+) with XP for every on-chain action | MagicBlock Logic |
-| 🔊 Sound/Haptic | Synth effects and physical vibration on mobile | Web Audio + Haptic API |
-| 👻 Ghost Marks | Ephemeral social messages registered on Tapestry | Tapestry protocol |
-| 🗺️ Quest Trails | Sequenced waypoints (Sunrise Tutorial included) | Client-side Logic |
-| 🌌 Ambient Vibe | Toggleable graveyard soundscape & radar sweep effect | Audius + CSS Animations |
-| 📱 Mobile-First | Pixel-perfect PWA layout for iOS/Android | Tailwind + Wallet Adapter |
+**Core mechanics**
+- Drop messages with SOL rewards at real GPS coordinates
+- GPS verification — must be within 150m to claim (Haversine formula)
+- Real on-chain SOL transfers via Pinocchio program
 
----
+**Ghost Marks** — ephemeral social layer. Short-lived messages (24h) with 8 emoji types. No SOL attached, just vibes, warnings, tips. Other users can react. Creates FOMO because whatever was on the map yesterday is gone.
 
-## 📘 Deep Dive: How to Use Features
+**Quest Trails** — multi-waypoint walking routes. Three pre-built trails around Warsaw (Old Town Haunting, Vistula Death March, Crypto Graveyard Tour). GPS auto-check-in marks waypoints as you physically visit them. Completing a full trail pays out bonus SOL (0.5–1.0).
 
-### ⚡ Claiming a Drop
-1. **Find a marker:** Blue/Purple icons represent rewards.
-2. **Proximity:** Walk within **150m** of the location.
-3. **Claim:** Click the marker and hit "Claim". Sign the transaction.
-4. **Result:** SOL is transferred from the vault PDA to your wallet. You earn **50 XP**.
-
-### 🔗 Solana Blinks (OrbitFlare)
-1. **Share:** Click any drop on the map.
-2. **Action:** Click "Share as Blink".
-3. **Blink Link:** You get a `dial.to` link. When posted on X, it renders as an interactive button.
-4. **Remote Interaction:** Users can claim or interact with the drop directly from their social feed.
-
-### 🎵 Audius Music Echoes
-1. **Spot the Icon:** Look for 🎵 markers on the map.
-2. **Walk & Listen:** As you enter the radius, Locus triggers a hidden Audius player.
-3. **Atmosphere:** Each coordinate can have a unique "audio lore" or soundtrack attached.
-
-### 🕹️ MagicBlock Progression (XP)
-Every action in Locus is gamified:
-- **Claim a Drop:** +50 XP
-- **Create a Ghost Mark:** +10 XP
-- **Follow on Tapestry:** +5 XP
-- **Complete a Trail:** +100 XP
-*Your Rank (Ghost -> Lich Lord) is visible in the Profile panel.*
-
-### 👤 Tapestry Social Graph
-- **Profile:** Automatically created when you connect your wallet.
-- **Interactions:** Likes and comments are registered as on-chain content nodes.
-- **Follows:** Building a decentralized social graph of fellow explorers.
-
----
-
-### 👻 Ghost Marks — Ephemeral Social Layer
-
-Ghost Marks are short-lived messages on the map that **disappear after 24 hours**. Unlike Drops (which hold SOL), Ghost Marks are lightweight social signals — tips, warnings, photos, vibes.
-
-- 8 emoji types: 👻 💭 ⚠️ 📸 🎵 💀 🔥 ❄️
-- Placed at your GPS location
-- Other users can react (👻 button)
-- Stored as Tapestry content nodes
-- Creates FOMO: "what was on the map yesterday?"
-
-### 🗺️ Quest Trails — Multi-Waypoint Routes
-
-Quest Trails link multiple waypoints into a walking route. Users follow the trail, physically visit each checkpoint, and earn a bonus SOL reward for completing the full quest.
-
-- 3 pre-built trails in Warsaw (Old Town Haunting, Vistula Death March, Crypto Graveyard Tour)
-- Dashed polyline rendered on map connecting waypoints
-- **Auto check-in**: GPS proximity (150m) automatically marks waypoints as visited
-- Progress bar per trail with real-time tracking
-- Difficulty levels: Easy / Medium / Hard
-- Bonus SOL on completion (0.5–1.0 SOL)
-
-### 🏅 NFT Badges — Proof of Discovery
-
-Achievement badges that can be minted as compressed NFTs on Solana. Tracks user milestones across all features.
+**NFT Badges** — achievement tokens that mint as compressed NFTs via Metaplex Bubblegum. Eight badges across rarity tiers:
 
 | Badge | Requirement | Rarity |
 |-------|------------|--------|
@@ -197,55 +73,56 @@ Achievement badges that can be minted as compressed NFTs on Solana. Tracks user 
 | 🗺️ Trail Walker | Complete a quest trail | Rare |
 | ⭐ Legend | Reach 200 reputation | Legendary |
 
-- Auto-popup when threshold reached: "Badge earned! Mint NFT?"
-- Progress bars in Profile panel
-- Rarity tiers with colors
-- Production: Metaplex Bubblegum compressed NFTs (~0.001 SOL per mint)
+**Reputation & Leaderboard** — score = Claims×10 + Created×5 + Likes×2. Ranks go from Lost Soul → Spirit → Wraith → Lich. Displayed on a live leaderboard.
+
+**Social layer (Tapestry)** — profiles auto-created on wallet connect, likes and comments on drops stored on-chain, follow other explorers, build your social graph.
 
 ---
 
-## Anti-Spam & Security
+## Hackathon Tracks
 
-Locus implements client-side protections and has a roadmap for on-chain enforcement:
+**Tapestry — On-chain Social ($5,000)**
+Every drop and ghost mark registers as a Tapestry content node. Profiles, follows, likes, and comments all go through the Tapestry protocol. No off-chain database for social data.
 
-### Current (Client-side)
+**MagicBlock — Gaming ($5,000)**
+Quest Trails use game engine logic applied to the real world — sequenced waypoints, auto check-in triggers, difficulty levels, bonus rewards. Ghost Marks create a "now or never" loop that keeps people coming back daily.
 
-| Protection | How |
-|---|---|
-| Max 5 active drops per wallet | Blocks creation after 5 unclaimed drops |
-| 60-second cooldown | Prevents rapid-fire drop spam |
-| Minimum 0.01 SOL reward | Economic barrier to low-effort spam |
-| No self-claiming | Can't claim your own drops |
-| Duplicate claim prevention | Can't claim same drop twice |
+**Sunrise — Migrations & Onboarding ($7,000)**
+There's a dedicated Sunrise Quest Trail that walks new users through setting up a wallet, making their first on-chain interaction, and understanding what social graphs are. The "Lore" drops scattered around the trail explain Solana concepts (CU, PDA, Rent) in an immersive way rather than pointing people at documentation.
 
-### Future (On-chain — Sybil Resistance Roadmap)
+**Torque — Loyalty ($1,000)**
+NFT badges for consistent explorers. Planned: daily check-in streaks at physical locations earning Torque-powered rewards.
 
-| Protection | Implementation |
-|---|---|
-| PDA counter per wallet | On-chain account tracking drop count per pubkey |
-| SOL stake requirement | Lock 0.1 SOL per active drop, released on claim |
-| Reputation gate | Min Tapestry score required to create drops |
-| Time-locked claims | Drops become claimable only after N confirmations |
-| ZK proof of location | Prove proximity without revealing exact coordinates |
-| Quadratic staking | Cost increases per drop: 1st free, 2nd 0.05, 3rd 0.1... |
+---
+
+## Anti-spam
+
+Client-side right now:
+- Max 5 active drops per wallet
+- 60-second cooldown between creates
+- Minimum 0.01 SOL reward as economic barrier
+- Can't claim your own drops
+- Can't claim the same drop twice
+
+The roadmap for on-chain enforcement includes PDA counters per wallet, SOL stake requirements, reputation gates via Tapestry score, and eventually ZK proof of location (prove you were within range without revealing your exact coordinates).
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Program** | Pinocchio (zero-dep Solana framework) |
-| **Frontend** | Next.js 14 + React 18 + TypeScript |
-| **Social** | Tapestry Protocol (on-chain social graph) |
-| **Wallet** | @solana/wallet-adapter (Phantom, Solflare) |
-| **Map** | Leaflet + react-leaflet |
-| **Styling** | Tailwind CSS (custom dark theme) |
-| **Deploy** | Vercel |
+| Layer | Tech |
+|-------|------|
+| Program | Pinocchio (zero-dep Solana framework) |
+| Frontend | Next.js 14 + React 18 + TypeScript |
+| Social | Tapestry Protocol |
+| Wallet | @solana/wallet-adapter (Phantom, Solflare) |
+| Map | Leaflet + react-leaflet + CARTO dark tiles |
+| Styling | Tailwind CSS |
+| Deploy | Vercel |
 
 ---
 
-## Quick Start
+## Getting Started
 
 ```bash
 git clone https://github.com/CratosPL/locus.git
@@ -262,21 +139,45 @@ NEXT_PUBLIC_TAPESTRY_NAMESPACE=locus
 
 ```bash
 npm run dev
-# → http://localhost:3000
+# http://localhost:3000
 ```
 
-### Testing Flow
-1. Open app → Complete 3-step welcome tour.
-2. Click **"📍 Enable GPS"** to activate location (or enable Demo Mode).
-3. Connect your wallet (Phantom/Solflare) on **Devnet**.
-4. Explore the map. Notice the **Day/Night** toggle and **Spectral Ambient** (Ghost icon) toggle in the bottom left.
-5. Walk within 150m of a marker. Notice the **Radar Sweep** and pulsing range circle around you.
-6. **Claim a Drop**: Sign the transaction. Hear the "level up" synth sound and feel the haptic feedback.
-7. **Music Drops**: Find a drop with a 🎵 icon. Walk close to hear its Audius "echo".
-8. **Share as Blink**: Open any drop and click "Share as Blink" to see the Solana Action link.
-9. **Level Up**: Check your profile to see your RPG Rank and XP progress.
-10. **Sunrise Tutorial**: Go to Trails and start the "Sunrise Onboarding" quest.
-11. **Create Social Marks**: Use the **+** button to leave "Memory Drops" (no SOL required) or "Dead Drops" (SOL bounties).
+---
+
+## Testing the App
+
+If you're a judge and don't want to walk around Warsaw, there's a **Demo Mode** button that bypasses GPS. You can test the full flow from your desk.
+
+1. Open the app — there's a 3-step welcome tour on first visit
+2. Click **Enable GPS** (or turn on Demo Mode)
+3. Connect Phantom or Solflare set to Devnet
+4. Click a drop marker on the map → check the distance → claim it
+5. Hit **+** to create a ghost mark or a new drop
+6. Open the Quests tab → start a trail → walk (or demo) through waypoints
+7. Check Profile for badge popups → mint your first NFT badge
+8. Open Rank tab for the leaderboard
+
+---
+
+## Verified Transactions
+
+All tested on devnet:
+
+```
+Claim:
+3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY
+CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
+
+Create Drop:
+44dEsMYw1abdLaQdF6xh7WZnxXayWbzVLS9i6vh1AoAqTb9FWDLmL1G3PYj3qaUZPuw8kYod9Zfp1DvzQurnwTcS
+CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
+
+Deploy:
+2T2jy6GuBUA3Nidu3wGnawphyxy4zVaraquL5t57RwdfjRopYxnsUJ6fFNYNMoRixRPTtckW69ghEwM2vgxDzBs2
+CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
+```
+
+[View on Solscan](https://solscan.io/tx/3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY?cluster=devnet)
 
 ---
 
@@ -285,110 +186,43 @@ npm run dev
 ```
 src/
 ├── app/
-│   ├── api/tapestry/route.ts   # Server-side proxy (CORS bypass)
+│   ├── api/tapestry/route.ts   # Server proxy (handles CORS)
 │   ├── layout.tsx              # Root layout + wallet provider + PWA
-│   ├── page.tsx                # Main page — map, drops, ghosts, trails, badges
-│   └── globals.css             # Dark theme + markers + ghost/trail CSS
+│   ├── page.tsx                # Main page
+│   └── globals.css             # Dark theme + custom marker CSS
 ├── components/
-│   ├── AppWalletProvider.tsx    # Solana wallet context
-│   ├── Header.tsx              # Logo + generic wallet connect/disconnect
-│   ├── MapView.tsx             # Leaflet map + drop/ghost/trail markers + popups
-│   ├── StatsBar.tsx            # Active drops, rewards, claims
-│   ├── DropList.tsx            # List view with category filters + sorting
-│   ├── CreateDropModal.tsx     # Create drop OR ghost mark (tabbed modal)
-│   ├── ProfilePanel.tsx        # Profile + NFT badges + reputation + mint
-│   ├── Leaderboard.tsx         # Top players by reputation
-│   ├── QuestTrails.tsx         # Trail listing + progress + start quest
-│   ├── WelcomeOverlay.tsx      # 3-step onboarding for first-time users
-│   └── TxToast.tsx             # Transaction success/error notifications
+│   ├── AppWalletProvider.tsx
+│   ├── Header.tsx
+│   ├── MapView.tsx             # Leaflet map + all markers + popups
+│   ├── StatsBar.tsx
+│   ├── DropList.tsx
+│   ├── CreateDropModal.tsx     # Drop or Ghost Mark creation (tabbed)
+│   ├── ProfilePanel.tsx        # Profile + badges + reputation
+│   ├── Leaderboard.tsx
+│   ├── QuestTrails.tsx
+│   ├── WelcomeOverlay.tsx      # First-time onboarding
+│   └── TxToast.tsx
 ├── hooks/
-│   ├── useProgram.ts           # Solana program interaction (claim/create)
-│   ├── useTapestry.ts          # Tapestry social API (profile/like/comment)
-│   └── useGeolocation.ts       # GPS + IP fallback + proximity
-├── types/index.ts              # Drop, GhostMark, QuestTrail, NFTBadge types
+│   ├── useProgram.ts           # Solana program calls
+│   ├── useTapestry.ts          # Tapestry API
+│   └── useGeolocation.ts       # GPS + IP fallback + proximity calc
+├── types/index.ts
 └── utils/mockData.ts           # Sample drops, ghosts, trails, badge defs
-public/
-├── manifest.json               # PWA manifest
-└── icon-512.svg                # App icon
 ```
 
 ---
 
-## Hackathon Tracks
+## What's Next
 
-### Tapestry — On-chain Social ($5,000)
+ZK geofencing to prove proximity without revealing coordinates is the big one. After that: multi-token rewards (BONK, USDC), session keys for gas-free onboarding, multi-sig drops that need N finders to unlock, push notifications when drops appear near you, and seasonal events with prize pools.
 
-Locus uses Tapestry to bring **social features fully on-chain**:
-
-- **Profiles** → Auto-created via `findOrCreate` on wallet connect
-- **Content Nodes** → Every drop and ghost mark registered as Tapestry content
-- **Likes** → On-chain engagement tracked per drop
-- **Comments** → Users leave messages on drops via Tapestry
-- **Social Graph** → Follow drop creators, build reputation
-
-### DRiP — NFT Track ($2,500)
-
-Locus implements **NFT achievement badges** as Proof-of-Discovery tokens:
-
-- **8 badge definitions** with rarity tiers (Common → Legendary)
-- **Auto-trigger** when user hits milestone (claims, creates, trails, reputation)
-- **Mint flow** — popup with badge preview → confirm → mint compressed NFT
-- **Profile gallery** — minted badges displayed with rarity + progress bars
-- **Production path** → Metaplex Bubblegum for ~0.001 SOL per compressed NFT
-
----
-
-## Why Pinocchio?
-
-| | Anchor | Pinocchio |
-|---|--------|-----------|
-| CU per tx | ~200,000 | ~13,250 |
-| Binary size | ~200KB | ~30KB |
-| Dependencies | Many | Zero |
-| Rent cost | Higher | Lower |
-
-Pinocchio was chosen to demonstrate that geo-social doesn't need to be expensive. Every claim costs < 0.00003 SOL in fees.
-
----
-
-## Verified Transactions
-
-```
-# Claim transaction
-Signature: 3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY
-CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
-
-# Create drop transaction
-Signature: 44dEsMYw1abdLaQdF6xh7WZnxXayWbzVLS9i6vh1AoAqTb9FWDLmL1G3PYj3qaUZPuw8kYod9Zfp1DvzQurnwTcS
-CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
-
-# Deploy drop transaction
-Signature: 2T2jy6GuBUA3Nidu3wGnawphyxy4zVaraquL5t57RwdfjRopYxnsUJ6fFNYNMoRixRPTtckW69ghEwM2vgxDzBs2
-CU: 13,250 | Fee: 0.000025 SOL | Status: ✅ Finalized
-```
-
-[View on Solscan →](https://solscan.io/tx/3VUAp7mQi8tggEeZijDZ7iLTUL3GaZBtuECYuCGZLoTjnEfqCHp5KwZ4vWVzqEnwxat4NLaAxjFiBYdsdANfw4LY?cluster=devnet)
-
----
-
-## Future Roadmap
-
-- 🔐 **ZK geofencing** — prove proximity without revealing exact location
-- 🛡️ **On-chain sybil resistance** — PDA counters, quadratic staking, reputation gates
-- 🪙 **Multi-token rewards** — BONK, USDC, and SPL token support for drop bounties
-- 🎫 **Session keys** — gas-free claiming for onboarding new users
-- 🌍 **Multi-city expansion** — community-created drop zones worldwide
-- 🏆 **Seasonal events** — time-limited trails with leaderboard prize pools
-- 🤝 **Multi-sig drops** — require N finders to unlock a shared vault
-- 🔔 **Push notifications** — alert when new drops appear near your location
-- 📷 **Photo drops** — attach images to drops and ghost marks
-- 🏪 **Creator marketplace** — buy/sell quest trail templates
+The long-term vision is community-created drop zones in cities worldwide, with a marketplace for buying and selling quest trail templates.
 
 ---
 
 ## Team
 
-Solo developer — **Graveyard Hackathon 2026**
+Solo dev. Built for the Graveyard Hackathon 2026.
 
 ## License
 
