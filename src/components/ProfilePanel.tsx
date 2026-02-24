@@ -237,8 +237,8 @@ export default function ProfilePanel({
                       : "bg-transparent border-white/5 opacity-40"
                   )}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-xl border border-white/5">
-                    {badge.icon}
+                  <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center border border-white/5" style={{ filter: badge.earned ? `drop-shadow(0 0 6px ${badge.color}66)` : "grayscale(1) opacity(0.5)" }}>
+                    {typeof badge.icon === "function" ? badge.icon(badge.earned ? badge.color : "#4b5563") : <span className="text-xl">{badge.icon}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

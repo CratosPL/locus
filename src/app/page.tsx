@@ -538,7 +538,9 @@ export default function HomePage() {
         return (
           <div className="fixed inset-0 z-[4000] flex items-center justify-center bg-black/70 backdrop-blur-sm">
             <div className="w-72 bg-void-100/[0.98] border border-crypt-300/20 rounded-2xl p-6 animate-slide-up text-center">
-              <div className="text-6xl mb-4">{badge.icon}</div>
+              <div className="w-16 h-16 mx-auto mb-4" style={{ filter: `drop-shadow(0 0 14px ${badge.color}88)` }}>
+                {typeof badge.icon === "function" ? badge.icon(badge.color) : <span className="text-6xl">{badge.icon}</span>}
+              </div>
               <h3 className="text-crypt-200 font-mono text-2xl font-bold mb-2">{badge.name}</h3>
               <p className="text-sm text-gray-400 font-mono mb-2">{badge.description}</p>
               <span className={"inline-block text-xs font-mono font-bold px-3 py-1 rounded-full mb-6 uppercase"} style={{ color: badge.color, background: badge.color + "15", border: "1px solid " + badge.color + "33" }}>

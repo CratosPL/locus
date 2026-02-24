@@ -1,4 +1,5 @@
 import { Drop, CategoryConfig, DropCategory, GhostMark, QuestTrail, NFTBadge } from "@/types";
+import { BADGE_ICONS } from "@/utils/badgeIcons";
 
 export var CATEGORY_CONFIG: Record<DropCategory, CategoryConfig> = {
   lore: { icon: "👻", color: "#a78bfa", label: "Lore" },
@@ -554,15 +555,15 @@ export var MOCK_TRAILS: QuestTrail[] = [
 // ─── NFT Badge Definitions ───────────────────────────────────────────────────
 
 export var BADGE_DEFINITIONS: NFTBadge[] = [
-  { id: "first-blood",    name: "First Blood",    description: "Claim your first drop",          icon: "🩸", threshold: 1,   thresholdType: "claims",     rarity: "common",    color: "#ef4444" },
-  { id: "explorer",       name: "Explorer",       description: "Claim 5 drops",                  icon: "🧭", threshold: 5,   thresholdType: "claims",     rarity: "rare",      color: "#3b82f6" },
-  { id: "phantom-hunter", name: "Phantom Hunter", description: "Claim 10 drops",                 icon: "👻", threshold: 10,  thresholdType: "claims",     rarity: "epic",      color: "#a78bfa" },
-  { id: "lich-lord",      name: "Lich Lord",      description: "Claim 25 drops",                 icon: "👑", threshold: 25,  thresholdType: "claims",     rarity: "legendary", color: "#fbbf24" },
-  { id: "gravedigger",    name: "Gravedigger",    description: "Create 3 drops",                 icon: "⚰️", threshold: 3,   thresholdType: "creates",    rarity: "common",    color: "#6b7280" },
-  { id: "haunter",        name: "Haunter",        description: "Leave 5 ghost marks",            icon: "💭", threshold: 5,   thresholdType: "ghosts",     rarity: "rare",      color: "#8b5cf6" },
-  { id: "trail-walker",   name: "Trail Walker",   description: "Complete a quest trail",          icon: "🗺️", threshold: 1,   thresholdType: "trails",     rarity: "rare",      color: "#10b981" },
-  { id: "social-butterfly", name: "Social Butterfly", description: "Follow 5 explorers on Tapestry", icon: "🦋", threshold: 5,   thresholdType: "reputation", rarity: "rare",      color: "#ec4899" },
-  { id: "torque-loyalist", name: "Torque Loyalist",  description: "Maintain a 7-day streak (Torque)", icon: "🛡️", threshold: 7,   thresholdType: "claims",     rarity: "epic",      color: "#f59e0b" },
-  { id: "magicblock-hero", name: "Magic Hero",      description: "Master of gaming quests",        icon: "⚔️", threshold: 50,  thresholdType: "reputation", rarity: "legendary", color: "#3b82f6" },
-  { id: "legend",         name: "Legend",          description: "Reach 200 reputation",           icon: "⭐", threshold: 200, thresholdType: "reputation", rarity: "legendary", color: "#f59e0b" },
+  { id: "first-blood",      name: "First Blood",      description: "Claim your first drop",               icon: BADGE_ICONS["first-blood"],      threshold: 1,   thresholdType: "claims",     rarity: "common",    color: "#ef4444" },
+  { id: "explorer",         name: "Explorer",         description: "Claim 5 drops",                       icon: BADGE_ICONS["explorer"],         threshold: 5,   thresholdType: "claims",     rarity: "rare",      color: "#3b82f6" },
+  { id: "phantom-hunter",   name: "Phantom Hunter",   description: "Claim 10 drops",                      icon: BADGE_ICONS["phantom-hunter"],   threshold: 10,  thresholdType: "claims",     rarity: "epic",      color: "#a78bfa" },
+  { id: "lich-lord",        name: "Lich Lord",        description: "Claim 25 drops",                      icon: BADGE_ICONS["lich-lord"],        threshold: 25,  thresholdType: "claims",     rarity: "legendary", color: "#fbbf24" },
+  { id: "gravedigger",      name: "Gravedigger",      description: "Create 3 drops",                      icon: BADGE_ICONS["gravedigger"],      threshold: 3,   thresholdType: "creates",    rarity: "common",    color: "#9ca3af" },
+  { id: "haunter",          name: "Haunter",          description: "Leave 5 ghost marks",                 icon: BADGE_ICONS["haunter"],          threshold: 5,   thresholdType: "ghosts",     rarity: "rare",      color: "#8b5cf6" },
+  { id: "trail-walker",     name: "Trail Walker",     description: "Complete a quest trail",              icon: BADGE_ICONS["trail-walker"],     threshold: 1,   thresholdType: "trails",     rarity: "rare",      color: "#10b981" },
+  { id: "social-butterfly", name: "Social Butterfly", description: "Follow 5 explorers on Tapestry",      icon: BADGE_ICONS["social-butterfly"], threshold: 5,   thresholdType: "reputation", rarity: "rare",      color: "#ec4899" },
+  { id: "torque-loyalist",  name: "Torque Loyalist",  description: "Maintain a 7-day streak (Torque)",    icon: BADGE_ICONS["torque-loyalist"],  threshold: 7,   thresholdType: "claims",     rarity: "epic",      color: "#f59e0b" },
+  { id: "magicblock-hero",  name: "Magic Hero",       description: "Master of gaming quests",             icon: BADGE_ICONS["magicblock-hero"],  threshold: 50,  thresholdType: "reputation", rarity: "legendary", color: "#3b82f6" },
+  { id: "legend",           name: "Legend",           description: "Reach 200 reputation",                icon: BADGE_ICONS["legend"],           threshold: 200, thresholdType: "reputation", rarity: "legendary", color: "#f59e0b" },
 ];

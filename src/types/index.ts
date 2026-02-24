@@ -74,7 +74,7 @@ export interface NFTBadge {
   id: string;
   name: string;
   description: string;
-  icon: string;
+  icon: string | ((color: string) => import("react").ReactNode);
   threshold: number;
   thresholdType: "claims" | "creates" | "ghosts" | "trails" | "reputation";
   rarity: "common" | "rare" | "epic" | "legendary";
