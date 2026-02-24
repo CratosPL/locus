@@ -12,6 +12,8 @@ import QuestTrails from "@/components/QuestTrails";
 import WelcomeOverlay from "@/components/WelcomeOverlay";
 import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
+import ClaimSuccessModal from "@/components/ClaimSuccessModal";
+import ActivityFeed from "@/components/ActivityFeed";
 import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
@@ -91,6 +93,7 @@ export default function HomePage() {
   // Badge mint tracking
   var [mintedBadges, setMintedBadges] = useState<Set<string>>(new Set());
   var [pendingBadge, setPendingBadge] = useState<string | null>(null);
+  var [claimResult, setClaimResult] = useState<{ drop: Drop; signature: string } | null>(null);
 
   // Load persisted state
   useEffect(function() {
@@ -291,18 +294,20 @@ export default function HomePage() {
         setClaimedIds(newClaimed);
         saveSet("locus_claimed", newClaimed);
 
-        showToast("Drop claimed! +" + drop.finderReward + " SOL", "success", result.value);
+        // Show rich claim success modal
+        setClaimResult({ drop: drop, signature: result.value });
+        setSelectedDrop(null);
+
         confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#a78bfa', '#34d399', '#ffffff']
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.5 },
+          colors: ['#34d399', '#a78bfa', '#ffffff', '#fbbf24']
         });
 
         setActivities(function(prev) {
-          return [{ icon: "⚡", text: "Claimed " + drop!.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
+          return [{ icon: "⚡", text: "You claimed " + drop!.finderReward + "◎ drop!", color: "#34d399", timestamp: Date.now() }].concat(prev);
         });
-        setSelectedDrop(null);
 
         // Check badges
         var newClaimCount = newClaimed.size;
@@ -652,16 +657,10 @@ export default function HomePage() {
               );
             })()}
 
-            {/* Activity feed - Hidden on Mobile */}
-            {activities.length > 0 && !activeTrail && (
-              <div className="hidden md:flex absolute top-14 right-3 z-[1000] w-52 flex-col gap-1.5 pointer-events-none">
-                {activities.slice(0, 3).map(function(a, i) {
-                  return (
-                    <div key={a.timestamp + "-" + i} className="px-3 py-2 rounded-lg bg-void-100/90 border border-crypt-300/10 text-[11px] font-mono text-gray-500 animate-fade-in backdrop-blur">
-                      <span style={{ color: a.color }}>{a.icon}</span> {a.text}
-                    </div>
-                  );
-                })}
+            {/* Activity feed */}
+            {!activeTrail && (
+              <div className="absolute top-14 right-3 z-[1000] w-52">
+                <ActivityFeed activities={activities} />
               </div>
             )}
 
@@ -871,8 +870,15 @@ export default function HomePage() {
         tapestryConfigured={tapestryConfigured}
       />
 
+      {claimResult && (
+        <ClaimSuccessModal
+          drop={claimResult.drop}
+          signature={claimResult.signature}
+          onClose={function() { setClaimResult(null); }}
+        />
+      )}
+
       <InfoPanel
-        isOpen={showInfo}
         onClose={function() {
           if (soundEnabled) playSound("popup-close");
           setShowInfo(false);
