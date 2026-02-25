@@ -49,6 +49,7 @@ interface MapProps {
   onComment: (dropId: string, text: string) => void;
   onFollow?: (targetProfileId: string) => Promise<boolean>;
   onMessageAuthor?: (username: string) => void;
+  onMapDrag?: () => void;
   onConnectWallet: () => void;
   onReactGhost?: (ghostId: string) => void;
   likedIds: Set<string>;
@@ -77,6 +78,17 @@ function FlyToUser({ position, flyTrigger }: { position: GeoPosition | null; fly
   return null;
 }
 
+// Detects map drag and notifies parent to collapse overlays
+function MapDragDetector({ onDrag }: { onDrag?: () => void }) {
+  var map = useMapHook ? useMapHook() : null;
+  React.useEffect(function() {
+    if (!map || !onDrag) return;
+    map.on("movestart", onDrag);
+    return function() { map.off("movestart", onDrag); };
+  }, [map, onDrag]);
+  return null;
+}
+
 export default function MapView({
   drops,
   ghosts,
@@ -91,6 +103,7 @@ export default function MapView({
   onComment,
   onFollow,
   onMessageAuthor,
+  onMapDrag,
   onConnectWallet,
   onReactGhost,
   likedIds,
@@ -334,6 +347,7 @@ export default function MapView({
           className={`map-tiles-themed ${isNight ? "map-tiles-night" : "map-tiles-day"}`}
           key={isNight ? 'night' : 'day'}
         />
+        <MapDragDetector onDrag={onMapDrag} />
 
         {/* Fly to user when GPS activates */}
         <FlyToUser position={userPosition} flyTrigger={flyTrigger || 0} />

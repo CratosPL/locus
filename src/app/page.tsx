@@ -97,6 +97,8 @@ export default function HomePage() {
   var [pendingBadge, setPendingBadge] = useState<string | null>(null);
   var [claimResult, setClaimResult] = useState<{ drop: Drop; signature: string } | null>(null);
   var [viewingExplorer, setViewingExplorer] = useState<NearbyExplorer | null>(null);
+  var [showRightPanel, setShowRightPanel] = useState(false);
+  var [showLeftMenu, setShowLeftMenu] = useState(false);
 
   // Load persisted state
   useEffect(function() {
@@ -609,6 +611,10 @@ export default function HomePage() {
               onMessageAuthor={function(username) {
                 handleSendMessage(username, "");
               }}
+              onMapDrag={function() {
+                setShowRightPanel(false);
+                setShowLeftMenu(false);
+              }}
               onConnectWallet={handleConnectWallet}
               onReactGhost={handleReactGhost}
               likedIds={likedIds}
@@ -674,89 +680,145 @@ export default function HomePage() {
               );
             })()}
 
-            {/* Activity feed */}
+            {/* Activity feed + Explorers — right panel */}
             {!activeTrail && (
-              <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5">
-                <ActivityFeed activities={activities} />
-                <NearbyExplorers
-                  explorers={MOCK_NEARBY_EXPLORERS}
-                  onViewProfile={setViewingExplorer}
-                />
-              </div>
+              <>
+                {/* 📡 Toggle button */}
+                <button
+                  onClick={function() { setShowRightPanel(function(v) { return !v; }); setShowLeftMenu(false); }}
+                  className={"absolute top-3 right-3 z-[1001] w-9 h-9 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all shadow-lg cursor-pointer " + (
+                    showRightPanel
+                      ? "bg-crypt-300/20 border-crypt-300/50 text-crypt-300"
+                      : "bg-void/80 border-white/10 text-gray-400"
+                  )}
+                >
+                  {/* dot indicator for live activity */}
+                  <div className="relative">
+                    <ActivityIcon size={15} />
+                    <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_#34d399] animate-pulse" />
+                  </div>
+                </button>
+
+                {/* Slide-in panel */}
+                {showRightPanel && (
+                  <div
+                    className="absolute top-12 right-3 z-[1000] w-52 flex flex-col gap-1.5"
+                    style={{ animation: "panel-slide-in 0.2s ease-out" }}
+                  >
+                    <style>{`
+                      @keyframes panel-slide-in {
+                        from { opacity: 0; transform: translateX(12px); }
+                        to   { opacity: 1; transform: translateX(0); }
+                      }
+                    `}</style>
+                    <ActivityFeed activities={activities} />
+                    <NearbyExplorers
+                      explorers={MOCK_NEARBY_EXPLORERS}
+                      onViewProfile={setViewingExplorer}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
-            {/* Info overlay */}
-            <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2 max-w-[150px] md:max-w-none">
-              <div className="px-3 py-2 rounded-xl bg-void/80 backdrop-blur-xl border border-white/5 font-mono text-[9px] text-gray-500 tracking-wider shadow-xl glass-border-gradient">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                  <span className="font-black text-gray-400 uppercase tracking-widest">Spectral Density</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span>{drops.filter(function(d) { return !d.isClaimed; }).length} Drops</span>
-                  <span>{ghostMarks.length} Marks</span>
-                </div>
-                {userPosition && (function() {
-                  var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
-                  var nearbyCount = unclaimed.filter(function(d) { return isNearby(d.location.lat, d.location.lng); }).length;
-                  var distances = unclaimed.map(function(d) {
-                    var dist = distanceTo(d.location.lat, d.location.lng);
-                    return dist !== null ? dist : Infinity;
-                  }).sort(function(a, b) { return a - b; });
-                  var nearest = distances[0];
-                  return (
-                    <div className="mt-1 pt-1 border-t border-crypt-300/10">
-                      {nearbyCount > 0 ? (
-                        <div className="flex items-center gap-1.5 text-emerald-400">
-                          <span className="text-[10px]">⚡</span><span>{nearbyCount} in range!</span>
-                        </div>
-                      ) : nearest && nearest < Infinity ? (
-                        <div className="flex items-center gap-1.5 text-yellow-500/80">
-                          <span className="text-[10px]">→</span><span>Nearest: {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"}</span>
-                        </div>
-                      ) : null}
-                    </div>
-                  );
-                })()}
-                {profile && <div className="text-[9px] text-crypt-300 mt-0.5">@{profile.username}</div>}
-              </div>
+            {/* Left controls — GPS always visible, rest in hamburger */}
+            <div className="absolute top-3 left-3 z-[1001] flex flex-col gap-1.5">
 
+              {/* GPS button — always visible */}
               <button
                 onClick={function() {
                   if (geoStatus === "active") setFlyTrigger(Date.now());
                   else if (geoStatus === "idle" || geoStatus === "error") requestLocation();
                 }}
-                className={"flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl border transition-all cursor-pointer shadow-lg " + (
-                  geoStatus === "active" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                    : geoStatus === "requesting" ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
-                    : geoStatus === "denied" ? "bg-red-500/10 border-red-500/30 text-red-400"
-                    : "bg-white/5 border-white/10 text-gray-400"
+                className={"w-9 h-9 rounded-full border backdrop-blur-xl flex items-center justify-center transition-all shadow-lg cursor-pointer " + (
+                  geoStatus === "active"
+                    ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
+                    : geoStatus === "requesting"
+                    ? "bg-yellow-500/15 border-yellow-500/40 text-yellow-400"
+                    : geoStatus === "denied"
+                    ? "bg-red-500/15 border-red-500/40 text-red-400"
+                    : "bg-void/80 border-white/10 text-gray-400"
                 )}
               >
-                <MapPin size={12} />
-                <span className="text-[9px] font-mono font-black uppercase tracking-widest">
-                  {geoStatus === "active" ? (userPosition && userPosition.source === "ip" ? "~IP" : "GPS " + (userPosition ? Math.round(userPosition.accuracy) + "m" : ""))
-                    : geoStatus === "requesting" ? "Searching..."
-                    : geoStatus === "denied" ? "Denied"
-                    : "Enable"}
-                </span>
+                <MapPin size={15} />
               </button>
 
+              {/* Hamburger — toggles left menu */}
               <button
-                onClick={function() { setDemoMode(!demoMode); }}
-                className={"flex items-center gap-1.5 px-3 py-1.5 rounded-lg backdrop-blur border transition-colors cursor-pointer " + (
-                  demoMode ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400" : "bg-void/80 border-crypt-300/10 text-gray-600"
+                onClick={function() { setShowLeftMenu(function(v) { return !v; }); setShowRightPanel(false); }}
+                className={"w-9 h-9 rounded-full border backdrop-blur-xl flex flex-col items-center justify-center gap-[3px] transition-all shadow-lg cursor-pointer " + (
+                  showLeftMenu
+                    ? "bg-crypt-300/20 border-crypt-300/50 text-crypt-300"
+                    : "bg-void/80 border-white/10 text-gray-500"
                 )}
               >
-                <span className="text-[10px] font-mono">{demoMode ? "🔓 Demo ON" : "🔓 Demo"}</span>
+                <span className={"block w-3.5 h-px transition-all origin-center " + (showLeftMenu ? "rotate-45 translate-y-[4px] bg-crypt-300" : "bg-gray-400")} />
+                <span className={"block w-3.5 h-px transition-all " + (showLeftMenu ? "opacity-0" : "bg-gray-400")} />
+                <span className={"block w-3.5 h-px transition-all origin-center " + (showLeftMenu ? "-rotate-45 -translate-y-[4px] bg-crypt-300" : "bg-gray-400")} />
               </button>
 
-              <button
-                onClick={function() { setShowInfo(true); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-crypt-300/10 border border-crypt-300/30 text-crypt-300 backdrop-blur transition-all cursor-pointer hover:bg-crypt-300/20"
-              >
-                <span className="text-[10px] font-mono font-bold italic">💡 Info / Jury</span>
-              </button>
+              {/* Expanded left menu */}
+              {showLeftMenu && (
+                <div
+                  className="flex flex-col gap-1.5"
+                  style={{ animation: "panel-slide-in 0.2s ease-out" }}
+                >
+                  {/* Spectral Density */}
+                  <div className="px-3 py-2 rounded-xl bg-void/90 backdrop-blur-xl border border-white/8 font-mono text-[9px] text-gray-500 shadow-xl w-44">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
+                      <span className="font-black text-gray-400 uppercase tracking-widest">Spectral Density</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span>{drops.filter(function(d) { return !d.isClaimed; }).length} Drops</span>
+                      <span>{ghostMarks.length} Marks</span>
+                    </div>
+                    {userPosition && (function() {
+                      var unclaimed = drops.filter(function(d) { return !d.isClaimed; });
+                      var nearbyCount = unclaimed.filter(function(d) { return isNearby(d.location.lat, d.location.lng); }).length;
+                      var distances = unclaimed.map(function(d) {
+                        var dist = distanceTo(d.location.lat, d.location.lng);
+                        return dist !== null ? dist : Infinity;
+                      }).sort(function(a, b) { return a - b; });
+                      var nearest = distances[0];
+                      return (
+                        <div className="mt-1 pt-1 border-t border-crypt-300/10">
+                          {nearbyCount > 0 ? (
+                            <div className="flex items-center gap-1.5 text-emerald-400">
+                              <span>⚡</span><span>{nearbyCount} in range!</span>
+                            </div>
+                          ) : nearest && nearest < Infinity ? (
+                            <div className="flex items-center gap-1.5 text-yellow-500/80">
+                              <span>→</span><span>Nearest: {nearest < 1000 ? Math.round(nearest) + "m" : (nearest / 1000).toFixed(1) + "km"}</span>
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
+                    {profile && <div className="text-[9px] text-crypt-300 mt-0.5">@{profile.username}</div>}
+                  </div>
+
+                  {/* Demo toggle */}
+                  <button
+                    onClick={function() { setDemoMode(!demoMode); }}
+                    className={"flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-xl border transition-all cursor-pointer w-44 " + (
+                      demoMode
+                        ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
+                        : "bg-void/80 border-white/8 text-gray-500"
+                    )}
+                  >
+                    <span className="text-[10px] font-mono">{demoMode ? "🔓 Demo ON" : "🔓 Demo Mode"}</span>
+                  </button>
+
+                  {/* Info / Jury */}
+                  <button
+                    onClick={function() { setShowInfo(true); setShowLeftMenu(false); }}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-crypt-300/10 border border-crypt-300/25 text-crypt-300 backdrop-blur-xl cursor-pointer w-44 transition-all hover:bg-crypt-300/20"
+                  >
+                    <span className="text-[10px] font-mono font-bold">💡 Info / Jury</span>
+                  </button>
+                </div>
+              )}
             </div>
           </>
         ) : activeTab === "list" ? (
