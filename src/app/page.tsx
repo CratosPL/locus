@@ -14,6 +14,8 @@ import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
 import ClaimSuccessModal from "@/components/ClaimSuccessModal";
 import ActivityFeed from "@/components/ActivityFeed";
+import ExplorerProfileModal from "@/components/ExplorerProfileModal";
+import NearbyExplorers, { MOCK_NEARBY_EXPLORERS, NearbyExplorer } from "@/components/NearbyExplorers";
 import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon, Activity as ActivityIcon } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
@@ -94,6 +96,7 @@ export default function HomePage() {
   var [mintedBadges, setMintedBadges] = useState<Set<string>>(new Set());
   var [pendingBadge, setPendingBadge] = useState<string | null>(null);
   var [claimResult, setClaimResult] = useState<{ drop: Drop; signature: string } | null>(null);
+  var [viewingExplorer, setViewingExplorer] = useState<NearbyExplorer | null>(null);
 
   // Load persisted state
   useEffect(function() {
@@ -496,6 +499,17 @@ export default function HomePage() {
     [isConnected, commentOnDrop]
   );
 
+  var handleSendMessage = useCallback(
+    function(username: string, message: string) {
+      // In production: Tapestry DM or comment on user's profile node
+      showToast("Message sent to @" + username + " via Tapestry", "success");
+      setActivities(function(prev) {
+        return [{ icon: "💬", text: "You messaged @" + username, color: "#60a5fa", timestamp: Date.now() }].concat(prev);
+      });
+    },
+    [showToast]
+  );
+
   var handleSelectDropFromList = useCallback(function(drop: Drop) {
     setSelectedDrop(drop);
     setActiveTab("map");
@@ -592,6 +606,9 @@ export default function HomePage() {
               onLike={handleLike}
               onComment={handleComment}
               onFollow={handleFollow}
+              onMessageAuthor={function(username) {
+                handleSendMessage(username, "");
+              }}
               onConnectWallet={handleConnectWallet}
               onReactGhost={handleReactGhost}
               likedIds={likedIds}
@@ -659,8 +676,12 @@ export default function HomePage() {
 
             {/* Activity feed */}
             {!activeTrail && (
-              <div className="absolute top-14 right-3 z-[1000] w-52">
+              <div className="absolute top-14 right-3 z-[1000] w-52 flex flex-col gap-1.5">
                 <ActivityFeed activities={activities} />
+                <NearbyExplorers
+                  explorers={MOCK_NEARBY_EXPLORERS}
+                  onViewProfile={setViewingExplorer}
+                />
               </div>
             )}
 
@@ -910,6 +931,26 @@ export default function HomePage() {
           drop={claimResult.drop}
           signature={claimResult.signature}
           onClose={function() { setClaimResult(null); }}
+        />
+      )}
+
+      {viewingExplorer && (
+        <ExplorerProfileModal
+          username={viewingExplorer.username}
+          walletAddress={viewingExplorer.walletAddress}
+          dropsCreated={viewingExplorer.dropsCreated}
+          dropsClaimed={viewingExplorer.dropsClaimed}
+          reputation={viewingExplorer.reputation}
+          isFollowing={viewingExplorer.isFollowing}
+          onFollow={async (username) => {
+            var ok = await followUser(username);
+            setActivities(function(prev) {
+              return [{ icon: "👤", text: "You followed @" + username, color: "#a78bfa", timestamp: Date.now() }].concat(prev);
+            });
+            return ok;
+          }}
+          onSendMessage={handleSendMessage}
+          onClose={function() { setViewingExplorer(null); }}
         />
       )}
 

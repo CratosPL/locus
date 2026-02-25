@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Heart,
   MessageSquare,
+  Mail,
   Navigation,
   MapPin,
   UserPlus,
@@ -47,6 +48,7 @@ interface MapProps {
   onLike: (dropId: string) => void;
   onComment: (dropId: string, text: string) => void;
   onFollow?: (targetProfileId: string) => Promise<boolean>;
+  onMessageAuthor?: (username: string) => void;
   onConnectWallet: () => void;
   onReactGhost?: (ghostId: string) => void;
   likedIds: Set<string>;
@@ -88,6 +90,7 @@ export default function MapView({
   onLike,
   onComment,
   onFollow,
+  onMessageAuthor,
   onConnectWallet,
   onReactGhost,
   likedIds,
@@ -101,6 +104,8 @@ export default function MapView({
   const [leafletReady, setLeafletReady] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentingDropId, setCommentingDropId] = useState<string | null>(null);
+  const [dmDropId, setDmDropId] = useState<string | null>(null);
+  const [dmText, setDmText] = useState("");
   const [isNight, setIsNight] = useState(true);
   const [isAutoTheme, setIsAutoTheme] = useState(true);
   const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
@@ -567,9 +572,77 @@ export default function MapView({
                           }`}
                         >
                           <MessageSquare size={14} />
-                          Comment
+                          Chat
                         </button>
+
+                        {/* Message author privately */}
+                        {onMessageAuthor && drop.createdBy.startsWith("@") && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDmDropId(dmDropId === drop.id ? null : drop.id);
+                            }}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border transition-all font-mono text-[11px] ${
+                              dmDropId === drop.id
+                                ? "bg-crypt-300/10 border-crypt-300/40 text-crypt-300"
+                                : "bg-void-100/50 border-crypt-300/10 text-gray-500 hover:border-crypt-300/30"
+                            }`}
+                          >
+                            <Mail size={14} />
+                            DM
+                          </button>
+                        )}
                       </div>
+
+                      {/* DM input */}
+                      {dmDropId === drop.id && onMessageAuthor && drop.createdBy.startsWith("@") && (
+                        <div style={{ marginTop: "8px" }}>
+                          <div style={{ fontSize: "9px", color: "#6b7280", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                            Private message to {drop.createdBy} via Tapestry
+                          </div>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <input
+                              type="text"
+                              value={dmText}
+                              onChange={(e) => setDmText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && dmText.trim()) {
+                                  onMessageAuthor(drop.createdBy.substring(1));
+                                  setDmText("");
+                                  setDmDropId(null);
+                                }
+                              }}
+                              placeholder={`Hey ${drop.createdBy}, cool drop!`}
+                              style={{
+                                flex: 1, padding: "6px 10px",
+                                borderRadius: "8px",
+                                border: "1px solid rgba(167,139,250,0.2)",
+                                background: "rgba(167,139,250,0.05)",
+                                color: "#c4b5fd", fontSize: "11px",
+                                fontFamily: "monospace", outline: "none",
+                              }}
+                            />
+                            <button
+                              onClick={() => {
+                                if (dmText.trim() && onMessageAuthor) {
+                                  onMessageAuthor(drop.createdBy.substring(1));
+                                  setDmText("");
+                                  setDmDropId(null);
+                                }
+                              }}
+                              style={{
+                                padding: "6px 10px", borderRadius: "8px",
+                                border: "none",
+                                background: "linear-gradient(135deg, #a78bfa, #7c3aed)",
+                                color: "#fff", fontSize: "11px", fontWeight: 700,
+                                cursor: "pointer", fontFamily: "monospace",
+                              }}
+                            >
+                              Send
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Comment input */}
                       {commentingDropId === drop.id && (
