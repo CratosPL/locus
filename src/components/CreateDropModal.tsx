@@ -83,8 +83,7 @@ export default function CreateDropModal({
       setAudiusSearching(true);
       try {
         var res = await fetch(
-          "https://discoveryprovider.audius.co/v1/tracks/search?query=" +
-          encodeURIComponent(audiusQuery) + "&app_name=LOCUS&limit=5"
+          "/api/audius?query=" + encodeURIComponent(audiusQuery) + "&limit=6"
         );
         var json = await res.json();
         var tracks = (json.data || []).map(function(t: any) {
