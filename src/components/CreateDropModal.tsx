@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { DropCategory, GhostEmoji } from "@/types";
 import { CATEGORY_CONFIG, GHOST_EMOJIS } from "@/utils/mockData";
 import type { GeoPosition } from "@/hooks/useGeolocation";
@@ -36,6 +36,8 @@ interface CreateDropModalProps {
     externalLink?: string;
     dropType: "crypto" | "memory";
     audiusTrackId?: string;
+    audiusTrackName?: string;
+    audiusArtist?: string;
   }) => void;
   onCreateGhost: (data: {
     message: string;
@@ -64,8 +66,46 @@ export default function CreateDropModal({
   var [link, setLink] = useState("");
   var [dropType, setDropType] = useState<"crypto" | "memory">("crypto");
   var [audiusTrackId, setAudiusTrackId] = useState("");
+  var [audiusTrackName, setAudiusTrackName] = useState("");
+  var [audiusArtist, setAudiusArtist] = useState("");
+  var [audiusQuery, setAudiusQuery] = useState("");
+  var [audiusResults, setAudiusResults] = useState<{ id: string; title: string; artist: string; artwork?: string }[]>([]);
+  var [audiusSearching, setAudiusSearching] = useState(false);
+  var audiusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { playSound } = useSound();
+
+  // Audius search with debounce
+  useEffect(function() {
+    if (!audiusQuery.trim() || audiusTrackId) return;
+    if (audiusTimerRef.current) clearTimeout(audiusTimerRef.current);
+    audiusTimerRef.current = setTimeout(async function() {
+      setAudiusSearching(true);
+      try {
+        var res = await fetch(
+          "https://discoveryprovider.audius.co/v1/tracks/search?query=" +
+          encodeURIComponent(audiusQuery) + "&app_name=LOCUS&limit=5"
+        );
+        var json = await res.json();
+        var tracks = (json.data || []).map(function(t: any) {
+          return {
+            id: t.id,
+            title: t.title,
+            artist: t.user?.name || t.user?.handle || "Unknown",
+            artwork: t.artwork?.["150x150"] || t.artwork?.["480x480"],
+          };
+        });
+        setAudiusResults(tracks);
+      } catch {
+        setAudiusResults([]);
+      } finally {
+        setAudiusSearching(false);
+      }
+    }, 500);
+    return function() {
+      if (audiusTimerRef.current) clearTimeout(audiusTimerRef.current);
+    };
+  }, [audiusQuery, audiusTrackId]);
 
   var handleSubmit = function() {
     if (!message.trim()) return;
@@ -78,6 +118,8 @@ export default function CreateDropModal({
         externalLink: link.trim() || undefined,
         dropType: dropType,
         audiusTrackId: audiusTrackId.trim() || undefined,
+        audiusTrackName: audiusTrackName || undefined,
+        audiusArtist: audiusArtist || undefined,
       });
       playSound("success");
     } else {
@@ -299,16 +341,69 @@ export default function CreateDropModal({
                   className="w-full pl-9 p-2.5 rounded-xl border border-crypt-300/10 bg-crypt-300/5 text-crypt-200 font-mono text-xs outline-none focus:border-crypt-300/30 transition-colors"
                 />
               </div>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-pink-400">
-                  <Music size={14} />
+              {/* Audius music search */}
+              <div>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-pink-400">
+                    <Music size={14} />
+                  </div>
+                  {audiusTrackId ? (
+                    <div className="w-full pl-9 pr-9 p-2.5 rounded-xl border border-pink-400/30 bg-pink-400/8 text-crypt-200 font-mono text-xs flex items-center justify-between">
+                      <div className="min-w-0">
+                        <div className="text-pink-300 font-bold truncate">{audiusTrackName}</div>
+                        <div className="text-gray-500 text-[10px] truncate">{audiusArtist}</div>
+                      </div>
+                      <button
+                        onClick={function() { setAudiusTrackId(""); setAudiusTrackName(""); setAudiusArtist(""); setAudiusQuery(""); setAudiusResults([]); }}
+                        className="ml-2 text-gray-600 hover:text-red-400 bg-transparent border-none cursor-pointer flex-shrink-0"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={audiusQuery}
+                      onChange={function(e) { setAudiusQuery(e.target.value); }}
+                      placeholder="Search Audius track by name..."
+                      className="w-full pl-9 p-2.5 rounded-xl border border-crypt-300/10 bg-crypt-300/5 text-crypt-200 font-mono text-xs outline-none focus:border-pink-400/30 transition-colors"
+                    />
+                  )}
                 </div>
-                <input
-                  type="text" value={audiusTrackId}
-                  onChange={(e) => setAudiusTrackId(e.target.value)}
-                  placeholder="Audius Track ID (Soundtrack)"
-                  className="w-full pl-9 p-2.5 rounded-xl border border-crypt-300/10 bg-crypt-300/5 text-crypt-200 font-mono text-xs outline-none focus:border-crypt-300/30 transition-colors"
-                />
+
+                {/* Search results */}
+                {!audiusTrackId && (audiusSearching || audiusResults.length > 0) && (
+                  <div className="mt-1.5 rounded-xl border border-white/8 bg-void-100/95 overflow-hidden">
+                    {audiusSearching ? (
+                      <div className="p-3 text-[10px] text-gray-600 font-mono text-center">Searching Audius...</div>
+                    ) : audiusResults.map(function(track) {
+                      return (
+                        <button
+                          key={track.id}
+                          onClick={function() {
+                            setAudiusTrackId(track.id);
+                            setAudiusTrackName(track.title);
+                            setAudiusArtist(track.artist);
+                            setAudiusResults([]);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-pink-400/8 transition-colors cursor-pointer border-none bg-transparent text-left border-b border-white/5 last:border-none"
+                        >
+                          {track.artwork ? (
+                            <img src={track.artwork} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-pink-400/10 flex items-center justify-center flex-shrink-0">
+                              <Music size={14} className="text-pink-400" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="text-[11px] font-bold text-gray-200 truncate">{track.title}</div>
+                            <div className="text-[9px] text-gray-500 truncate">{track.artist}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </>

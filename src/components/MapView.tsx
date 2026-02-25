@@ -193,30 +193,37 @@ export default function MapView({
     secret: renderToStaticMarkup(<Lock size={18} />),
     ritual: renderToStaticMarkup(<MapPin size={18} />),
     treasure: renderToStaticMarkup(<Coins size={18} />),
+    music: `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
   };
 
   // ─── Icons ──────────────────────────────────────────────────────────────
   const createDropIcon = (drop: Drop) => {
     const config = CATEGORY_CONFIG[drop.category];
     const isClaimed = drop.isClaimed;
-    const bgColor = isClaimed ? "#444" : config.color;
-    const glowColor = isClaimed ? "transparent" : config.color;
+    const isMusic = !!drop.audiusTrackId && !isClaimed;
+    const bgColor = isClaimed ? "#444" : isMusic ? "#ec4899" : config.color;
+    const glowColor = isClaimed ? "transparent" : isMusic ? "#ec4899" : config.color;
     const claimedClass = isClaimed ? "drop-marker-claimed" : "marker-pulse";
-    const svgIcon = SVG_ICONS[drop.category] || SVG_ICONS.lore;
+    const svgIcon = isMusic ? SVG_ICONS.music : (SVG_ICONS[drop.category] || SVG_ICONS.lore);
+
+    // Music drops get animated notes ring
+    const musicRing = isMusic
+      ? '<div style="position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:#ec4899;display:flex;align-items:center;justify-content:center;font-size:8px;border:1.5px solid #050208;box-shadow:0 0 6px #ec489988;">♪</div>'
+      : "";
 
     return L!.divIcon({
       className: "custom-marker",
-      html: '<div class="drop-marker ' + claimedClass + '" style="' +
-        '--marker-color:' + bgColor + '; --glow-color:' + glowColor + ';">' +
+      html: '<div style="position:relative;">' + musicRing + '<div class="drop-marker ' + claimedClass + '" style="' +
+        '--marker-color:' + bgColor + '; --glow-color:' + glowColor + ';' + (isMusic ? ' --pulse-color:#ec4899aa;' : '') + '">' +
         '<div class="drop-marker-inner">' +
           '<div class="drop-marker-svg" style="color:' + (isClaimed ? '#666' : '#fff') + '">' + svgIcon + '</div>' +
         '</div>' +
         '<div class="drop-marker-pointer"></div>' +
         (isClaimed ? '' : '<div class="drop-marker-ring"></div>') +
         '<div class="drop-marker-reward" style="color:' + (isClaimed ? '#444' : '#fff') + '; background:' + (isClaimed ? 'transparent' : 'rgba(0,0,0,0.6)') + '; padding: 1px 6px; border-radius: 10px; font-weight: 800; font-size: 9px; white-space: nowrap; border: 1px solid ' + (isClaimed ? 'transparent' : bgColor + '44') + ';">' +
-          (isClaimed ? 'CLAIMED' : (drop.dropType === 'memory' ? 'MEMORY' : drop.finderReward + ' ◎')) +
+          (isClaimed ? 'CLAIMED' : isMusic ? '♪ ' + (drop.finderReward > 0 ? drop.finderReward + ' ◎' : 'FREE') : (drop.dropType === 'memory' ? 'MEMORY' : drop.finderReward + ' ◎')) +
         '</div>' +
-      '</div>',
+      '</div></div>',
       iconSize: [48, 58],
       iconAnchor: [24, 54],
       popupAnchor: [0, -54],
@@ -489,9 +496,21 @@ export default function MapView({
                               setPlayingTrackId(playingTrackId === drop.audiusTrackId ? null : (drop.audiusTrackId || null));
                               playSound("click");
                             }}
-                            className={`${playingTrackId === drop.audiusTrackId ? 'text-pink-500 animate-pulse' : 'text-gray-500'} hover:text-pink-400 transition-colors bg-transparent border-none p-0 cursor-pointer`}
+                            className={`flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-lg border transition-all bg-transparent cursor-pointer font-mono ${
+                              playingTrackId === drop.audiusTrackId
+                                ? 'border-pink-500/40 bg-pink-500/10 text-pink-400'
+                                : 'border-pink-500/20 bg-pink-500/5 text-gray-500 hover:text-pink-400 hover:border-pink-500/30'
+                            }`}
                           >
-                            <Music size={14} />
+                            {playingTrackId === drop.audiusTrackId ? (
+                              <span className="animate-pulse">▐▐</span>
+                            ) : (
+                              <span>▶</span>
+                            )}
+                            <span className="truncate max-w-[120px]">
+                              {drop.audiusTrackName || "Play Track"}
+                              {drop.audiusArtist && <span className="text-gray-600"> · {drop.audiusArtist}</span>}
+                            </span>
                           </button>
                         )}
                       </div>

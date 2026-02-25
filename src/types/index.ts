@@ -22,6 +22,8 @@ export interface Drop {
   externalLink?: string;
   dropType?: "crypto" | "memory";
   audiusTrackId?: string;
+  audiusTrackName?: string;
+  audiusArtist?: string;
 }
 
 export interface CategoryConfig {

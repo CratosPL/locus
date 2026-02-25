@@ -334,6 +334,9 @@ export default function HomePage() {
       twitterHandle?: string;
       externalLink?: string;
       dropType: "crypto" | "memory";
+      audiusTrackId?: string;
+      audiusTrackName?: string;
+      audiusArtist?: string;
     }) {
       var myDrops = extraDrops.filter(function(d) { return !d.isClaimed; });
       if (myDrops.length >= 5) { showToast("Max 5 active drops per wallet", "error"); return; }
@@ -369,6 +372,9 @@ export default function HomePage() {
           twitterHandle: data.twitterHandle,
           externalLink: data.externalLink,
           dropType: data.dropType,
+          audiusTrackId: data.audiusTrackId,
+          audiusTrackName: data.audiusTrackName,
+          audiusArtist: data.audiusArtist,
         };
 
         try { localStorage.setItem("locus_last_drop_time", String(Date.now())); } catch {}
