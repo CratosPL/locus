@@ -103,36 +103,56 @@ export default function InfoPanel({ isOpen, onClose, onRetakeTutorial }: InfoPan
                   </div>
                   <div className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold text-xs">2</div>
-                    <p className="text-xs">Grant <b className="text-white">GPS Access</b>. In Demo Mode, you can click the "map" to simulate walking if you aren't in Warsaw.</p>
+                    <p className="text-xs">Grant <b className="text-white">GPS Access</b>. Not in Warsaw? Enable <b className="text-yellow-400">Demo Mode</b> (bottom-left) to explore without moving.</p>
                   </div>
                   <div className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-crypt-300/20 flex items-center justify-center shrink-0 text-crypt-300 font-bold text-xs">3</div>
-                    <p className="text-xs">Locate markers. Blue/Purple are <b className="text-white">Loot Drops</b> (SOL rewards). Green circles are <b className="text-white">Ghost Marks</b>.</p>
+                    <p className="text-xs">Tap a drop marker → walk within <b className="text-white">150m</b> → claim it. SOL transfers directly to your wallet.</p>
                   </div>
                 </div>
               </section>
 
-              <button
-                onClick={() => setActiveTab("faq")}
-                className="w-full p-4 rounded-xl bg-crypt-300/10 border border-crypt-300/30 flex items-center justify-between group hover:bg-crypt-300/20 transition-all"
-              >
-                <div className="text-left">
-                  <span className="text-xs font-bold text-white block">Need detailed instructions?</span>
-                  <span className="text-[10px] text-gray-500">Read our Feature Deep Dive & FAQ</span>
-                </div>
-                <Zap size={20} className="text-crypt-300 group-hover:scale-125 transition-transform" />
-              </button>
-
-              <section className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4">
-                <h4 className="text-amber-500 font-bold text-xs mb-2 flex items-center gap-2">
-                  <Zap size={14} /> PRO TIP: SUNRISE TUTORIAL
+              {/* Social features */}
+              <section className="bg-crypt-300/5 rounded-2xl p-4 border border-crypt-300/15 space-y-4">
+                <h4 className="text-crypt-300 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                  <Users size={13} /> Social Features
                 </h4>
-                <p className="text-xs">Open the <b className="text-white">Trails</b> menu and start the "Sunrise Onboarding" quest to learn the ropes and earn your first XP!</p>
+
+                <div className="space-y-3 text-xs">
+                  <div className="flex gap-3">
+                    <span className="text-lg shrink-0">💬</span>
+                    <div>
+                      <b className="text-white block mb-0.5">Public Chat on drops</b>
+                      <span className="text-gray-400">Every drop has a public comment thread. Tap <b className="text-white">Chat</b> in the drop popup to leave a message — stored on-chain via Tapestry.</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="text-lg shrink-0">✉️</span>
+                    <div>
+                      <b className="text-white block mb-0.5">Private DM to author</b>
+                      <span className="text-gray-400">Tap <b className="text-white">DM</b> in the drop popup to send a private message to whoever left the drop. Perfect for meeting up or asking about the location.</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="text-lg shrink-0">👤</span>
+                    <div>
+                      <b className="text-white block mb-0.5">Follow from the map</b>
+                      <span className="text-gray-400">Tap <b className="text-white">Follow</b> next to a creator's name in any drop popup. Follows are registered on Tapestry's social graph — fully on-chain.</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="text-lg shrink-0">🗺️</span>
+                    <div>
+                      <b className="text-white block mb-0.5">Nearby Explorers</b>
+                      <span className="text-gray-400">Open the <b className="text-white">Explorers Nearby</b> panel on the map (top-right, below Feed). See other active players around you, their rank and distance. Click any explorer to view their profile, follow them, or send a DM.</span>
+                    </div>
+                  </div>
+                </div>
               </section>
 
               <button
                 onClick={onRetakeTutorial}
-                className="w-full mt-4 p-4 rounded-xl border border-white/10 flex items-center justify-center gap-2 hover:bg-white/5 transition-all text-[10px] font-bold uppercase tracking-widest text-gray-400"
+                className="w-full p-4 rounded-xl border border-white/10 flex items-center justify-center gap-2 hover:bg-white/5 transition-all text-[10px] font-bold uppercase tracking-widest text-gray-400"
               >
                 <Navigation size={14} /> Retake Guided Tour
               </button>
@@ -169,6 +189,15 @@ export default function InfoPanel({ isOpen, onClose, onRetakeTutorial }: InfoPan
                     </h4>
                     <p className="text-[11px] text-gray-400 pl-6 border-l border-white/10">
                       Your identity is your wallet. Every claim, like, and comment is a node on the <b className="text-white">Tapestry Social Graph</b>. Follow creators to see their new drops first.
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white font-bold text-xs mb-2 flex items-center gap-2">
+                      <Users size={14} className="text-emerald-400" /> 4. EXPLORERS NEARBY + DM
+                    </h4>
+                    <p className="text-[11px] text-gray-400 pl-6 border-l border-white/10">
+                      The <b className="text-white">Explorers Nearby</b> panel (map, top-right) shows active players around you with their rank and distance. Tap any explorer to open their profile — you can follow them or send a private message via Tapestry. Drop popups also have a <b className="text-white">DM button</b> to message the author directly.
                     </p>
                   </div>
 
@@ -218,7 +247,7 @@ export default function InfoPanel({ isOpen, onClose, onRetakeTutorial }: InfoPan
                 <h3 className="text-crypt-300 font-bold mb-3 flex items-center gap-2 uppercase">Hackathon Tracks</h3>
                 <div className="space-y-3">
                   <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                    <p className="text-xs"><b className="text-purple-400">TAPESTRY:</b> Profile metadata and social graph (follows) are synced with Tapestry v1 API.</p>
+                    <p className="text-xs"><b className="text-purple-400">TAPESTRY:</b> Profile auto-created on wallet connect. Every drop + ghost mark = Tapestry content node. Likes, comments, follows on-chain. Live activity feed. Nearby Explorers panel with follow + private DM from map. Drop popups have public Chat and private DM buttons. ExplorerProfileModal with stats, rank, and message flow.</p>
                   </div>
                   <div className="p-3 bg-white/5 rounded-xl border border-white/5">
                     <p className="text-xs"><b className="text-blue-400">MAGICBLOCK:</b> RPG logic for Leveling and ephemeral state (Ghost Marks expire after 24h).</p>

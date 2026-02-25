@@ -49,6 +49,24 @@ PDAs: `["drop", drop_id]` for the drop account, `["vault", drop_id]` for the SOL
 
 ---
 
+## Social Discovery — Meet People IRL
+
+This is the part I'm most excited about building further. The idea is that GPS proximity + on-chain social graph creates conditions for real-world connections between people who've never met.
+
+**What's in right now:**
+
+Drop popups have three social buttons: Like (on-chain via Tapestry), Chat (public comment thread on the drop), and DM (private message to the author). The DM input shows "Private message to @username via Tapestry" so it's clear what's happening under the hood.
+
+Every drop popup also shows the creator's handle with a Follow button inline — one tap, registered on Tapestry's social graph, no extra screens.
+
+**Nearby Explorers panel** sits on the map (top-right, below the Live Feed). It shows active players around you sorted by distance — avatar, username, rank (Lost Soul / Spirit / Wraith / Lich), how long ago they were active, and how far away. Click any explorer to open their full profile.
+
+**Explorer Profile Modal** shows their stats (drops created, claimed, reputation), rank, wallet address. Two actions: Follow (updates Tapestry social graph) and Message (opens inline DM field). Everything attributed to Tapestry Protocol.
+
+**What this enables in production:** someone leaves a drop at a location, you find it and want to know who was there — you DM them. Two people both leave ghost marks at the same spot — Ghost Chain creates a Tapestry link between them automatically. Drops visible only to your followers. City-wide social graph built entirely from physical presence.
+
+---
+
 ## Features
 
 **Core mechanics**
@@ -56,9 +74,16 @@ PDAs: `["drop", drop_id]` for the drop account, `["vault", drop_id]` for the SOL
 - GPS verification — must be within 150m to claim (Haversine formula)
 - Real on-chain SOL transfers via Pinocchio program
 
-**Claim Success Modal** — after every claim a modal shows up with an animated SOL counter going from 0 to the full reward, a visualization of the vault-to-wallet transfer flow, the drop's message, shortened tx signature and a direct link to Solscan. The kind of moment that makes the on-chain part feel real instead of abstract.
+**Social Discovery (Tapestry)**
+- **Public chat** on every drop — comment thread stored on-chain
+- **Private DM** to drop author directly from the map popup
+- **Follow button** inline in drop popups — one tap, on-chain via Tapestry
+- **Nearby Explorers panel** — list of active players around you with rank, distance, last active time; click any to open profile
+- **Explorer Profile Modal** — stats, rank, Follow + Message actions powered by Tapestry
 
-**Live Activity Feed** — on the map there's a collapsible feed showing what's happening across the network in real time. Tapestry events like claims, new drops, follows, badge mints, and ghost marks stream in every few seconds. You can watch the social graph being built while you play.
+**Claim Success Modal** — after every claim a modal shows up with an animated SOL counter going from 0 to the full reward, a visualization of the vault-to-wallet transfer flow, the drop's message, shortened tx signature and a direct link to Solscan.
+
+**Live Activity Feed** — collapsible panel on map showing Tapestry events in real time (claims, new drops, follows, badge mints, ghost marks).
 
 **Ghost Marks** — ephemeral messages (24h) with 8 types. No SOL attached, just vibes, warnings, tips. Other users can react. Creates FOMO because whatever was on the map yesterday is gone.
 
@@ -97,7 +122,7 @@ What I'd build next: "Nearby Explorers" — show avatars of users active in the 
 ## Hackathon Tracks
 
 **Tapestry — On-chain Social ($5,000)**
-Every drop and ghost mark registers as a Tapestry content node. Profiles, follows, likes, and comments all go through the Tapestry protocol. The live activity feed visualizes the social graph being built in real time.
+Every drop and ghost mark registers as a Tapestry content node. Profiles auto-created on wallet connect. Follows, likes, and comments all go through Tapestry protocol. Live activity feed. Nearby Explorers panel with follow + DM from map. Drop popups have public Chat and private DM buttons. Explorer Profile Modal shows stats, rank, and message flow. The social graph forms entirely from physical presence — people discovering each other through the locations they've both visited.
 
 **MagicBlock — Gaming ($5,000)**
 Quest Trails use game engine logic applied to the real world — sequenced waypoints, auto check-in triggers, difficulty levels, bonus rewards. Ghost Marks create a "now or never" loop that keeps people coming back daily.
