@@ -14,7 +14,7 @@ import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
 import ClaimSuccessModal from "@/components/ClaimSuccessModal";
 import ActivityFeed from "@/components/ActivityFeed";
-import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon, Activity } from "lucide-react";
+import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon, Activity as ActivityIcon } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useSound } from "@/hooks/useSound";
@@ -852,7 +852,7 @@ export default function HomePage() {
             )}
           >
             <div className={"relative flex items-center justify-center w-8 h-6 rounded-lg transition-all " + (activeTab === "feed" ? "bg-crypt-300/15" : "")}>
-              <Activity size={18} />
+              <ActivityIcon size={18} />
               <div className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_#34d399] animate-pulse" />
             </div>
             <span className="opacity-80 uppercase tracking-widest">Feed</span>
