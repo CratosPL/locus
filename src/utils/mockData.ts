@@ -439,22 +439,41 @@ export var MOCK_DROPS: Drop[] = [
     createdBy: "kiwi_hacker.sol",
     createdAt: "2026-02-25",
   },
-  // ─── Music Drops — Global ────────────────────────────────────────────────
+  // ─── Comprehensive Example Drops — Every Type & Combination ─────────────
+  // Covers: all 5 categories, memory type, music+SOL, music+free, music+claimed,
+  // twitter handle, external link, all combos, global locations
+
+  // [1] MEMORY drop — no SOL, pure message, with Twitter
   {
-    id: "drop-music-1",
+    id: "drop-ex-1",
     location: { lat: 52.2355, lng: 21.0062 },
-    message: "Heard this walking through Old Town at 3am. Something about this corner made it feel right. Sit with it for a minute.",
+    message: "My grandfather lived here before the war. This building is all that's left. Not everything has to be a bounty — some things just deserve to be remembered.",
     isClaimed: false,
-    finderReward: 0.05,
+    finderReward: 0,
     category: "lore",
-    createdBy: "@spectre_wav",
+    createdBy: "@historia_dev",
     createdAt: "2026-02-24",
-    audiusTrackId: "777353110",
-    audiusTrackName: "Midnight Solana",
-    audiusArtist: "CryptoBeats",
+    dropType: "memory" as const,
+    twitterHandle: "@historia_dev",
   },
+
+  // [2] CRYPTO drop — high reward, quest, with external link (portfolio)
   {
-    id: "drop-music-2",
+    id: "drop-ex-2",
+    location: { lat: 51.5074, lng: -0.1278 },
+    message: "First person to walk here and sign this transaction gets 2 SOL. No tricks. I'm testing geo-social bounties for an upcoming launch. Link to the project below.",
+    isClaimed: false,
+    finderReward: 2.0,
+    category: "quest",
+    createdBy: "@london_builder",
+    createdAt: "2026-02-22",
+    twitterHandle: "@london_builder",
+    externalLink: "https://github.com/london-builder/geodrop",
+  },
+
+  // [3] MUSIC drop — free, memory type, with Audius (musician sharing work)
+  {
+    id: "drop-ex-3",
     location: { lat: 35.6762, lng: 139.6503 },
     message: "Made this during six months of late nights in Shibuya. Dropping it here for free — music wants to be free. Audius or nothing.",
     isClaimed: false,
@@ -466,49 +485,104 @@ export var MOCK_DROPS: Drop[] = [
     audiusTrackId: "2013859664",
     audiusTrackName: "Ghost Protocol",
     audiusArtist: "phantom_producer",
+    twitterHandle: "@phantom_producer",
   },
+
+  // [4] MUSIC drop — with SOL reward, ritual, global (Paris)
   {
-    id: "drop-music-3",
-    location: { lat: 51.5074, lng: -0.1278 },
-    message: "Someone was dancing alone here at sunrise. Left this as a tribute. React if you feel it.",
-    isClaimed: false,
-    finderReward: 0.08,
-    category: "ritual",
-    createdBy: "@dawn_lich",
-    createdAt: "2026-02-25",
-    audiusTrackId: "777353110",
-    audiusTrackName: "Before Sunrise",
-    audiusArtist: "dawn_lich",
-  },
-  {
-    id: "drop-music-4",
+    id: "drop-ex-4",
     location: { lat: 48.8566, lng: 2.3522 },
     message: "Paris has a frequency. Standing here at dusk you can hear it between the crowd noise. This track is the closest I got to recording it.",
     isClaimed: false,
     finderReward: 0.12,
-    category: "lore",
+    category: "ritual",
     createdBy: "@lich_lord_pl",
     createdAt: "2026-02-22",
     audiusTrackId: "987654321",
     audiusTrackName: "Paris Frequency",
     audiusArtist: "lich_lord_pl",
   },
+
+  // [5] MUSIC drop — CLAIMED, with track name (shows how claimed music drops look)
   {
-    id: "drop-music-5",
+    id: "drop-ex-5",
     location: { lat: 40.7580, lng: -73.9855 },
     message: "Times Square at 4am — total silence except this. Left it here for whoever finds it next.",
-    isClaimed: false,
+    isClaimed: true,
     finderReward: 0.2,
     category: "treasure",
     createdBy: "@nyc_phantom",
     createdAt: "2026-02-20",
+    claimedBy: "3xK9...mR7q",
+    claimedAt: "2026-02-21",
     audiusTrackId: "2013859664",
     audiusTrackName: "4AM Times Square",
     audiusArtist: "nyc_phantom",
   },
+
+  // [6] CRYPTO drop — micro reward, lore, Warsaw Old Town
   {
-    id: "drop-music-6",
+    id: "drop-ex-6",
+    location: { lat: 52.2497, lng: 21.0122 },
+    message: "Heard this walking through Old Town at 3am. Something about this corner made it feel right. Sit with it for a minute.",
+    isClaimed: false,
+    finderReward: 0.05,
+    category: "lore",
+    createdBy: "@spectre_wav",
+    createdAt: "2026-02-24",
+    audiusTrackId: "777353110",
+    audiusTrackName: "Midnight Solana",
+    audiusArtist: "CryptoBeats",
+  },
+
+  // [7] CRYPTO drop — secret, all social fields (twitter + link + music)
+  {
+    id: "drop-ex-7",
+    location: { lat: 37.7749, lng: -122.4194 },
+    message: "Recorded this loop walking across the Golden Gate in the fog. The city disappears. Only sound remains. Check my other work below.",
+    isClaimed: false,
+    finderReward: 0.18,
+    category: "secret",
+    createdBy: "@fog_signal",
+    createdAt: "2026-02-18",
+    twitterHandle: "@fog_signal",
+    externalLink: "https://audius.co/fog_signal",
+    audiusTrackId: "2013859664",
+    audiusTrackName: "Golden Gate Loop",
+    audiusArtist: "fog_signal",
+  },
+
+  // [8] MEMORY drop — no SOL, with external link (photographer sharing location)
+  {
+    id: "drop-ex-8",
     location: { lat: -33.8688, lng: 151.2093 },
+    message: "Shot this photo series from this exact spot at sunrise. If you're here at dawn you'll understand why. No bounty — just wanted to mark it.",
+    isClaimed: false,
+    finderReward: 0,
+    category: "lore",
+    createdBy: "@oz_wraith",
+    createdAt: "2026-02-19",
+    dropType: "memory" as const,
+    externalLink: "https://oz-wraith.art/sydney-sunrise",
+  },
+
+  // [9] CRYPTO drop — large reward, treasure, with twitter (contest-style)
+  {
+    id: "drop-ex-9",
+    location: { lat: 1.3521, lng: 103.8198 },
+    message: "Singapore hidden reward. First to claim gets 1.5 SOL. Tag me when you find it — I want to know who you are.",
+    isClaimed: false,
+    finderReward: 1.5,
+    category: "treasure",
+    createdBy: "@sg_crypt",
+    createdAt: "2026-02-21",
+    twitterHandle: "@sg_crypt",
+  },
+
+  // [10] MUSIC drop — Sydney harbour, medium reward
+  {
+    id: "drop-ex-10",
+    location: { lat: -33.857, lng: 151.215 },
     message: "Sydney harbour at night. Made this beat on my phone sitting on the steps. Worth 0.15 SOL if you find it.",
     isClaimed: false,
     finderReward: 0.15,
@@ -519,18 +593,33 @@ export var MOCK_DROPS: Drop[] = [
     audiusTrackName: "Harbour Frequency",
     audiusArtist: "oz_wraith",
   },
+
+  // [11] CRYPTO drop — ritual, Warsaw, CLAIMED example
   {
-    id: "drop-music-7",
-    location: { lat: 37.7749, lng: -122.4194 },
-    message: "Recorded this loop walking across the Golden Gate in the fog. The city disappears. Only sound remains.",
+    id: "drop-ex-11",
+    location: { lat: 52.2279, lng: 20.9987 },
+    message: "The ritual is complete. This spot witnessed three wallets signing simultaneously. The chain remembers.",
+    isClaimed: true,
+    finderReward: 0.3,
+    category: "ritual",
+    createdBy: "@trinity.sol",
+    createdAt: "2026-02-10",
+    claimedBy: "7rP2...xK4n",
+    claimedAt: "2026-02-11",
+  },
+
+  // [12] CRYPTO drop — quest, with full social (twitter + link), Seoul
+  {
+    id: "drop-ex-12",
+    location: { lat: 37.5665, lng: 126.9780 },
+    message: "Seoul quest: find all 3 drops I left across Gangnam district and DM me for a bonus 0.5 SOL. This is drop #1.",
     isClaimed: false,
-    finderReward: 0.18,
-    category: "secret",
-    createdBy: "@fog_signal",
-    createdAt: "2026-02-18",
-    audiusTrackId: "2013859664",
-    audiusTrackName: "Golden Gate Loop",
-    audiusArtist: "fog_signal",
+    finderReward: 0.1,
+    category: "quest",
+    createdBy: "@gangnam_dev",
+    createdAt: "2026-02-20",
+    twitterHandle: "@gangnam_dev",
+    externalLink: "https://x.com/gangnam_dev/status/1234567890",
   },
 ];
 
