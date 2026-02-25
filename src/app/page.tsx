@@ -14,7 +14,7 @@ import TxToast from "@/components/TxToast";
 import InfoPanel from "@/components/InfoPanel";
 import ClaimSuccessModal from "@/components/ClaimSuccessModal";
 import ActivityFeed from "@/components/ActivityFeed";
-import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon } from "lucide-react";
+import { Map as MapIcon, ScrollText, Compass, Trophy, User, MapPin, Zap as ZapIcon, Activity } from "lucide-react";
 import { useProgram } from "@/hooks/useProgram";
 import { useTapestry } from "@/hooks/useTapestry";
 import { useSound } from "@/hooks/useSound";
@@ -39,7 +39,7 @@ var MapView = dynamic(function() { return import("@/components/MapView"); }, {
   },
 });
 
-type TabId = "map" | "list" | "trails" | "leaderboard";
+type TabId = "map" | "list" | "trails" | "leaderboard" | "feed";
 
 interface ToastData {
   id: number; message: string; signature?: string; type: "success" | "error" | "info";
@@ -748,6 +748,23 @@ export default function HomePage() {
             onSelectTrail={handleSelectTrail}
             onStartTrail={handleStartTrail}
           />
+        ) : activeTab === "feed" ? (
+          <div className="flex flex-col h-full overflow-y-auto p-4 gap-3" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <div className="flex items-center justify-between mb-1">
+              <div>
+                <div className="text-[10px] text-gray-600 uppercase tracking-widest">Tapestry Protocol</div>
+                <div className="text-sm font-black text-crypt-200">Live Social Feed</div>
+              </div>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_#34d399]" />
+                <span className="text-[9px] text-emerald-400 font-mono">On-chain</span>
+              </div>
+            </div>
+            <ActivityFeed activities={activities} className="w-full" />
+            <div className="mt-2 p-3 rounded-xl bg-white/[0.02] border border-white/8 text-[10px] text-gray-600 leading-relaxed">
+              Every event in this feed is powered by <span className="text-crypt-300">Tapestry Protocol</span> — profiles, content nodes, likes, comments and follows are stored on-chain. The social graph is fully decentralized.
+            </div>
+          </div>
         ) : (
       <div className="flex flex-col h-full overflow-hidden">
         {/* Hackathon Banner */}
@@ -773,30 +790,32 @@ export default function HomePage() {
 
       {/* Bottom nav */}
       <nav className="flex items-center bg-void/80 border-t border-white/5 z-50 relative backdrop-blur-2xl shrink-0 glass-border-gradient" style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))", paddingTop: "8px" }}>
-        {/* Left Side: Map & Drops & Quests */}
+        {/* Left Side: Map, Drops, Quests */}
         <div className="flex flex-1 justify-evenly items-center">
           {([
-            { id: "map" as TabId, icon: <MapIcon size={20} />, label: "Map" },
-            { id: "list" as TabId, icon: <ScrollText size={20} />, label: "Drops" },
-            { id: "trails" as TabId, icon: <Compass size={20} />, label: "Quests" },
+            { id: "map" as TabId, icon: <MapIcon size={18} />, label: "Map" },
+            { id: "list" as TabId, icon: <ScrollText size={18} />, label: "Drops" },
+            { id: "trails" as TabId, icon: <Compass size={18} />, label: "Quests" },
           ]).map(function(tab) {
             return (
               <button
                 key={tab.id}
                 onClick={function() { if (soundEnabled) playSound("click"); setActiveTab(tab.id); }}
-                className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
-                  activeTab === tab.id ? "text-crypt-300 scale-110" : "text-gray-500"
+                className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[8px] font-bold tracking-tight transition-all active:scale-90 w-14 py-1 " + (
+                  activeTab === tab.id ? "text-crypt-300" : "text-gray-500"
                 )}
               >
-                {tab.icon}
-                <span className="opacity-80">{tab.label}</span>
+                <div className={"flex items-center justify-center w-8 h-6 rounded-lg transition-all " + (activeTab === tab.id ? "bg-crypt-300/15" : "")}>
+                  {tab.icon}
+                </div>
+                <span className="opacity-80 uppercase tracking-widest">{tab.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Center: Action Button (Plus) */}
-        <div className="flex flex-col items-center px-2 -translate-y-2">
+        {/* Center: Action Button */}
+        <div className="flex flex-col items-center px-1 -translate-y-3">
           <button
             onClick={function() {
               if (soundEnabled) playSound("click");
@@ -807,22 +826,36 @@ export default function HomePage() {
                 handleConnectWallet();
               }
             }}
-            className="w-14 h-14 rounded-full border-4 border-void bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-3xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90 z-10"
+            className="w-13 h-13 w-[52px] h-[52px] rounded-full border-4 border-void bg-gradient-to-br from-crypt-300 to-crypt-500 text-white text-2xl cursor-pointer flex items-center justify-center shadow-[0_8px_32px_rgba(167,139,250,0.5)] hover:from-crypt-400 hover:to-crypt-600 transition-all active:scale-90 z-10"
           >
             +
           </button>
         </div>
 
-        {/* Right Side: Rank & Profile */}
+        {/* Right Side: Rank, Feed, Profile */}
         <div className="flex flex-1 justify-evenly items-center">
           <button
-            onClick={function() { playSound("click"); setActiveTab("leaderboard"); }}
-            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
-              activeTab === "leaderboard" ? "text-crypt-300 scale-110" : "text-gray-500"
+            onClick={function() { if (soundEnabled) playSound("click"); setActiveTab("leaderboard"); }}
+            className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[8px] font-bold tracking-tight transition-all active:scale-90 w-14 py-1 " + (
+              activeTab === "leaderboard" ? "text-crypt-300" : "text-gray-500"
             )}
           >
-            <Trophy size={20} />
-            <span className="opacity-80">Rank</span>
+            <div className={"flex items-center justify-center w-8 h-6 rounded-lg transition-all " + (activeTab === "leaderboard" ? "bg-crypt-300/15" : "")}>
+              <Trophy size={18} />
+            </div>
+            <span className="opacity-80 uppercase tracking-widest">Rank</span>
+          </button>
+          <button
+            onClick={function() { if (soundEnabled) playSound("click"); setActiveTab("feed"); }}
+            className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[8px] font-bold tracking-tight transition-all active:scale-90 w-14 py-1 " + (
+              activeTab === "feed" ? "text-crypt-300" : "text-gray-500"
+            )}
+          >
+            <div className={"relative flex items-center justify-center w-8 h-6 rounded-lg transition-all " + (activeTab === "feed" ? "bg-crypt-300/15" : "")}>
+              <Activity size={18} />
+              <div className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_4px_#34d399] animate-pulse" />
+            </div>
+            <span className="opacity-80 uppercase tracking-widest">Feed</span>
           </button>
           <button
             onClick={function() {
@@ -834,12 +867,14 @@ export default function HomePage() {
                 handleConnectWallet();
               }
             }}
-            className={"flex flex-col items-center gap-1 bg-transparent border-none cursor-pointer font-mono text-[9px] font-bold tracking-tight transition-all active:scale-90 " + (
-              showProfile ? "text-crypt-300 scale-110" : "text-gray-500"
+            className={"flex flex-col items-center gap-0.5 bg-transparent border-none cursor-pointer font-mono text-[8px] font-bold tracking-tight transition-all active:scale-90 w-14 py-1 " + (
+              showProfile ? "text-crypt-300" : "text-gray-500"
             )}
           >
-            <User size={20} />
-            <span className="opacity-80">{isConnected ? "Profile" : "Login"}</span>
+            <div className={"flex items-center justify-center w-8 h-6 rounded-lg transition-all " + (showProfile ? "bg-crypt-300/15" : "")}>
+              <User size={18} />
+            </div>
+            <span className="opacity-80 uppercase tracking-widest">{isConnected ? "Profile" : "Login"}</span>
           </button>
         </div>
       </nav>
