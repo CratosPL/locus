@@ -170,7 +170,7 @@ export default function HomePage() {
       if (!currentProgress.has(wp.id) && isNearby(wp.location.lat, wp.location.lng)) {
         currentProgress.add(wp.id);
         changed = true;
-        addActivity("🗺️", "Reached " + wp.name, trail.color);
+addActivity("🗺️", "Reached " + wp.name, trail!.color);
       }
     });
 
