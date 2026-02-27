@@ -9,6 +9,7 @@ import {
   User,
   Activity as ActivityIcon,
 } from "lucide-react";
+import type { SoundType } from "@/hooks/useSound";
 
 export type TabId = "map" | "list" | "trails" | "leaderboard" | "feed";
 
@@ -18,7 +19,7 @@ interface BottomNavProps {
   isConnected: boolean;
   showProfile: boolean;
   soundEnabled: boolean;
-  playSound: (name: string) => void;
+  playSound: (name: SoundType) => void;
   onOpenCreate: () => void;
   onOpenProfile: () => void;
   onConnectWallet: () => void;

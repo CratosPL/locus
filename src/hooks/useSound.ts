@@ -7,7 +7,7 @@ import { useCallback, useRef } from "react";
  * Handles haptic vibrations and interface sound effects using Web Audio API.
  */
 
-type SoundType =
+export type SoundType =
   | "claim"
   | "success"
   | "error"
