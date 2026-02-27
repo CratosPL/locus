@@ -45,6 +45,8 @@ interface CreateDropModalProps {
   }) => void;
   userPosition?: GeoPosition | null;
   isConnected: boolean;
+  pickedLocation?: { lat: number; lng: number } | null;
+  onPickLocation?: () => void;
 }
 
 var TOKEN_OPTIONS = [
@@ -54,7 +56,7 @@ var TOKEN_OPTIONS = [
 ];
 
 export default function CreateDropModal({
-  onClose, onCreate, onCreateGhost, userPosition, isConnected,
+  onClose, onCreate, onCreateGhost, userPosition, isConnected, pickedLocation, onPickLocation,
 }: CreateDropModalProps) {
   var [mode, setMode] = useState<CreateMode>("drop");
   var [message, setMessage] = useState("");
@@ -187,12 +189,22 @@ export default function CreateDropModal({
 
         {/* Location */}
         <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-lg bg-crypt-300/5 border border-crypt-300/10">
-          <div className={"w-2 h-2 rounded-full " + (userPosition ? "bg-emerald-400 animate-pulse" : "bg-yellow-400")} />
-          <span className="text-[11px] text-gray-500 font-mono">
-            {userPosition
+          <div className={"w-2 h-2 rounded-full " + (pickedLocation ? "bg-crypt-300 animate-pulse" : userPosition ? "bg-emerald-400 animate-pulse" : "bg-yellow-400")} />
+          <span className="text-[11px] text-gray-500 font-mono flex-1">
+            {pickedLocation
+              ? "📌 " + pickedLocation.lat.toFixed(4) + ", " + pickedLocation.lng.toFixed(4) + " (picked)"
+              : userPosition
               ? "📍 " + userPosition.lat.toFixed(4) + ", " + userPosition.lng.toFixed(4)
               : "📍 Default location (enable GPS)"}
           </span>
+          {onPickLocation && (
+            <button
+              onClick={function() { onPickLocation(); }}
+              className="text-[9px] font-mono font-bold text-crypt-300 bg-crypt-300/10 px-2 py-1 rounded-md border border-crypt-300/20 cursor-pointer hover:bg-crypt-300/20 transition-colors"
+            >
+              📌 Pick on map
+            </button>
+          )}
         </div>
 
         {mode === "drop" ? (

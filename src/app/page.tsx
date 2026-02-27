@@ -83,6 +83,8 @@ export default function HomePage() {
   var [viewingExplorer, setViewingExplorer] = useState<NearbyExplorer | null>(null);
   var [showRightPanel, setShowRightPanel] = useState(false);
   var [showLeftMenu, setShowLeftMenu] = useState(false);
+  var [pickingLocation, setPickingLocation] = useState(false);
+  var [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // ─── Persist / hydrate ──────────────────────────────────────────────────
   useEffect(function () {
@@ -261,11 +263,12 @@ addActivity("🗺️", "Reached " + wp.name, trail!.color);
     } catch {}
     if (data.dropType === "crypto" && data.reward < 0.01) { showToast("Minimum reward: 0.01 SOL", "error"); return; }
 
-    var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
-    var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
+    var lat = pickedLocation ? pickedLocation.lat : userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
+    var lng = pickedLocation ? pickedLocation.lng : userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
     var result = await createDropOnChain(data.message, lat, lng, data.reward);
 
     if (result.ok) {
+      setPickedLocation(null);
       var name = profile?.username ? "@" + profile.username : walletAddress ? walletAddress.slice(0, 4) + "..." + walletAddress.slice(-4) : "anon.sol";
       var newDrop: Drop = {
         id: "drop-" + Date.now(), location: { lat, lng }, message: data.message,
@@ -284,12 +287,13 @@ addActivity("🗺️", "Reached " + wp.name, trail!.color);
       showToast("Drop created! " + cat.icon + " " + (data.dropType === "memory" ? "Memory recorded" : data.reward + " SOL"), "success", result.value);
       addActivity("🪦", "Dropped " + cat.label.toLowerCase() + " at your location", cat.color);
     } else { showToast("Create failed", "error"); }
-  }, [createDropOnChain, userPosition, walletAddress, profile, registerDropAsContent, showToast, extraDrops]);
+  }, [createDropOnChain, userPosition, walletAddress, profile, registerDropAsContent, showToast, extraDrops, pickedLocation, soundEnabled, playSound, addActivity]);
 
   // ─── Ghost Mark ────────────────────────────────────────────────────────
   var handleCreateGhost = useCallback(function (data: { message: string; emoji: GhostEmoji }) {
-    var lat = userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
-    var lng = userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
+    var lat = pickedLocation ? pickedLocation.lat : userPosition ? userPosition.lat : 52.2297 + (Math.random() - 0.5) * 0.01;
+    var lng = pickedLocation ? pickedLocation.lng : userPosition ? userPosition.lng : 21.0122 + (Math.random() - 0.5) * 0.01;
+    setPickedLocation(null);
     var ghost: GhostMark = { id: "ghost-" + Date.now(), location: { lat, lng }, message: data.message, emoji: data.emoji, createdBy: profile?.username ? "@" + profile.username : "anon", createdAt: Date.now(), reactions: 0 };
     setGhostMarks(function (prev) { var updated = prev.concat([ghost]); saveJSON("locus_ghosts", updated.filter(function (g) { return g.id.startsWith("ghost-"); })); return updated; });
     setGhostCount(function (c) { return c + 1; });
@@ -298,7 +302,7 @@ addActivity("🗺️", "Reached " + wp.name, trail!.color);
     addActivity("👻", "Left a ghost mark " + data.emoji, "#8b5cf6");
     var rep = claimedIds.size * 10 + createdCount * 5 + likedIds.size * 2;
     checkBadges({ claims: claimedIds.size, creates: createdCount, ghosts: ghostCount + 1, trails: completedTrails, rep });
-  }, [userPosition, profile, showToast, ghostCount, claimedIds, createdCount, likedIds, completedTrails, checkBadges]);
+  }, [userPosition, profile, showToast, ghostCount, claimedIds, createdCount, likedIds, completedTrails, checkBadges, pickedLocation, soundEnabled, playSound, addActivity]);
 
   var handleReactGhost = useCallback(function (ghostId: string) {
     if (soundEnabled) playSound("click");
@@ -385,6 +389,14 @@ addActivity("🗺️", "Reached " + wp.name, trail!.color);
               onConnectWallet={handleConnectWallet} onReactGhost={handleReactGhost}
               likedIds={likedIds} userPosition={userPosition} demoMode={demoMode}
               formatDistance={formatDistance} isNearby={isNearby} flyTrigger={flyTrigger}
+              pickingLocation={pickingLocation}
+              onMapClick={function (lat, lng) {
+                if (pickingLocation) {
+                  setPickedLocation({ lat, lng });
+                  setPickingLocation(false);
+                  setShowCreateModal(true);
+                }
+              }}
             />
             <MapOverlays
               drops={drops} ghostMarks={ghostMarks} activeTrail={activeTrail}
@@ -419,7 +431,13 @@ addActivity("🗺️", "Reached " + wp.name, trail!.color);
       />
 
       {showCreateModal && (
-        <CreateDropModal onClose={function () { if (soundEnabled) playSound("popup-close"); setShowCreateModal(false); }} onCreate={handleCreateDrop} onCreateGhost={handleCreateGhost} userPosition={userPosition} isConnected={isConnected} />
+        <CreateDropModal onClose={function () { if (soundEnabled) playSound("popup-close"); setShowCreateModal(false); }} onCreate={handleCreateDrop} onCreateGhost={handleCreateGhost} userPosition={userPosition} isConnected={isConnected}
+          pickedLocation={pickedLocation}
+          onPickLocation={function () {
+            setShowCreateModal(false);
+            setPickingLocation(true);
+          }}
+        />
       )}
 
       <ProfilePanel

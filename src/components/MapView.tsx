@@ -58,6 +58,8 @@ interface MapProps {
   formatDistance: (lat: number, lng: number) => string;
   isNearby: (lat: number, lng: number) => boolean;
   flyTrigger?: number;
+  pickingLocation?: boolean;
+  onMapClick?: (lat: number, lng: number) => void;
 }
 
 // Inner component — flies map to user position when GPS activates
@@ -89,6 +91,18 @@ function MapDragDetector({ onDrag }: { onDrag?: () => void }) {
   return null;
 }
 
+// Captures map clicks for "pick location" mode
+function MapClickHandler({ active, onClick }: { active: boolean; onClick?: (lat: number, lng: number) => void }) {
+  var map = useMapHook ? useMapHook() : null;
+  React.useEffect(function() {
+    if (!map || !active || !onClick) return;
+    var handler = function(e: any) { onClick(e.latlng.lat, e.latlng.lng); };
+    map.on("click", handler);
+    return function() { map.off("click", handler); };
+  }, [map, active, onClick]);
+  return null;
+}
+
 export default function MapView({
   drops,
   ghosts,
@@ -112,6 +126,8 @@ export default function MapView({
   formatDistance,
   isNearby,
   flyTrigger,
+  pickingLocation,
+  onMapClick,
 }: MapProps) {
   const [mounted, setMounted] = useState(false);
   const [leafletReady, setLeafletReady] = useState(false);
@@ -355,6 +371,7 @@ export default function MapView({
           key={isNight ? 'night' : 'day'}
         />
         <MapDragDetector onDrag={onMapDrag} />
+        <MapClickHandler active={!!pickingLocation} onClick={onMapClick} />
 
         {/* Fly to user when GPS activates */}
         <FlyToUser position={userPosition} flyTrigger={flyTrigger || 0} />
@@ -834,6 +851,15 @@ export default function MapView({
           </>
         )}
       </MapContainer>
+
+      {/* Pick location overlay */}
+      {pickingLocation && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[2000] pointer-events-none">
+          <div className="px-5 py-3 rounded-2xl bg-crypt-300/20 backdrop-blur-xl border border-crypt-300/40 text-center shadow-[0_0_30px_rgba(167,139,250,0.3)]">
+            <div className="text-xs font-mono font-bold text-crypt-200 animate-pulse">📍 Tap the map to place your drop</div>
+          </div>
+        </div>
+      )}
 
       {/* Custom styles */}
       <style jsx global>{`
