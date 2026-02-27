@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SOLANA_CLUSTER, ADDRESS_URL } from "@/utils/config";
 import { Wallet, Copy, Search, LogOut, ChevronDown, Activity, Volume2, VolumeX, Share2 } from "lucide-react";
@@ -13,6 +13,7 @@ interface HeaderProps {
 
 export default function Header({ soundEnabled, onToggleSound }: HeaderProps) {
   const { publicKey, connected, disconnect, wallet } = useWallet();
+  const { connection } = useConnection();
   const { setVisible } = useWalletModal();
   const [showMenu, setShowMenu] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
@@ -50,13 +51,15 @@ export default function Header({ soundEnabled, onToggleSound }: HeaderProps) {
   // Fetch balance on connect/refresh
   useEffect(() => {
     if (publicKey && connected) {
-      // In a real app we'd use connection.getBalance, 
-      // but for UI polish we can simulate or fetch.
-      setBalance(Math.random() * 2 + 0.5); // Mock balance for demo polish
+      connection.getBalance(publicKey).then((lamports) => {
+        setBalance(lamports / 1e9);
+      }).catch(() => {
+        setBalance(null);
+      });
     } else {
       setBalance(null);
     }
-  }, [publicKey, connected]);
+  }, [publicKey, connected, connection]);
 
   return (
     <header className="flex items-center justify-between px-3 py-2 bg-void-100/95 backdrop-blur-xl border-b border-crypt-300/10 z-[1100] relative shrink-0">

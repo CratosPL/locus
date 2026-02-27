@@ -85,10 +85,12 @@ export function useTapestry() {
 
       console.log("[Tapestry] Finding/creating profile for:", walletAddress);
 
+      var shortWallet = walletAddress.slice(0, 4);
+
       var result = await apiCall("/profiles/findOrCreate", "POST", {
         walletAddress: walletAddress,
         username: username,
-        bio: "Locus explorer | Dropping secrets on Solana",
+        bio: "Explorer " + shortWallet + " | Haunting the map on Solana",
         blockchain: "SOLANA",
         execution: "FAST_UNCONFIRMED",
         namespace: NAMESPACE,
