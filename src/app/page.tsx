@@ -85,6 +85,7 @@ export default function HomePage() {
   var [showLeftMenu, setShowLeftMenu] = useState(false);
   var [pickingLocation, setPickingLocation] = useState(false);
   var [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  var [tapestryDrops, setTapestryDrops] = useState<Drop[]>([]);
 
   // ─── Persist / hydrate ──────────────────────────────────────────────────
   useEffect(function () {
@@ -123,14 +124,21 @@ export default function HomePage() {
     return function () { clearTimeout(timer); };
   }, [activities.length]);
 
-  // Merged drops array
-  var drops = MOCK_DROPS.concat(extraDrops).map(function (d) {
+  // Merged drops array — MOCK_DROPS + Tapestry (on-chain) + local (user-created this session)
+  var drops = MOCK_DROPS.concat(tapestryDrops).concat(extraDrops).map(function (d) {
     return { ...d, isClaimed: d.isClaimed || claimedIds.has(d.id) };
+  });
+  // Deduplicate by id (local drops may overlap with Tapestry)
+  var seen = new Set<string>();
+  drops = drops.filter(function (d) {
+    if (seen.has(d.id)) return false;
+    seen.add(d.id);
+    return true;
   });
 
   // ─── Hooks ──────────────────────────────────────────────────────────────
   var { claimDrop: claimDropOnChain, createDrop: createDropOnChain, isProcessing, isConnected, walletAddress } = useProgram();
-  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop, followUser } = useTapestry();
+  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, fetchAllDrops, likeDrop, commentOnDrop, followUser } = useTapestry();
   var { position: userPosition, demoMode, setDemoMode, isNearby, distanceTo, formatDistance, requestLocation, status: geoStatus } = useGeolocation();
   var { setVisible: setWalletModalVisible } = useWalletModal();
   var { playSound } = useSound();
@@ -158,6 +166,16 @@ export default function HomePage() {
   useEffect(function () {
     if (isConnected && walletAddress && !profile) findOrCreateProfile();
   }, [isConnected, walletAddress, profile, findOrCreateProfile]);
+
+  // Fetch persistent drops from Tapestry on-chain social graph
+  useEffect(function () {
+    fetchAllDrops().then(function (drops) {
+      if (drops.length > 0) {
+        console.log("[App] Loaded " + drops.length + " persistent drops from Tapestry");
+        setTapestryDrops(drops);
+      }
+    });
+  }, [fetchAllDrops]);
 
   // ─── Trail proximity check ─────────────────────────────────────────────
   useEffect(function () {
@@ -281,7 +299,12 @@ addActivity("🗺️", "Reached " + wp.name, trail!.color);
       try { localStorage.setItem("locus_last_drop_time", String(Date.now())); } catch {}
       setExtraDrops(function (prev) { var updated = prev.concat([newDrop]); saveJSON("locus_extra_drops", updated); return updated; });
       setCreatedCount(function (c) { return c + 1; });
-      await registerDropAsContent(newDrop.id, data.message, { twitter: data.twitterHandle, link: data.externalLink, type: data.dropType === "memory" ? "memory-drop" : "geo-drop" });
+      await registerDropAsContent(newDrop.id, data.message, { lat, lng }, {
+        twitter: data.twitterHandle, link: data.externalLink,
+        type: data.dropType === "memory" ? "memory-drop" : "geo-drop",
+        reward: data.reward, category: data.category,
+        audiusTrackId: data.audiusTrackId, audiusTrackName: data.audiusTrackName, audiusArtist: data.audiusArtist,
+      });
       var cat = CATEGORY_CONFIG[data.category];
       if (soundEnabled) playSound("success");
       showToast("Drop created! " + cat.icon + " " + (data.dropType === "memory" ? "Memory recorded" : data.reward + " SOL"), "success", result.value);

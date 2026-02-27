@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import type { Drop, DropCategory } from "@/types";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 // Correct base URL: https://api.usetapestry.dev/v1 (NOT /api/v1)
@@ -146,16 +147,28 @@ export function useTapestry() {
   // Docs: POST /contents/create
   // Body: profileId, content, contentType, customProperties[]
   var registerDropAsContent = useCallback(
-    async function(dropId: string, message: string, extras?: { twitter?: string, link?: string, type?: string }) {
+    async function(dropId: string, message: string, location: { lat: number; lng: number }, extras?: {
+      twitter?: string; link?: string; type?: string;
+      reward?: number; category?: string;
+      audiusTrackId?: string; audiusTrackName?: string; audiusArtist?: string;
+    }) {
       if (!publicKey || !profile) return null;
       try {
         var customProperties = [
           { key: "dropId", value: dropId },
           { key: "namespace", value: NAMESPACE },
           { key: "type", value: extras?.type || "geo-drop" },
+          { key: "lat", value: String(location.lat) },
+          { key: "lng", value: String(location.lng) },
+          { key: "reward", value: String(extras?.reward ?? 0) },
+          { key: "category", value: extras?.category || "lore" },
+          { key: "createdBy", value: profile.username ? "@" + profile.username : publicKey.toBase58().slice(0, 8) },
         ];
         if (extras?.twitter) customProperties.push({ key: "twitter", value: extras.twitter });
         if (extras?.link) customProperties.push({ key: "link", value: extras.link });
+        if (extras?.audiusTrackId) customProperties.push({ key: "audiusTrackId", value: extras.audiusTrackId });
+        if (extras?.audiusTrackName) customProperties.push({ key: "audiusTrackName", value: extras.audiusTrackName });
+        if (extras?.audiusArtist) customProperties.push({ key: "audiusArtist", value: extras.audiusArtist });
 
         var result = await apiCall("/contents/create", "POST", {
           profileId: profile.id,
@@ -173,6 +186,69 @@ export function useTapestry() {
       }
     },
     [publicKey, profile, apiCall]
+  );
+
+  // ─── Fetch All Drops from Tapestry ──────────────────────────────────────
+  // Reads back content nodes of type "drop" so all users see persistent drops.
+  var fetchAllDrops = useCallback(
+    async function(): Promise<Drop[]> {
+      try {
+        var result = await apiCall(
+          "/contents?contentType=drop",
+          "GET"
+        );
+
+        if (!result || !Array.isArray(result)) {
+          // Try alternative endpoint format
+          var altResult = await apiCall(
+            "/contents/search?contentType=drop",
+            "GET"
+          );
+          result = altResult?.contents || altResult || [];
+        }
+
+        var contents = Array.isArray(result) ? result : (result?.contents || []);
+        if (!Array.isArray(contents)) return [];
+
+        var drops: Drop[] = [];
+        contents.forEach(function(item: any) {
+          var props: Record<string, string> = {};
+          var cpArray = item.customProperties || item.properties || [];
+          if (Array.isArray(cpArray)) {
+            cpArray.forEach(function(p: any) { props[p.key] = p.value; });
+          }
+
+          // Only include drops from our namespace
+          if (props.namespace && props.namespace !== NAMESPACE) return;
+          if (!props.lat || !props.lng) return;
+
+          var drop: Drop = {
+            id: props.dropId || item.id || ("tap_" + Date.now()),
+            location: { lat: parseFloat(props.lat), lng: parseFloat(props.lng) },
+            message: item.content || "",
+            isClaimed: false,
+            finderReward: parseFloat(props.reward || "0"),
+            category: (props.category || "lore") as DropCategory,
+            createdBy: props.createdBy || "anon",
+            createdAt: item.createdAt ? item.createdAt.split("T")[0] : new Date().toISOString().split("T")[0],
+            twitterHandle: props.twitter,
+            externalLink: props.link,
+            dropType: props.type === "memory-drop" ? "memory" : "crypto",
+            audiusTrackId: props.audiusTrackId,
+            audiusTrackName: props.audiusTrackName,
+            audiusArtist: props.audiusArtist,
+          };
+          drops.push(drop);
+        });
+
+        console.log("[Tapestry] Fetched " + drops.length + " drops from on-chain social graph");
+        return drops;
+      } catch (error) {
+        console.warn("[Tapestry] Failed to fetch drops:", error);
+        return [];
+      }
+    },
+    [apiCall]
   );
 
   // ─── Like a Drop ──────────────────────────────────────────────────────
@@ -262,6 +338,7 @@ export function useTapestry() {
     isConfigured: isConfigured,
     findOrCreateProfile: findOrCreateProfile,
     registerDropAsContent: registerDropAsContent,
+    fetchAllDrops: fetchAllDrops,
     likeDrop: likeDrop,
     commentOnDrop: commentOnDrop,
     followUser: followUser,
