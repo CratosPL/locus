@@ -55,7 +55,7 @@ export function useProgram() {
    * Current: Sends a real transaction to devnet program
    * The instruction data encodes: [0x01 (claim opcode), ...drop_id_bytes]
    */
-  const claimDrop = useCallback(async (dropId: string): Promise<Result<string>> => {
+  const claimDrop = useCallback(async (dropId: string, claimerLat?: number, claimerLng?: number): Promise<Result<string>> => {
     if (!publicKey || !sendTransaction) {
       return { ok: false, error: new Error('Wallet not connected') };
     }
@@ -74,11 +74,15 @@ export function useProgram() {
       console.log(`[Program] Vault PDA: ${vaultPda.toString()}`);
 
       // Build claim instruction
-      // Instruction data: [0x01 = claim opcode, ...utf8 bytes of dropId]
-      const instructionData = Buffer.concat([
-        Buffer.from([0x01]), // Claim opcode
-        Buffer.from(dropId, 'utf-8'),
-      ]);
+      // Instruction data: [0x01 = claim opcode, lat_i64_le, lng_i64_le]
+      // Coordinates are fixed-point × 1e7 to match on-chain storage
+      const latFixed = BigInt(Math.round((claimerLat ?? 0) * 1e7));
+      const lngFixed = BigInt(Math.round((claimerLng ?? 0) * 1e7));
+
+      const instructionData = Buffer.alloc(1 + 8 + 8);
+      instructionData.writeUInt8(0x01, 0);
+      instructionData.writeBigInt64LE(latFixed, 1);
+      instructionData.writeBigInt64LE(lngFixed, 9);
 
       const claimInstruction = new TransactionInstruction({
         programId: PROGRAM_ID,
