@@ -137,8 +137,8 @@ export default function HomePage() {
   });
 
   // ─── Hooks ──────────────────────────────────────────────────────────────
-  var { claimDrop: claimDropOnChain, createDrop: createDropOnChain, isProcessing, isConnected, walletAddress } = useProgram();
-  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, fetchAllDrops, likeDrop, commentOnDrop, followUser } = useTapestry();
+  var { claimDrop: claimDropOnChain, createDrop: createDropOnChain, fetchOnChainDrops, isProcessing, isConnected, walletAddress } = useProgram();
+  var { profile, isConfigured: tapestryConfigured, findOrCreateProfile, registerDropAsContent, likeDrop, commentOnDrop, followUser } = useTapestry();
   var { position: userPosition, demoMode, setDemoMode, isNearby, distanceTo, formatDistance, requestLocation, status: geoStatus } = useGeolocation();
   var { setVisible: setWalletModalVisible } = useWalletModal();
   var { playSound } = useSound();
@@ -167,15 +167,28 @@ export default function HomePage() {
     if (isConnected && walletAddress && !profile) findOrCreateProfile();
   }, [isConnected, walletAddress, profile, findOrCreateProfile]);
 
-  // Fetch persistent drops from Tapestry on-chain social graph
+  // Fetch persistent drops from Solana on-chain program accounts
   useEffect(function () {
-    fetchAllDrops().then(function (drops) {
-      if (drops.length > 0) {
-        console.log("[App] Loaded " + drops.length + " persistent drops from Tapestry");
-        setTapestryDrops(drops);
+    fetchOnChainDrops().then(function (onChainDrops) {
+      if (onChainDrops.length > 0) {
+        console.log("[App] Loaded " + onChainDrops.length + " drops from Solana on-chain");
+        var converted: Drop[] = onChainDrops.map(function (d) {
+          return {
+            id: d.id,
+            location: { lat: d.lat, lng: d.lng },
+            message: "On-chain drop",
+            isClaimed: d.isClaimed,
+            finderReward: d.reward,
+            category: "lore" as DropCategory,
+            createdBy: d.creator,
+            createdAt: new Date().toISOString().split("T")[0],
+            dropType: d.reward > 0 ? "crypto" : "memory",
+          };
+        });
+        setTapestryDrops(converted);
       }
     });
-  }, [fetchAllDrops]);
+  }, [fetchOnChainDrops]);
 
   // ─── Trail proximity check ─────────────────────────────────────────────
   useEffect(function () {
@@ -239,7 +252,7 @@ addActivity("🗺️", "Reached " + wp.name, trail!.color);
       setMintedBadges(newMinted);
       saveSet("locus_minted_badges", newMinted);
       setPendingBadge(null);
-      showToast("🎉 NFT Badge Minted! " + badge!.icon + " " + badge!.name, "success", "MOCK_" + Date.now().toString(36));
+      showToast("🎉 NFT Badge Minted! " + badge!.name, "success", "MOCK_" + Date.now().toString(36));
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: [badge!.color, "#ffffff", "#fbbf24"] });
     }, 1000);
   }, [mintedBadges, showToast, isConnected, claimDropOnChain]);

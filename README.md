@@ -312,7 +312,7 @@ src/
 
 ## What's Next
 
-ZK geofencing — upgrade the current on-chain Euclidean distance check to a ZK proof that verifies proximity without revealing exact coordinates. Ghost Chain — automatic Tapestry link between wallets that haunted the same location. Drops visible only to your followers. Multi-token rewards. Session keys for gasless onboarding. Seasonal city events with shared prize pools.
+NFT Image Drops — mint geo-located NFTs with embedded images, claimable only at the drop location (photo drops, art installations, collectible maps). ZK geofencing — upgrade the current on-chain Euclidean distance check to a ZK proof that verifies proximity without revealing exact coordinates. Ghost Chain — automatic Tapestry link between wallets that haunted the same location. Drops visible only to your followers. Multi-token rewards. Session keys for gasless onboarding. Seasonal city events with shared prize pools.
 
 ---
 

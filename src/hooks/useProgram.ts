@@ -251,9 +251,49 @@ export function useProgram() {
     }
   }, [publicKey, sendTransaction, connection, getDropPda, getVaultPda]);
 
+  // ─── Fetch on-chain drops via getProgramAccounts ─────────────────────
+  // Reads all Drop PDA accounts owned by our program on devnet.
+  // Drop struct (57 bytes): creator(32) | lat_i64(8) | lng_i64(8) | reward_u64(8) | is_claimed(1)
+  const DROP_ACCOUNT_SIZE = 57;
+
+  const fetchOnChainDrops = useCallback(async (): Promise<{
+    id: string; lat: number; lng: number; reward: number; creator: string; isClaimed: boolean;
+  }[]> => {
+    try {
+      const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
+        filters: [{ dataSize: DROP_ACCOUNT_SIZE }],
+      });
+
+      const drops = accounts.map((acc) => {
+        const data = acc.account.data;
+        const creator = new PublicKey(data.slice(0, 32)).toBase58();
+        const lat = Number(Buffer.from(data.slice(32, 40)).readBigInt64LE()) / 1e7;
+        const lng = Number(Buffer.from(data.slice(40, 48)).readBigInt64LE()) / 1e7;
+        const reward = Number(Buffer.from(data.slice(48, 56)).readBigUInt64LE()) / 1e9;
+        const isClaimed = data[56] === 1;
+
+        return {
+          id: acc.pubkey.toBase58(),
+          lat,
+          lng,
+          reward,
+          creator: creator.slice(0, 4) + "..." + creator.slice(-4),
+          isClaimed,
+        };
+      });
+
+      console.log(`[Program] Fetched ${drops.length} drops from on-chain`);
+      return drops;
+    } catch (error) {
+      console.warn("[Program] Failed to fetch on-chain drops:", error);
+      return [];
+    }
+  }, [connection]);
+
   return {
     claimDrop,
     createDrop,
+    fetchOnChainDrops,
     getDropPda,
     getVaultPda,
     isPending,
