@@ -35,6 +35,17 @@ I wanted to see how low the CU cost could go. Anchor is great but it's heavy —
 
 ---
 
+## On-chain Geofence
+
+The claim instruction enforces a 150-meter proximity check directly in the Solana program. The claimer's GPS coordinates are encoded as fixed-point integers (× 1e7) in the transaction data. The program:
+
+1. **Bounding-box reject** — quick check that `|Δlat|` and `|Δlng|` are within limits (accounts for longitude shrinking at higher latitudes via a scaling factor for 40–60°N).
+2. **Euclidean distance² ≤ radius²** — normalises longitude delta to latitude-equivalent units, then compares squared distance against the 15,000-unit (~150 m) threshold. All integer math, no floating point.
+
+This is a dual-layer approach: the frontend does a Haversine check before even building the transaction (better UX — instant "too far" feedback), and the program independently enforces the geofence on-chain so a spoofed client can't bypass it. The next step is ZK geofencing to verify proximity without revealing exact coordinates.
+
+---
+
 ## How it works
 
 ```
@@ -44,8 +55,9 @@ Creator                                    Finder
   ├─ GPS locates position                    ├─ GPS locates position
   ├─ Creates drop (message + SOL reward)     ├─ Sees nearby drops on map
   │   └─► CreateDrop tx → Solana program     ├─ Walks within 150m radius
-  │   └─► Content node registered → Tapestry ├─ Claims drop (signs tx)
+  │   └─► Content node registered → Tapestry ├─ Claims drop (signs tx + GPS coords)
   │                                          │   └─► ClaimDrop tx → Solana
+  │                                          │   └─► On-chain geofence: ≤150m check
   │                                          │   └─► SOL transferred from PDA vault
   └─ Receives notification via feed          └─ Likes/comments via Tapestry
 ```
@@ -112,7 +124,7 @@ The Torque Loyalist badge specifically targets the 7-day streak mechanic — dai
 
 **Core dead drop mechanic**
 - Drop messages + SOL rewards at real GPS coordinates (global, any city)
-- 150m geofence enforcement via Haversine formula — must physically be there
+- 150m geofence enforcement — **dual layer**: client-side Haversine + **on-chain Euclidean distance check** in the Pinocchio program
 - Real on-chain SOL transfers: vault PDA holds funds, released on claim
 - Anti-spam: max 5 active drops per wallet, 60s cooldown, 0.01 SOL minimum
 
@@ -260,11 +272,18 @@ npm run dev
 src/
 ├── app/
 │   ├── api/tapestry/route.ts        # Server proxy (handles CORS)
+│   ├── api/audius/route.ts          # Audius search proxy
+│   ├── api/actions/drop/route.ts    # Solana Actions / Blinks endpoint
 │   ├── layout.tsx
-│   ├── page.tsx                     # Main page + all state
+│   ├── page.tsx                     # Main page — state + orchestration (~450 lines)
 │   └── globals.css
 ├── components/
 │   ├── MapView.tsx                  # Leaflet map + markers + popups + social bar
+│   ├── MapOverlays.tsx              # GPS, hamburger menu, right panel, trail banner
+│   ├── BottomNav.tsx                # Bottom tab navigation bar
+│   ├── BadgeMintPopup.tsx           # Badge achievement mint modal
+│   ├── FeedTab.tsx                  # Live social feed tab
+│   ├── LeaderboardTab.tsx           # Leaderboard tab with hackathon banner
 │   ├── ClaimSuccessModal.tsx        # Post-claim modal with SOL animation
 │   ├── ActivityFeed.tsx             # Live Tapestry event feed
 │   ├── ExplorerProfileModal.tsx     # Explorer profile with follow + DM
@@ -277,12 +296,15 @@ src/
 │   ├── WelcomeOverlay.tsx
 │   └── TxToast.tsx
 ├── hooks/
-│   ├── useProgram.ts                # Solana program calls (Pinocchio)
+│   ├── useProgram.ts                # Solana program calls (Pinocchio + on-chain geofence)
 │   ├── useTapestry.ts               # Tapestry API integration
-│   └── useGeolocation.ts            # GPS + IP fallback + Haversine proximity
+│   ├── useGeolocation.ts            # GPS + IP fallback + Haversine proximity
+│   └── useSound.ts
 ├── types/index.ts
 └── utils/
+    ├── storage.ts                   # localStorage helpers (SSR-safe)
     ├── mockData.ts                  # Global seeded drops, ghosts, trails, badges
+    ├── config.ts                    # Solana cluster + program ID
     └── badgeIcons.tsx               # Custom SVG badge icons
 ```
 
@@ -290,7 +312,7 @@ src/
 
 ## What's Next
 
-ZK geofencing — prove proximity without revealing exact coordinates. Ghost Chain — automatic Tapestry link between wallets that haunted the same location. Drops visible only to your followers. Multi-token rewards. Session keys for gasless onboarding. Seasonal city events with shared prize pools.
+ZK geofencing — upgrade the current on-chain Euclidean distance check to a ZK proof that verifies proximity without revealing exact coordinates. Ghost Chain — automatic Tapestry link between wallets that haunted the same location. Drops visible only to your followers. Multi-token rewards. Session keys for gasless onboarding. Seasonal city events with shared prize pools.
 
 ---
 

@@ -76,10 +76,14 @@ export const POST = async (req: Request) => {
     );
 
     // Build claim instruction (same logic as useProgram.ts)
-    const instructionData = Buffer.concat([
-      Buffer.from([0x01]), // Claim opcode
-      Buffer.from(dropId, "utf-8"),
-    ]);
+    // NOTE: Blink context doesn't have GPS — we pass 0,0 coords.
+    // The on-chain program will reject if the drop requires proximity.
+    // In production, Blinks would only work for "remote-claimable" drops.
+    const instructionData = Buffer.alloc(1 + 8 + 8);
+    instructionData.writeUInt8(0x01, 0); // Claim opcode
+    // claimer lat/lng = 0 (Blink has no GPS context)
+    instructionData.writeBigInt64LE(BigInt(0), 1);
+    instructionData.writeBigInt64LE(BigInt(0), 9);
 
     const instruction = new TransactionInstruction({
       programId: PROGRAM_ID,
